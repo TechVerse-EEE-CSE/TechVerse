@@ -3,24 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="description" content="TechVerse - The ultimate fusion of Electrical & Electronic Engineering (EEE) and Computer Science (CSE).">
+    <meta property="og:title" content="TechVerse EEE & CSE | Future of Tech">
+    <meta property="og:description" content="Master the technology of tomorrow with embedded systems, robotics, AI, and full-stack web development.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#050814">
+    
     <title>TechVerse EEE & CSE</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #050814; /* Deep Dark Theme */
+            background-color: #050814;
             color: #ffffff;
             overflow-x: hidden;
         }
         
+        /* Preloader Animation */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background-color: #050814;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .circuit-loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(6, 182, 212, 0.2);
+            border-top-color: #22d3ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
         /* Premium Glassmorphism Effect */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03);
@@ -31,8 +56,13 @@
         }
         
         /* Neon Glow Hover Effect for Cards */
+        .glass-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
         .glass-card:hover {
-            border-color: rgba(6, 182, 212, 0.5); /* Cyan Glow */
+            border-color: rgba(6, 182, 212, 0.5);
             box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
             transform: translateY(-5px);
         }
@@ -72,7 +102,7 @@
 
         /* Nav Link Active State */
         .nav-link.active {
-            color: #22d3ee !important; /* Cyan-400 */
+            color: #22d3ee !important;
             position: relative;
         }
         .nav-link.active::after {
@@ -90,9 +120,55 @@
         .workspace-modal {
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Premium Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050814; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #22d3ee, #3b82f6); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #06b6d4, #2563eb); }
+
+        /* Smooth FAQ Accordion Transition */
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+        }
+
+        /* Typing Cursor Animation */
+        .type-cursor {
+            display: inline-block;
+            width: 3px;
+            background-color: #22d3ee;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Partner Marquee */
+        .marquee-container {
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .marquee-content {
+            display: inline-flex;
+            animation: scroll 25s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
     </style>
 </head>
 <body class="relative">
+
+    <div id="preloader">
+        <div class="flex flex-col items-center gap-4">
+            <div class="circuit-loader"></div>
+            <p class="text-cyan-400 text-sm tracking-widest uppercase font-semibold animate-pulse">Initializing System...</p>
+        </div>
+    </div>
+
+    <div id="cursor-glow" class="hidden md:block fixed w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none z-[-5] transition-transform duration-75 ease-out -translate-x-1/2 -translate-y-1/2"></div>
 
     <div class="bg-grid"></div>
 
@@ -106,15 +182,29 @@
             <div class="hidden md:flex gap-8 text-sm font-semibold text-gray-300 navbar-menu">
                 <a href="#home" class="nav-link hover:text-cyan-400 transition active">Home</a>
                 <a href="#domains" class="nav-link hover:text-cyan-400 transition">Domains</a>
+                <a href="#projects" class="nav-link hover:text-cyan-400 transition">Projects</a>
+                
+                <a href="javascript:void(0)" onclick="openWorkspace('editor')" class="nav-link hover:text-yellow-400 transition text-yellow-500/80 flex items-center gap-1"><i class="fa-solid fa-laptop-code"></i> Live Code</a>
+                <a href="javascript:void(0)" onclick="openWorkspace('eeeBuilder')" class="nav-link hover:text-purple-400 transition text-purple-500/80 flex items-center gap-1"><i class="fa-solid fa-cogs"></i> EEE Builder</a>
+                
+                <a href="#faq" class="nav-link hover:text-cyan-400 transition">FAQ</a>
                 <a href="#contact" class="nav-link hover:text-cyan-400 transition">Contact</a>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-5">
+                <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold">Live System</span>
+                </div>
+
                 <a href="#contact" class="hidden sm:inline-block glass-panel px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-cyan-500/20 transition border-cyan-500/30 text-cyan-400 cursor-pointer">
                     Join Community
                 </a>
                 
-                <button id="menu-btn" class="md:hidden text-gray-300 hover:text-cyan-400 focus:outline-none transition">
+                <button id="menu-btn" class="md:hidden text-gray-300 hover:text-cyan-400 focus:outline-none transition flex items-center justify-center w-10 h-10">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
             </div>
@@ -123,6 +213,12 @@
         <div id="mobile-menu" class="hidden max-w-7xl mx-auto px-6 mt-4 flex flex-col gap-4 text-sm font-semibold text-gray-300 pb-4 border-t border-white/5 pt-4 transition-all duration-300">
             <a href="#home" class="mobile-nav-link hover:text-cyan-400 transition py-1">Home</a>
             <a href="#domains" class="mobile-nav-link hover:text-cyan-400 transition py-1">Domains</a>
+            <a href="#projects" class="mobile-nav-link hover:text-cyan-400 transition py-1">Projects</a>
+            
+            <a href="javascript:void(0)" onclick="openWorkspace('editor')" class="mobile-nav-link hover:text-yellow-400 transition py-1 text-yellow-500/80"><i class="fa-solid fa-laptop-code mr-1"></i> Live Code Editor</a>
+            <a href="javascript:void(0)" onclick="openWorkspace('eeeBuilder')" class="mobile-nav-link hover:text-purple-400 transition py-1 text-purple-500/80"><i class="fa-solid fa-cogs mr-1"></i> EEE Project Builder</a>
+
+            <a href="#faq" class="mobile-nav-link hover:text-cyan-400 transition py-1">FAQ</a>
             <a href="#contact" class="mobile-nav-link hover:text-cyan-400 transition py-1">Contact</a>
             <a href="#contact" class="sm:hidden glass-panel text-center px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-cyan-500/20 transition border-cyan-500/30 text-cyan-400 cursor-pointer mt-2">
                 Join Community
@@ -131,50 +227,71 @@
     </nav>
 
     <section id="home" class="min-h-screen flex flex-col justify-center items-center pt-28 px-6 relative">
-        <div class="text-center max-w-4xl" data-aos="fade-up" data-aos-duration="1000">
-            <div class="inline-block glass-panel px-4 py-1.5 rounded-full text-xs font-semibold text-cyan-400 mb-6 tracking-widest uppercase">
-                <i class="fa-solid fa-bolt mr-2"></i> The Future of Tech
+        <div class="text-center max-w-4xl flex flex-col items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
+            <div class="inline-flex glass-panel px-4 py-1.5 rounded-full text-xs font-semibold text-cyan-400 mb-6 tracking-widest uppercase items-center">
+                <i class="fa-solid fa-bolt mr-2 text-yellow-400"></i> The Future of Tech
             </div>
             
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Where Circuits Meet <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Code & Innovation</span>
-            </h1>
+            <div class="min-h-[140px] md:min-h-[180px] flex items-center justify-center w-full">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    Where Circuits Meet <br>
+                    <span id="typewriter" class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"></span><span class="type-cursor">&nbsp;</span>
+                </h1>
+            </div>
             
-            <p class="text-gray-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
+            <p class="text-gray-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
                 The ultimate fusion of Electrical & Electronic Engineering and Computer Science. Build, innovate, and master the technology of tomorrow.
             </p>
             
-            <div class="flex flex-col sm:flex-row justify-center gap-5">
-                <a href="javascript:void(0)" onclick="openWorkspace('eee')" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-3.5 rounded-full font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition transform hover:-translate-y-1 text-center">
+            <div class="flex flex-col sm:flex-row justify-center gap-5 w-full sm:w-auto">
+                <a href="javascript:void(0)" onclick="openWorkspace('eee')" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-3.5 rounded-full font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition transform hover:-translate-y-1 text-center w-full sm:w-auto">
                     Explore EEE
                 </a>
-                <a href="javascript:void(0)" onclick="openWorkspace('cse')" class="glass-panel text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white/5 transition transform hover:-translate-y-1 text-center">
+                <a href="javascript:void(0)" onclick="openWorkspace('cse')" class="glass-panel text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white/5 transition transform hover:-translate-y-1 text-center w-full sm:w-auto">
                     Explore CSE
                 </a>
             </div>
         </div>
 
-        <div class="w-full max-w-5xl mt-20 grid grid-cols-2 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="200">
-            <div class="glass-panel p-6 rounded-2xl text-center">
-                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">500+</h4>
-                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Innovators</p>
+        <div class="w-full max-w-5xl mt-20 grid grid-cols-2 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="200" id="stats-section">
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400"><span class="counter" data-target="500">0</span>+</h4>
+                <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Innovators</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center">
-                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">50+</h4>
-                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Projects Built</p>
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400"><span class="counter" data-target="50">0</span>+</h4>
+                <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Projects Built</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center">
-                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">20+</h4>
-                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Workshops</p>
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400"><span class="counter" data-target="20">0</span>+</h4>
+                <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Workshops</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center">
-                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">24/7</h4>
-                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Tech Support</p>
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+                <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"><span class="counter" data-target="24">0</span>/7</h4>
+                <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Tech Support</p>
             </div>
         </div>
 
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+    </section>
+
+    <section class="py-10 border-t border-b border-white/5 bg-black/20 overflow-hidden marquee-container">
+        <div class="marquee-content flex gap-16 items-center px-8 text-gray-500 text-2xl md:text-4xl opacity-50">
+            <i class="fa-brands fa-html5 hover:text-orange-500 transition duration-300"></i>
+            <i class="fa-brands fa-css3-alt hover:text-blue-500 transition duration-300"></i>
+            <i class="fa-brands fa-js hover:text-yellow-400 transition duration-300"></i>
+            <i class="fa-brands fa-python hover:text-blue-400 transition duration-300"></i>
+            <i class="fa-solid fa-microchip hover:text-cyan-400 transition duration-300"></i>
+            <i class="fa-brands fa-aws hover:text-orange-400 transition duration-300"></i>
+            <i class="fa-brands fa-github hover:text-white transition duration-300"></i>
+            <i class="fa-brands fa-html5 hover:text-orange-500 transition duration-300"></i>
+            <i class="fa-brands fa-css3-alt hover:text-blue-500 transition duration-300"></i>
+            <i class="fa-brands fa-js hover:text-yellow-400 transition duration-300"></i>
+            <i class="fa-brands fa-python hover:text-blue-400 transition duration-300"></i>
+            <i class="fa-solid fa-microchip hover:text-cyan-400 transition duration-300"></i>
+            <i class="fa-brands fa-aws hover:text-orange-400 transition duration-300"></i>
+            <i class="fa-brands fa-github hover:text-white transition duration-300"></i>
+        </div>
     </section>
 
     <section id="domains" class="py-24 px-6">
@@ -184,9 +301,9 @@
                 <p class="text-gray-400">Choose your path of innovation.</p>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="glass-panel glass-card p-10 rounded-3xl transition-all duration-300 flex flex-col justify-between" data-aos="fade-right" data-aos-delay="100">
-                    <div>
+            <div class="grid md:grid-cols-2 gap-8 items-stretch">
+                <div class="glass-panel glass-card p-10 rounded-3xl transition-all duration-300 flex flex-col h-full" data-aos="fade-right" data-aos-delay="100">
+                    <div class="flex-grow">
                         <div class="w-16 h-16 bg-cyan-500/10 rounded-2xl flex items-center justify-center mb-6 border border-cyan-500/20">
                             <i class="fa-solid fa-plug text-3xl text-cyan-400"></i>
                         </div>
@@ -200,13 +317,13 @@
                             <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> VLSI & Microcontrollers</li>
                         </ul>
                     </div>
-                    <button onclick="openWorkspace('eee')" class="text-cyan-400 font-semibold hover:text-cyan-300 flex items-center gap-2 group w-fit">
+                    <button onclick="openWorkspace('eee')" class="text-cyan-400 font-semibold hover:text-cyan-300 flex items-center gap-2 group w-fit mt-auto">
                         Enter Matrix <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition"></i>
                     </button>
                 </div>
 
-                <div class="glass-panel glass-card p-10 rounded-3xl transition-all duration-300 flex flex-col justify-between" data-aos="fade-left" data-aos-delay="200">
-                    <div>
+                <div class="glass-panel glass-card p-10 rounded-3xl transition-all duration-300 flex flex-col h-full" data-aos="fade-left" data-aos-delay="200">
+                    <div class="flex-grow">
                         <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20">
                             <i class="fa-solid fa-code text-3xl text-blue-400"></i>
                         </div>
@@ -220,7 +337,7 @@
                             <li><i class="fa-solid fa-check text-blue-400 mr-2"></i> Cyber Security & Networks</li>
                         </ul>
                     </div>
-                    <button onclick="openWorkspace('cse')" class="text-blue-400 font-semibold hover:text-blue-300 flex items-center gap-2 group w-fit">
+                    <button onclick="openWorkspace('cse')" class="text-blue-400 font-semibold hover:text-blue-300 flex items-center gap-2 group w-fit mt-auto">
                         Start Coding <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition"></i>
                     </button>
                 </div>
@@ -228,12 +345,122 @@
         </div>
     </section>
 
-    <div id="eeeWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-6 backdrop-blur-xl">
-        <div class="max-w-6xl mx-auto mt-20 glass-panel rounded-3xl p-6 md:p-8 relative">
-            <button onclick="closeWorkspace('eee')" class="absolute top-6 right-6 text-gray-400 hover:text-cyan-400 text-xl transition">
+    <section id="projects" class="py-24 px-6 relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-10" data-aos="fade-up">
+                <div class="inline-block glass-panel px-4 py-1.5 rounded-full text-xs font-semibold text-blue-400 mb-4 tracking-widest uppercase">
+                    Innovations
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Projects</span></h2>
+                <p class="text-gray-400">Our innovators are pushing boundaries with real-world tech solutions.</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3 mb-12 text-xs font-semibold uppercase tracking-wider" data-aos="fade-up">
+                <button onclick="filterProjects('all')" class="filter-btn active-filter px-6 py-2.5 rounded-full glass-panel border-cyan-500/40 text-cyan-400 transition">All</button>
+                <button onclick="filterProjects('eee')" class="filter-btn px-6 py-2.5 rounded-full glass-panel border-transparent text-gray-400 hover:text-white transition">Hardware</button>
+                <button onclick="filterProjects('cse')" class="filter-btn px-6 py-2.5 rounded-full glass-panel border-transparent text-gray-400 hover:text-white transition">Software</button>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch" id="projects-container">
+                <div class="project-card glass-panel glass-card p-6 rounded-3xl transition-all duration-300 flex flex-col h-full" data-category="eee" data-aos="fade-up" data-aos-delay="100">
+                    <div class="relative rounded-2xl overflow-hidden mb-6 group flex-shrink-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050814] via-transparent to-transparent z-10"></div>
+                        <div class="w-full h-48 bg-gradient-to-br from-cyan-500/20 to-blue-600/10 flex items-center justify-center border border-white/5 rounded-2xl">
+                            <i class="fa-solid fa-robot text-5xl text-cyan-400/50 group-hover:scale-110 transition duration-300"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow">
+                        <span class="inline-block text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-3">EEE + CSE</span>
+                        <h3 class="text-xl font-bold mb-2">Autonomous Mesh Rover</h3>
+                        <p class="text-sm text-gray-400 mb-6">IoT and LIDAR-based autonomous vehicle utilizing real-time cloud data mapping.</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 border-t border-white/5 pt-4 mt-auto">
+                        <span><i class="fa-solid fa-heart mr-1 text-cyan-400"></i> 48 Likes</span>
+                        <a href="javascript:void(0)" class="text-cyan-400 hover:underline flex items-center gap-1">View Docs <i class="fa-solid fa-chevron-right text-[10px]"></i></a>
+                    </div>
+                </div>
+
+                <div class="project-card glass-panel glass-card p-6 rounded-3xl transition-all duration-300 flex flex-col h-full" data-category="cse" data-aos="fade-up" data-aos-delay="200">
+                    <div class="relative rounded-2xl overflow-hidden mb-6 group flex-shrink-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050814] via-transparent to-transparent z-10"></div>
+                        <div class="w-full h-48 bg-gradient-to-br from-blue-500/20 to-indigo-600/10 flex items-center justify-center border border-white/5 rounded-2xl">
+                            <i class="fa-solid fa-brain text-5xl text-blue-400/50 group-hover:scale-110 transition duration-300"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow">
+                        <span class="inline-block text-xs font-semibold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-3">Computer Science</span>
+                        <h3 class="text-xl font-bold mb-2">Neural Vision API</h3>
+                        <p class="text-sm text-gray-400 mb-6">Deep learning custom pipeline for edge devices to detect microscopic circuit defects.</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 border-t border-white/5 pt-4 mt-auto">
+                        <span><i class="fa-solid fa-heart mr-1 text-blue-400"></i> 64 Likes</span>
+                        <a href="javascript:void(0)" class="text-blue-400 hover:underline flex items-center gap-1">View Source <i class="fa-solid fa-chevron-right text-[10px]"></i></a>
+                    </div>
+                </div>
+
+                <div class="project-card glass-panel glass-card p-6 rounded-3xl transition-all duration-300 flex flex-col h-full" data-category="eee" data-aos="fade-up" data-aos-delay="300">
+                    <div class="relative rounded-2xl overflow-hidden mb-6 group flex-shrink-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050814] via-transparent to-transparent z-10"></div>
+                        <div class="w-full h-48 bg-gradient-to-br from-purple-500/20 to-pink-600/10 flex items-center justify-center border border-white/5 rounded-2xl">
+                            <i class="fa-solid fa-network-wired text-5xl text-purple-400/50 group-hover:scale-110 transition duration-300"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow">
+                        <span class="inline-block text-xs font-semibold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full uppercase tracking-wider mb-3">Electrical Eng</span>
+                        <h3 class="text-xl font-bold mb-2">Smart Grid Nodes</h3>
+                        <p class="text-sm text-gray-400 mb-6">Firmware implementation for microcontrollers managing solid-state relay automation.</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 border-t border-white/5 pt-4 mt-auto">
+                        <span><i class="fa-solid fa-heart mr-1 text-purple-400"></i> 32 Likes</span>
+                        <a href="javascript:void(0)" class="text-purple-400 hover:underline flex items-center gap-1">View Hardware <i class="fa-solid fa-chevron-right text-[10px]"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-20 px-6 relative">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">Frequently Asked <span class="text-cyan-400">Questions</span></h2>
+                <p class="text-gray-400">Everything you need to know about TechVerse Matrix.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 transition-all duration-300" data-aos="fade-up">
+                    <button onclick="toggleFaq(this)" class="w-full p-6 text-left flex justify-between items-center font-medium focus:outline-none hover:text-cyan-400 transition">
+                        <span>১. টেকভার্স মূলত কি ধরনের প্ল্যাটফর্ম?</span>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="px-6 pb-6 text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-4">
+                            টেকভার্স হলো ইলেকট্রিক্যাল ও ইলেকট্রনিক্স ইঞ্জিনিয়ারিং (EEE) এবং কম্পিউটার সায়েন্স (CSE) এর একটি আধুনিক সমন্বয়। এখানে হার্ডওয়্যার আর্কিটেকচার থেকে শুরু করে অ্যাডভান্সড সফটওয়্যার ডেভেলপমেন্ট ও এআই এর লাইভ প্রজেক্ট ও গাইডলাইন শেয়ার করা হয়।
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 transition-all duration-300" data-aos="fade-up">
+                    <button onclick="toggleFaq(this)" class="w-full p-6 text-left flex justify-between items-center font-medium focus:outline-none hover:text-cyan-400 transition">
+                        <span>২. আমি কিভাবে এইসি কমিউনিটিতে যুক্ত হতে পারি?</span>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <div class="px-6 pb-6 text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-4">
+                            আমাদের কমিউনিটিতে যুক্ত হওয়া একদম সহজ! নিচের "Join Community" ফর্মে আপনার নাম ও ইমেইল দিয়ে সাবমিট করলেই আমাদের টিম আপনার সাথে সেশন এবং ওয়ার্কশপের বিস্তারিত আপডেট শেয়ার করবে।
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+    </section>
+
+    <div id="eeeWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
+        <div class="w-full max-w-6xl glass-panel rounded-3xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeWorkspace('eee')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-cyan-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="flex items-center gap-3 mb-6">
+            <div class="flex items-center gap-3 mb-6 mt-4 md:mt-0">
                 <i class="fa-solid fa-microchip text-cyan-400 text-3xl"></i>
                 <h2 class="text-2xl md:text-3xl font-bold">EEE Hardware <span class="text-cyan-400">Matrix Lab</span></h2>
             </div>
@@ -253,36 +480,39 @@
                     <div id="eee-iot" class="tab-content-eee space-y-4">
                         <h4 class="text-xl font-semibold text-cyan-400">IoT Architecture & Nodes</h4>
                         <p class="text-sm text-gray-400">এখানে ইন্টারঅ্যাক্টিভ স্মার্ট নোডের মাধ্যমে সেন্সর ডেটা রিডিং এবং ক্লাউড কানেক্টিভিটি লজিক শিখুন।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-emerald-400 overflow-x-auto">
-                            // Arduino NodeMCU MQTT Subscription Setup<br>
-                            #include &lt;ESP8266WiFi.h&gt;<br>
-                            void setup() {<br>
-                            &nbsp;&nbsp;Serial.begin(115200);<br>
-                            &nbsp;&nbsp;WiFi.begin("TechVerse_IoT", "CircuitToCode");<br>
-                            }
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-emerald-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap">// Arduino NodeMCU MQTT Subscription Setup
+#include &lt;ESP8266WiFi.h&gt;
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin("TechVerse_IoT", "CircuitToCode");
+}</code>
                         </div>
                     </div>
                     <div id="eee-robotics" class="tab-content-eee space-y-4 hidden">
                         <h4 class="text-xl font-semibold text-cyan-400">Robotics & PWM Controls</h4>
                         <p class="text-sm text-gray-400">মোটর ড্রাইভার কন্ট্রোল এবং রিয়েল-টাইম সেন্সর ফিডব্যাক লুপ আর্কিটেকচার।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-cyan-400 overflow-x-auto">
-                            // PWM Servo Motor Control Implementation<br>
-                            int servoPin = 9;<br>
-                            void loop() {<br>
-                            &nbsp;&nbsp;for (int pos = 0; pos <= 180; pos += 1) {<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;myservo.write(pos); delay(15);<br>
-                            &nbsp;&nbsp;}<br>
-                            }
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-cyan-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap">// PWM Servo Motor Control Implementation
+int servoPin = 9;
+void loop() {
+  for (int pos = 0; pos <= 180; pos += 1) {
+    myservo.write(pos); delay(15);
+  }
+}</code>
                         </div>
                     </div>
                     <div id="eee-vlsi" class="tab-content-eee space-y-4 hidden">
                         <h4 class="text-xl font-semibold text-cyan-400">VLSI & Register Logic</h4>
                         <p class="text-sm text-gray-400">মাইক্রোপ্রসেসর লেভেল রেজিস্টার এবং ডিজিটাল লজিক গেটস এর বিস্তারিত রূপরেখা।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-indigo-400 overflow-x-auto">
-                            // Verilog Basic Logic Gate Circuit Example<br>
-                            module and_gate(input a, b, output c);<br>
-                            &nbsp;&nbsp;assign c = a & b;<br>
-                            endmodule
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-indigo-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap">// Verilog Basic Logic Gate Circuit Example
+module and_gate(input a, b, output c);
+  assign c = a & b;
+endmodule</code>
                         </div>
                     </div>
                 </div>
@@ -290,12 +520,12 @@
         </div>
     </div>
 
-    <div id="cseWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-6 backdrop-blur-xl">
-        <div class="max-w-6xl mx-auto mt-20 glass-panel rounded-3xl p-6 md:p-8 relative">
-            <button onclick="closeWorkspace('cse')" class="absolute top-6 right-6 text-gray-400 hover:text-blue-400 text-xl transition">
+    <div id="cseWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
+        <div class="w-full max-w-6xl glass-panel rounded-3xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeWorkspace('cse')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-blue-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="flex items-center gap-3 mb-6">
+            <div class="flex items-center gap-3 mb-6 mt-4 md:mt-0">
                 <i class="fa-solid fa-code text-blue-400 text-3xl"></i>
                 <h2 class="text-2xl md:text-3xl font-bold">CSE Software <span class="text-blue-400">Code Terminal</span></h2>
             </div>
@@ -315,36 +545,111 @@
                     <div id="cse-webdev" class="tab-content-cse space-y-4">
                         <h4 class="text-xl font-semibold text-blue-400">Full-Stack JavaScript Arena</h4>
                         <p class="text-sm text-gray-400">মডার্ন জাভাস্ক্রিপ্ট ইঞ্জিন এবং ক্লাউড ডাটাবেজ আর্কিটেকচার এর মূল কনসেপ্ট।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-yellow-400 overflow-x-auto">
-                            // Modern Async/Await Fetch API Architecture<br>
-                            async function fetchTechVerseData() {<br>
-                            &nbsp;&nbsp;const response = await fetch('/api/v1/innovation');<br>
-                            &nbsp;&nbsp;const data = await response.json();<br>
-                            &nbsp;&nbsp;console.log("System Stable:", data.status);<br>
-                            }
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-yellow-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap">// Modern Async/Await Fetch API Architecture
+async function fetchTechVerseData() {
+  const response = await fetch('/api/v1/innovation');
+  const data = await response.json();
+  console.log("System Stable:", data.status);
+}</code>
                         </div>
                     </div>
                     <div id="cse-ai" class="tab-content-cse space-y-4 hidden">
                         <h4 class="text-xl font-semibold text-blue-400">AI & Deep Learning Structures</h4>
                         <p class="text-sm text-gray-400">নিউরাল নেটওয়ার্ক এবং ডাটা সায়েন্স মডেল ট্রেইনিং আর্কিটেকচার।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-purple-400 overflow-x-auto">
-                            # Python Machine Learning Model Pipeline<br>
-                            import tensorflow as tf<br>
-                            model = tf.keras.models.Sequential([<br>
-                            &nbsp;&nbsp;tf.keras.layers.Dense(128, activation='relu'),<br>
-                            &nbsp;&nbsp;tf.keras.layers.Dense(10, activation='softmax')<br>
-                            ])
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-purple-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap"># Python Machine Learning Model Pipeline
+import tensorflow as tf
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Dense(128, activation='relu'),
+  tf.keras.layers.Dense(10, activation='softmax')
+])</code>
                         </div>
                     </div>
                     <div id="cse-cyber" class="tab-content-cse space-y-4 hidden">
                         <h4 class="text-xl font-semibold text-blue-400">Cyber Security & Network Security</h4>
                         <p class="text-sm text-gray-400">ক্রিপ্টোগ্রাফিক অ্যালগরিদম এবং এন্ড-টু-এন্ড সিকিউরড ডেটা ট্রান্সমিশন মেথড।</p>
-                        <div class="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-red-400 overflow-x-auto">
-                            // Data Encryption Standard Simulation<br>
-                            const crypto = require('crypto');<br>
-                            const cipher = crypto.createCipher('aes-256-cbc', 'SecretKey');<br>
-                            let encrypted = cipher.update('SecureDataText', 'utf8', 'hex');<br>
-                            encrypted += cipher.final('hex');
+                        <div class="relative p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-red-400 overflow-x-auto group">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 text-gray-400 hover:text-white bg-white/5 px-2 py-1 rounded transition opacity-0 group-hover:opacity-100"><i class="fa-regular fa-copy"></i> Copy</button>
+                            <code class="code-block whitespace-pre-wrap">// Data Encryption Standard Simulation
+const crypto = require('crypto');
+const cipher = crypto.createCipher('aes-256-cbc', 'SecretKey');
+let encrypted = cipher.update('SecureDataText', 'utf8', 'hex');
+encrypted += cipher.final('hex');</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editorWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
+        <div class="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-8 relative border-yellow-500/20 max-h-[90vh] flex flex-col">
+            <button onclick="closeWorkspace('editor')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-yellow-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4 mt-4 md:mt-0 flex-shrink-0">
+                <i class="fa-solid fa-laptop-code text-yellow-400 text-3xl"></i>
+                <h2 class="text-2xl md:text-3xl font-bold">Live <span class="text-yellow-400">Code Editor</span></h2>
+            </div>
+            <p class="text-gray-400 text-sm mb-6 flex-shrink-0">Write HTML/CSS/JS code below and see the magical preview instantly.</p>
+            
+            <div class="grid lg:grid-cols-2 gap-6 flex-grow min-h-[300px]">
+                <textarea id="liveCodeEditor" class="w-full h-full min-h-[250px] glass-input bg-black/50 rounded-xl p-5 text-emerald-400 font-mono text-sm resize-none" placeholder="<h1 style='color: #22d3ee; font-family: sans-serif; text-align: center;'>Hello TechVerse!</h1>
+<p style='color: white; text-align: center;'>Write code and see the magic.</p>"></textarea>
+                <div class="w-full h-full min-h-[250px] bg-white rounded-xl overflow-hidden border border-white/10 shadow-inner">
+                    <iframe id="livePreview" class="w-full h-full bg-white border-none"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="eeeBuilderWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
+        <div class="w-full max-w-5xl glass-panel rounded-3xl p-6 md:p-8 relative border-purple-500/20 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeWorkspace('eeeBuilder')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-purple-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-6 mt-4 md:mt-0">
+                <i class="fa-solid fa-cogs text-purple-400 text-3xl"></i>
+                <h2 class="text-2xl md:text-3xl font-bold">Smart EEE <span class="text-purple-400">Project Builder</span></h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 mt-4">
+                <div class="md:col-span-1 space-y-5">
+                    <div>
+                        <h3 class="text-gray-300 font-semibold mb-3 border-b border-white/10 pb-2">Select Components</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 text-sm text-gray-400 cursor-pointer hover:text-white transition">
+                                <input type="checkbox" value="Arduino Uno" class="eee-comp accent-purple-500 w-4 h-4"> Arduino Uno Board
+                            </label>
+                            <label class="flex items-center gap-3 text-sm text-gray-400 cursor-pointer hover:text-white transition">
+                                <input type="checkbox" value="ESP8266 WiFi" class="eee-comp accent-purple-500 w-4 h-4"> ESP8266 WiFi Module
+                            </label>
+                            <label class="flex items-center gap-3 text-sm text-gray-400 cursor-pointer hover:text-white transition">
+                                <input type="checkbox" value="Ultrasonic Sensor" class="eee-comp accent-purple-500 w-4 h-4"> Ultrasonic Sensor (HC-SR04)
+                            </label>
+                            <label class="flex items-center gap-3 text-sm text-gray-400 cursor-pointer hover:text-white transition">
+                                <input type="checkbox" value="Servo Motor" class="eee-comp accent-purple-500 w-4 h-4"> Micro Servo Motor
+                            </label>
+                            <label class="flex items-center gap-3 text-sm text-gray-400 cursor-pointer hover:text-white transition">
+                                <input type="checkbox" value="L298N Driver" class="eee-comp accent-purple-500 w-4 h-4"> L298N Motor Driver
+                            </label>
+                        </div>
+                    </div>
+                    <button onclick="generateEEEProject()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition">
+                        <i class="fa-solid fa-bolt mr-2 text-yellow-300"></i> Generate Architecture
+                    </button>
+                </div>
+                
+                <div class="md:col-span-2 glass-panel p-6 rounded-2xl min-h-[350px]">
+                    <h4 class="text-xl font-semibold text-purple-400 mb-2">System Architecture & Code</h4>
+                    <p class="text-xs text-gray-500 mb-4 border-b border-white/5 pb-4">Select components from the left panel to auto-generate the base boilerplate code for your hardware project.</p>
+                    <div id="eeeOutput" class="text-sm text-gray-400">
+                        <div class="h-40 flex flex-col items-center justify-center text-center opacity-50">
+                            <i class="fa-solid fa-microchip text-4xl mb-3"></i>
+                            <p>Waiting for component selection...</p>
                         </div>
                     </div>
                 </div>
@@ -361,7 +666,7 @@
                 <p class="text-gray-400 text-sm">Have a question or want to collaborate? Send us a message.</p>
             </div>
 
-            <form id="contactForm" class="space-y-6">
+            <form id="contactForm" class="space-y-6 relative z-10">
                 <input type="hidden" name="access_key" value="35301924-2be3-4ce1-965d-b9d61eb068f5">
                 
                 <div class="grid md:grid-cols-2 gap-6">
@@ -390,6 +695,102 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
     <script>
+        // 0. Preloader Logic
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const preloader = document.getElementById('preloader');
+                preloader.style.opacity = '0';
+                setTimeout(() => { preloader.style.visibility = 'hidden'; }, 600);
+            }, 800);
+        });
+
+        // 0.1 Cursor Glow Logic
+        const glow = document.getElementById('cursor-glow');
+        window.addEventListener('mousemove', (e) => {
+            if(glow) {
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            }
+        });
+
+        // 0.2 Typewriter Effect Hero
+        const texts = ["Code & Innovation", "Robotics & AI", "Hardware Logic"];
+        let count = 0, index = 0, currentText = '', letter = '';
+        (function type() {
+            if (count === texts.length) count = 0;
+            currentText = texts[count];
+            letter = currentText.slice(0, ++index);
+            const typewriterEl = document.getElementById('typewriter');
+            if(typewriterEl) typewriterEl.textContent = letter;
+            
+            if (letter.length === currentText.length) {
+                count++; index = 0;
+                setTimeout(type, 2000);
+            } else {
+                setTimeout(type, 100);
+            }
+        }());
+
+        // 0.3 Scroll Number Counter Logic
+        const counters = document.querySelectorAll('.counter');
+        const countObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const updateCount = () => {
+                        const target = +counter.getAttribute('data-target');
+                        const count = +counter.innerText;
+                        const inc = target / 50;
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + inc);
+                            setTimeout(updateCount, 40);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCount();
+                    countObserver.unobserve(counter);
+                }
+            });
+        });
+        counters.forEach(counter => countObserver.observe(counter));
+
+        // 0.4 Project Category Filter
+        function filterProjects(category) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-cyan-500/40', 'text-cyan-400');
+                btn.classList.add('border-transparent', 'text-gray-400');
+            });
+            event.currentTarget.classList.add('border-cyan-500/40', 'text-cyan-400');
+            event.currentTarget.classList.remove('border-transparent', 'text-gray-400');
+
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach(card => {
+                if(category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'flex';
+                    setTimeout(() => card.style.opacity = '1', 50);
+                } else {
+                    card.style.opacity = '0';
+                    setTimeout(() => card.style.display = 'none', 300);
+                }
+            });
+        }
+
+        // 0.5 Code Block Copy Logic
+        function copyCode(btn) {
+            const codeBlock = btn.nextElementSibling.innerText.replace(/&nbsp;/g, ' ');
+            navigator.clipboard.writeText(codeBlock).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied';
+                btn.classList.add('text-emerald-400');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('text-emerald-400');
+                }, 2000);
+            });
+        }
+
         // 1. Initialize Scroll Animation
         AOS.init({ once: true, offset: 50, duration: 800 });
 
@@ -428,7 +829,7 @@
             });
         });
 
-        // 4. Scrollspy Logic (Active Navbar Link Tracking)
+        // 4. Scrollspy Logic
         const sections = document.querySelectorAll('section');
         const navLinks = document.querySelectorAll('.nav-link');
 
@@ -436,8 +837,7 @@
             let current = '';
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (pageYOffset >= (sectionTop - 150)) {
+                if (window.pageYOffset >= (sectionTop - 150)) {
                     current = section.getAttribute('id');
                 }
             });
@@ -450,45 +850,70 @@
             });
         });
 
-        // PRO MAX UPDATE: Workspace Interactive Control Logic
+        // Workspace Interactive Control Logic
         function openWorkspace(type) {
             const workspace = document.getElementById(type + 'Workspace');
-            document.body.style.overflow = 'hidden'; // Base body scroll freeze
+            document.body.style.overflow = 'hidden'; 
             workspace.classList.remove('hidden');
+            
+            if(type === 'editor') {
+                const liveEditor = document.getElementById('liveCodeEditor');
+                const livePreview = document.getElementById('livePreview');
+                livePreview.srcdoc = liveEditor.value;
+            }
+
             setTimeout(() => {
-                workspace.classList.remove('opacity-0', 'translate-y-5');
-                workspace.classList.add('opacity-100', 'translate-y-0');
+                workspace.classList.remove('opacity-0');
+                workspace.classList.add('opacity-100');
             }, 50);
         }
 
         function closeWorkspace(type) {
             const workspace = document.getElementById(type + 'Workspace');
-            document.body.style.overflow = ''; // Restore scroll
-            workspace.classList.remove('opacity-100', 'translate-y-0');
-            workspace.classList.add('opacity-0', 'translate-y-5');
+            document.body.style.overflow = ''; 
+            workspace.classList.remove('opacity-100');
+            workspace.classList.add('opacity-0');
             setTimeout(() => {
                 workspace.classList.add('hidden');
             }, 500);
         }
 
         function switchTab(domain, tabId) {
-            // Hide all contents for specific domain
             document.querySelectorAll('.tab-content-' + domain).forEach(el => el.classList.add('hidden'));
-            // Remove active classes from buttons
             document.querySelectorAll('.tab-btn-' + domain).forEach(btn => {
                 btn.classList.remove('bg-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/10', 'border-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/30', 'text-' + (domain === 'eee' ? 'cyan' : 'blue') + '-400');
                 btn.classList.add('bg-white/5', 'border-white/5', 'text-gray-300');
             });
 
-            // Show current active content
             document.getElementById(domain + '-' + tabId).classList.remove('hidden');
-            // Add active style to event target button
             const activeBtn = event.currentTarget;
             activeBtn.classList.remove('bg-white/5', 'border-white/5', 'text-gray-300');
             activeBtn.classList.add('bg-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/10', 'border-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/30', 'text-' + (domain === 'eee' ? 'cyan' : 'blue') + '-400');
         }
 
-        // 5. Contact Form Premium Toast Interaction with Web3Forms API API Submission
+        // 5. Interactive Smooth FAQ Accordion Logic
+        function toggleFaq(button) {
+            const icon = button.querySelector('i');
+            const answer = button.nextElementSibling;
+            
+            icon.classList.toggle('rotate-180');
+            
+            if (answer.style.maxHeight && answer.style.maxHeight !== '0px') {
+                answer.style.maxHeight = '0px';
+                button.parentElement.classList.remove('border-cyan-500/30');
+            } else {
+                document.querySelectorAll('.faq-answer').forEach(el => {
+                    el.style.maxHeight = '0px';
+                    el.previousElementSibling.querySelector('i').classList.remove('rotate-180');
+                    el.parentElement.classList.remove('border-cyan-500/30');
+                });
+                
+                answer.style.maxHeight = answer.scrollHeight + 'px';
+                button.parentElement.classList.add('border-cyan-500/30');
+            }
+        }
+
+        // 6. Contact Form Logic
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -535,8 +960,62 @@
             });
         });
 
-        // 6. Dynamic Year for Footer
-        document.getElementById('year').textContent = new Date().getFullYear();
+        // 7. Live Code Editor
+        const liveEditor = document.getElementById('liveCodeEditor');
+        const livePreview = document.getElementById('livePreview');
+        if (liveEditor && livePreview) {
+            liveEditor.addEventListener('input', function() {
+                livePreview.srcdoc = this.value;
+            });
+        }
+
+        // 8. EEE Project Builder Logic
+        function generateEEEProject() {
+            const checkboxes = document.querySelectorAll('.eee-comp:checked');
+            const outputDiv = document.getElementById('eeeOutput');
+            
+            if(checkboxes.length === 0) {
+                outputDiv.innerHTML = `
+                    <div class="h-40 flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-circle-exclamation text-4xl mb-3 text-red-400"></i>
+                        <p class="text-red-400">Please select at least one component from the list.</p>
+                    </div>`;
+                return;
+            }
+
+            let comps = [];
+            checkboxes.forEach(cb => comps.push(cb.value));
+            
+            let codeSnippet = '';
+            if(comps.includes('ESP8266 WiFi')) codeSnippet += '#include <ESP8266WiFi.h>\n';
+            if(comps.includes('Servo Motor')) codeSnippet += '#include <Servo.h>\n\nServo myServo;\n';
+            
+            codeSnippet += 'void setup() {\n  Serial.begin(9600);\n';
+            if(comps.includes('Servo Motor')) codeSnippet += '  myServo.attach(9);\n';
+            codeSnippet += '  // Initialized: ' + comps.join(', ') + '\n}\n\n';
+            codeSnippet += 'void loop() {\n  // Write your core hardware logic here\n}';
+
+            outputDiv.innerHTML = `
+                <div class="mb-5 bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg">
+                    <span class="text-purple-400 font-semibold block mb-1">Selected Active Modules:</span> 
+                    <span class="text-white text-xs">${comps.join(' <span class="text-gray-500 mx-1">•</span> ')}</span>
+                </div>
+                <div class="relative p-5 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-indigo-300 overflow-x-auto shadow-inner">
+                    <code class="whitespace-pre block">${codeSnippet}</code>
+                </div>
+                <div class="mt-5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex items-center shadow-lg">
+                    <i class="fa-solid fa-circle-check text-xl mr-3"></i> 
+                    <div>
+                        <strong class="block text-sm">System Generated Successfully!</strong>
+                        Boilerplate is ready for C++ IDE compiling and hardware wiring.
+                    </div>
+                </div>
+            `;
+        }
+
+        // 9. Dynamic Year
+        const yearEl = document.getElementById('year');
+        if(yearEl) yearEl.textContent = new Date().getFullYear();
     </script>
 
 </body>
