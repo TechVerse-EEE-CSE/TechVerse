@@ -24,18 +24,17 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent;}
         
         body { 
-            /* Added mesh-like gradient for a premium feel */
             background: radial-gradient(circle at top left, #E2E8F0, #F8FAFC, #E2E8F0);
             color: var(--text-main); 
             display: flex; 
             justify-content: center; 
             align-items: center;
-            height: 100dvh; /* dvh ensures mobile address bar doesn't hide bottom elements */
+            height: 100dvh; 
             overflow: hidden; 
         }
         
         #app-container {
-            width: 100%; max-width: 420px; height: 100dvh; /* strictly fill mobile screen */
+            width: 100%; max-width: 420px; height: 100dvh; 
             background: var(--bg-color); position: relative;
             display: flex; flex-direction: column;
             box-shadow: 0 0 40px rgba(0,0,0,0.1); overflow: hidden;
@@ -78,12 +77,12 @@
         .add-btn { background: rgba(16, 185, 129, 0.1); color: var(--primary-dark); border: 1px solid var(--primary); width: 100%; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .add-btn:active { background: var(--primary); color: white; }
 
-        /* Bottom Nav - Improved Glassmorphism and Lifted */
+        /* Bottom Nav */
         .bottom-nav {
             position: absolute; bottom: 0; left: 0; width: 100%; 
             background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             display: flex; justify-content: space-around; 
-            padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); /* Lifts nav for mobile safe areas */
+            padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); 
             border-radius: 30px 30px 0 0;
             box-shadow: 0 -10px 25px rgba(0,0,0,0.06); z-index: 50; border-top: 1px solid rgba(255,255,255,0.8);
         }
@@ -110,7 +109,7 @@
         .profile-pic { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E2E8F0; object-fit: cover; margin: 0 auto 15px; display: none; box-shadow: var(--shadow-sm); }
         .profile-icon { font-size: 90px; color: #E2E8F0; margin-bottom: 15px; }
 
-        /* Auth UI Pro Max */
+        /* Auth UI */
         .auth-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 99; display: none; opacity: 0; transition: 0.3s; }
         .auth-overlay.active { display: block; opacity: 1; }
         
@@ -136,10 +135,6 @@
         .custom-input { width: 100%; padding: 15px 18px; background: white; border: 1.5px solid #E2E8F0; border-radius: 14px; margin-bottom: 15px; font-size: 15px; outline: none; transition: 0.3s; box-shadow: var(--shadow-sm); }
         .custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
         
-        .auth-actions { display: flex; gap: 12px; margin-top: 5px; }
-        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: 100%; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-outline:active { background: #F8FAFC; transform: scale(0.98); }
-        
         .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #94A3B8; font-size: 14px; font-weight: 600; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1.5px solid #E2E8F0; }
         .divider span { padding: 0 15px; }
@@ -155,6 +150,18 @@
         .toast { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); color: white; padding: 14px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .toast.error { background: rgba(239, 68, 68, 0.95); }
         @keyframes toastEnter { from { opacity: 0; transform: translateY(-25px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Payment Modal Styling (New - Smart Design) */
+        .payment-methods { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        .payment-card { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1.5px solid #E2E8F0; border-radius: 14px; cursor: pointer; transition: 0.3s; background: white; }
+        .payment-card.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.05); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1); }
+        .payment-card img { height: 24px; object-fit: contain; }
+        .payment-card-title { font-weight: 700; color: var(--text-main); font-size: 15px; display: flex; align-items: center; gap: 10px;}
+        .check-circle { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #CBD5E1; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .payment-card.active .check-circle { border-color: var(--primary); background: var(--primary); }
+        .payment-card.active .check-circle::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; }
+        .payment-details { display: none; padding: 15px; background: #F8FAFC; border-radius: 12px; margin-bottom: 15px; border: 1px dashed #CBD5E1; animation: slideIn 0.3s; }
+        .payment-details.active { display: block; }
     </style>
 </head>
 <body>
@@ -259,6 +266,40 @@
             গুগল দিয়ে কন্টিনিউ করুন
         </button>
     </div>
+
+    <div id="payment-overlay" class="auth-overlay" onclick="closePaymentModal()"></div>
+    <div id="payment-sheet" class="auth-sheet">
+        <div class="auth-header">
+            <h3 id="payment-title">পেমেন্ট মেথড</h3>
+            <button class="close-btn" onclick="closePaymentModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="payment-methods">
+            <div class="payment-card active" onclick="selectPayment('Cash on Delivery')" id="card-cod">
+                <div class="payment-card-title"><i class="fa-solid fa-hand-holding-dollar" style="color:var(--primary); font-size:20px;"></i> ক্যাশ অন ডেলিভারি</div>
+                <div class="check-circle"></div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('bKash')" id="card-bkash">
+                <div class="payment-card-title"><i class="fa-solid fa-mobile-screen-button" style="color:#E2136E; font-size:20px;"></i> বিকাশ পেমেন্ট</div>
+                <div class="check-circle"></div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('Nagad')" id="card-nagad">
+                <div class="payment-card-title"><i class="fa-solid fa-mobile-screen-button" style="color:#F7931E; font-size:20px;"></i> নগদ পেমেন্ট</div>
+                <div class="check-circle"></div>
+            </div>
+        </div>
+
+        <div id="mobile-banking-details" class="payment-details">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">নিচের নম্বরে সেন্ড মানি করুন (Personal): <strong style="color: var(--text-main);">017XXXXXXXX</strong></p>
+            <input type="text" id="trx-id" class="custom-input" placeholder="Transaction ID (TrxID) দিন" style="margin-bottom: 0;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-weight: 800; margin: 15px 0; font-size: 18px; padding-top: 10px; border-top: 1px solid #E2E8F0;">
+            <span>মোট পে করতে হবে:</span><span id="payment-total-price" style="color: var(--primary-dark);">৳ 0</span>
+        </div>
+
+        <button class="checkout-btn" onclick="confirmFinalOrder()">অর্ডার নিশ্চিত করুন <i class="fa-solid fa-check-circle"></i></button>
+    </div>
 </div>
 
 <script type="module">
@@ -288,6 +329,7 @@
     let currentUser = null;
     let myCart = JSON.parse(localStorage.getItem('halalProMaxCart')) || [];
     let confirmationResult = null; 
+    window.selectedPaymentMethod = 'Cash on Delivery'; // Default payment logic
 
     // --- Toast & UI Utils ---
     window.showToast = function(msg, type = 'success') {
@@ -347,16 +389,11 @@
         return "কোথাও কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।";
     }
 
-    // --- Password Validator (Pro Max Security) ---
     function isStrongPassword(password) {
-        // Requires: Min 8 chars, 1 uppercase, 1 lowercase, 1 number
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/;
         return regex.test(password);
     }
 
-    // --- Authentication Implementations --- //
-    
-    // 1. Google Auth
     window.handleGoogleLogin = async () => {
         try {
             await signInWithPopup(auth, googleProvider);
@@ -364,7 +401,6 @@
         } catch (error) { showToast(translateError(error.code), "error"); }
     };
 
-    // 2. Email / Password Signup (High Security)
     window.handleEmailSignup = async () => {
         const name = document.getElementById('signup-name').value;
         const email = document.getElementById('signup-email').value;
@@ -380,16 +416,13 @@
         
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-            // Update the display name
             await updateProfile(userCredential.user, { displayName: name });
-            // Refresh local user state
             auth.updateCurrentUser(userCredential.user);
             
             closeAuthModal(); showToast("আলহামদুলিল্লাহ! অ্যাকাউন্ট খোলা সফল।");
         } catch (error) { showToast(translateError(error.code), "error"); }
     }
 
-    // 3. Email / Password Login
     window.handleEmailLogin = async () => {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
@@ -401,7 +434,6 @@
         } catch (error) { showToast(translateError(error.code), "error"); }
     }
 
-    // 4. Forgot Password
     window.handleForgotPassword = async () => {
         const email = document.getElementById('login-email').value;
         if(!email) return showToast("পাসওয়ার্ড রিসেট করতে আগে লগইন বক্সে আপনার ইমেইলটি লিখুন", "error");
@@ -412,7 +444,6 @@
         } catch (error) { showToast(translateError(error.code), "error"); }
     }
 
-    // 5. Phone Authentication (OTP)
     window.sendOTP = async () => {
         const phone = document.getElementById('phone-input').value;
         if(phone.length !== 10 && phone.length !== 11) return showToast("সঠিক মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)", "error");
@@ -445,7 +476,6 @@
         } catch (error) { showToast("ভুল ওটিপি কোড!", "error"); }
     }
 
-    // --- Auth State Monitor ---
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         const profileBtn = document.getElementById('profile-auth-btn');
@@ -476,7 +506,6 @@
         }
     });
 
-    // --- Existing Navigation & Cart Logic (Kept Intact) ---
     window.switchScreen = function(screenName, element) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -485,7 +514,6 @@
         if(screenName === 'cart') renderCart();
     }
 
-    // Fetch Products Fake Auto-Generation
     const smartProducts = [
         { id: "p1", name: "প্রিমিয়াম আজওয়া খেজুর", desc: "মদিনার অরিজিনাল", price: 1200, icon: "fa-solid fa-cubes-stacked" },
         { id: "p2", name: "দুবাই আতর", desc: "অ্যালকোহল মুক্ত", price: 850, icon: "fa-solid fa-spray-can" },
@@ -546,10 +574,81 @@
         checkoutSec.style.display = 'block';
     }
 
+    // --- New Smart Payment Flow Logic ---
+    window.closePaymentModal = function() {
+        document.getElementById('payment-overlay').classList.remove('active');
+        document.getElementById('payment-sheet').classList.remove('active');
+    }
+
+    window.selectPayment = function(method) {
+        window.selectedPaymentMethod = method;
+        document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('active'));
+        
+        let targetId = method === 'Cash on Delivery' ? 'card-cod' : (method === 'bKash' ? 'card-bkash' : 'card-nagad');
+        document.getElementById(targetId).classList.add('active');
+
+        // Show Transaction ID input only for bKash/Nagad
+        if(method !== 'Cash on Delivery') {
+            document.getElementById('mobile-banking-details').classList.add('active');
+        } else {
+            document.getElementById('mobile-banking-details').classList.remove('active');
+        }
+    }
+
+    // This overrides your previous basic checkout to smartly open the payment modal first
     window.processCheckout = function() {
-        showToast("অর্ডার প্রসেস হচ্ছে..."); myCart = []; 
-        localStorage.removeItem('halalProMaxCart');
-        setTimeout(() => renderCart(), 1000); updateCartBadge();
+        if(!currentUser) return showToast("অর্ডার করতে অনুগ্রহ করে লগইন করুন", "error");
+        if(myCart.length === 0) return showToast("আপনার কার্ট ফাঁকা!", "error");
+        
+        // Populate and show the modal
+        document.getElementById('payment-total-price').innerText = document.getElementById('total-price').innerText;
+        document.getElementById('payment-overlay').classList.add('active');
+        document.getElementById('payment-sheet').classList.add('active');
+        
+        // Reset to default selection every time it opens
+        selectPayment('Cash on Delivery');
+        document.getElementById('trx-id').value = ''; 
+    }
+
+    // Final order processing function with Firestore database saving
+    window.confirmFinalOrder = async function() {
+        let trxId = document.getElementById('trx-id').value;
+        if(window.selectedPaymentMethod !== 'Cash on Delivery' && trxId.trim() === '') {
+            return showToast("দয়া করে Transaction ID দিন", "error");
+        }
+
+        showToast("অর্ডার প্রসেস হচ্ছে...");
+        closePaymentModal();
+        
+        try {
+            const orderId = "order_" + new Date().getTime();
+            const orderDocRef = doc(db, "orders", orderId);
+            let totalAmount = myCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            // Saves exactly to Firestore including the payment method
+            await setDoc(orderDocRef, {
+                orderId: orderId,
+                userId: currentUser.uid,
+                userEmail: currentUser.email || "মোবাইল ইউজার",
+                userName: currentUser.displayName || "গেস্ট",
+                items: myCart,
+                totalAmount: totalAmount,
+                paymentMethod: window.selectedPaymentMethod,
+                transactionId: trxId || "N/A",
+                status: "Pending",
+                timestamp: new Date().toISOString()
+            });
+
+            showToast("আলহামদুলিল্লাহ, অর্ডারটি ডেটাবেজে সফলভাবে জমা হয়েছে!");
+            myCart = []; 
+            localStorage.removeItem('halalProMaxCart');
+            setTimeout(() => renderCart(), 1000); 
+            updateCartBadge();
+            
+        } catch (error) {
+            console.error("Firestore Error: ", error);
+            showToast("ডেটাবেজে সেভ হতে সমস্যা হয়েছে।", "error");
+        }
     }
 </script>
 </body>
