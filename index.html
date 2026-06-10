@@ -60,6 +60,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            transform-style: preserve-3d; /* Added for Pro Max Tilt */
         }
         .glass-card:hover {
             border-color: rgba(6, 182, 212, 0.5);
@@ -157,9 +158,15 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
+
+        /* Mobile Bottom Nav Active Style */
+        .bottom-nav-link.active {
+            color: #22d3ee;
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+        }
     </style>
 </head>
-<body class="relative">
+<body class="relative pb-24 md:pb-0">
 
     <div id="preloader">
         <div class="flex flex-col items-center gap-4">
@@ -168,7 +175,7 @@
         </div>
     </div>
 
-    <div id="cursor-glow" class="hidden md:block fixed w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none z-[-5] transition-transform duration-75 ease-out -translate-x-1/2 -translate-y-1/2"></div>
+    <div id="cursor-glow" class="hidden md:block fixed w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[120px] pointer-events-none z-[-5] transition-transform duration-100 ease-out -translate-x-1/2 -translate-y-1/2"></div>
 
     <div class="bg-grid"></div>
 
@@ -193,6 +200,10 @@
             </div>
             
             <div class="flex items-center gap-5">
+                <div id="nav-user-status" class="hidden items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs text-cyan-400">
+                    <i class="fa-solid fa-user-circle text-sm"></i> <span id="user-display-name">Developer</span>
+                </div>
+
                 <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                     <span class="relative flex h-2.5 w-2.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -256,19 +267,19 @@
         </div>
 
         <div class="w-full max-w-5xl mt-20 grid grid-cols-2 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="200" id="stats-section">
-            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full glass-card">
                 <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400"><span class="counter" data-target="500">0</span>+</h4>
                 <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Innovators</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full glass-card">
                 <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400"><span class="counter" data-target="50">0</span>+</h4>
                 <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Projects Built</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full glass-card">
                 <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400"><span class="counter" data-target="20">0</span>+</h4>
                 <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Workshops</p>
             </div>
-            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full">
+            <div class="glass-panel p-6 rounded-2xl text-center flex flex-col justify-center h-full glass-card">
                 <h4 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"><span class="counter" data-target="24">0</span>/7</h4>
                 <p class="text-xs text-gray-400 mt-2 uppercase tracking-wider">Tech Support</p>
             </div>
@@ -473,7 +484,7 @@
                     </button>
                     <div class="faq-answer">
                         <div class="px-6 pb-6 text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-4">
-                            টেকভার্স হলো ইলেকট্রিক্যাল ও ইলেকট্রনিক্স ইঞ্জিনিয়ারিং (EEE) এবং কম্পিউটার সায়েন্স (CSE) এর একটি আধুনিক সমন্বয়। এখানে হার্ডওয়্যার আর্কিটেকচার থেকে শুরু করে অ্যাডভান্সড সফটওয়্যার ডেভেলপমেন্ট ও এআই এর লাইভ প্রজেক্ট ও গাইডলাইন শেয়ার করা হয়।
+                            টেকভার্স হলো ইলেকট্রিক্যাল ও ইলেকট্রনিক্স ইঞ্জিনিয়ারিং (EEE) এবং কম্পিউটার সায়েন্স (CSE) এর একটি আধুনিক সমন্বয়। এখানে হার্ডওয়্যার আর্কিটেকচার থেকে শুরু করে অ্যাডভান্সডソフトওডায়্যার ডেভেলপমেন্ট ও এআই এর লাইভ প্রজেক্ট ও গাইডলাইন শেয়ার করা হয়।
                         </div>
                     </div>
                 </div>
@@ -493,6 +504,67 @@
         </div>
         <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
     </section>
+
+    <div id="authModal" class="workspace-modal fixed inset-0 z-[100] bg-[#050814]/90 hidden opacity-0 backdrop-blur-xl flex items-center justify-center p-4">
+        <div class="w-full max-w-md glass-panel rounded-3xl p-8 relative border-cyan-500/20 text-center shadow-[0_0_50px_rgba(6,182,212,0.15)]">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-cyan-400 text-xl transition bg-black/40 w-8 h-8 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="w-16 h-16 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2 tracking-wide">Authentication Required</h3>
+            <p class="text-sm text-gray-400 mb-8 leading-relaxed">টুলসগুলো ব্যবহার করতে প্রথমে আপনার গুগল অ্যাকাউন্ট দিয়ে দ্রুত সাইন-ইন সম্পন্ন করুন।</p>
+            
+            <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-3 shadow-lg transform hover:-translate-y-0.5 duration-200">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.48 14.99 1 12 1 7.35 1 3.37 3.68 1.41 7.59l3.79 2.94c.91-2.73 3.47-4.49 6.8-4.49z"/>
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.57l3.73 2.89c2.18-2.01 3.7-4.97 3.7-8.61z"/>
+                    <path fill="#FBBC05" d="M5.2 14.53c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.41 7.59C.51 9.39 0 11.4 0 13.5s.51 4.11 1.41 5.91l3.79-2.88z"/>
+                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.04.69-2.37 1.1-4.23 1.1-3.33 0-5.89-1.76-6.8-4.49L1.41 16.75C3.37 20.32 7.35 23 12 23z"/>
+                </svg>
+                Sign in with Google
+            </button>
+        </div>
+    </div>
+
+    <div id="paywallModal" class="workspace-modal fixed inset-0 z-[100] bg-[#050814]/95 hidden opacity-0 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div class="w-full max-w-lg glass-panel rounded-3xl p-8 md:p-10 relative border-yellow-500/30 text-center shadow-[0_0_60px_rgba(234,179,8,0.15)]">
+            <button onclick="closePaywallModal()" class="absolute top-4 right-4 text-gray-400 hover:text-yellow-400 text-xl transition bg-black/40 w-8 h-8 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="w-20 h-20 bg-gradient-to-tr from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(234,179,8,0.3)] animate-bounce">
+                <i class="fa-solid fa-crown text-3xl text-black"></i>
+            </div>
+            
+            <span class="px-4 py-1.5 rounded-full text-[10px] font-bold bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 uppercase tracking-widest block w-fit mx-auto mb-4 animate-pulse">Free Limit Reached</span>
+            <h3 class="text-3xl font-bold mb-3 tracking-wide">Unlock Smooth Access</h3>
+            <p class="text-sm text-gray-400 mb-8 leading-relaxed">আপনার ৩টি ফ্রি ট্রায়াল সফলভাবে শেষ হয়েছে। আনলিমিটেড কোডিং, প্রিমিয়াম প্রজেক্ট জেনারেটর এবং আজীবন ডেটা ব্যাকআপ সুবিধা পেতে প্রিমিয়াম মেম্বারশিপ নিন।</p>
+            
+            <div class="glass-panel rounded-2xl p-6 border-white/5 text-left mb-8 bg-black/40">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h4 class="text-lg font-bold text-white">TechVerse Pro Access</h4>
+                        <p class="text-xs text-gray-400">One-time premium purchase</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-2xl font-bold text-yellow-400">৳৪৯৯</span>
+                        <span class="text-xs text-gray-500 block">Life-time</span>
+                    </div>
+                </div>
+                <ul class="space-y-2.5 text-xs text-gray-300 border-t border-white/5 pt-4">
+                    <li><i class="fa-solid fa-circle-check text-yellow-400 mr-2"></i> Unlimited Live Coding Tool Uses</li>
+                    <li><i class="fa-solid fa-circle-check text-yellow-400 mr-2"></i> Unlimited EEE Boilerplate Generation</li>
+                    <li><i class="fa-solid fa-circle-check text-yellow-400 mr-2"></i> Full Source Code Downloads & Cloud Saving</li>
+                </ul>
+            </div>
+
+            <button onclick="simulatePayment()" class="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 text-black font-bold py-4 rounded-xl shadow-xl shadow-yellow-500/10 hover:shadow-yellow-500/30 transition transform hover:-translate-y-0.5 duration-200">
+                <i class="fa-solid fa-credit-card mr-2"></i> Pay Now to Unlock Smoothly
+            </button>
+        </div>
+    </div>
 
     <div id="eeeWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
         <div class="w-full max-w-6xl glass-panel rounded-3xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
@@ -629,15 +701,25 @@ encrypted += cipher.final('hex');</code>
             <button onclick="closeWorkspace('editor')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-yellow-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center z-10">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="flex items-center gap-3 mb-4 mt-4 md:mt-0 flex-shrink-0">
-                <i class="fa-solid fa-laptop-code text-yellow-400 text-3xl"></i>
-                <h2 class="text-2xl md:text-3xl font-bold">Live <span class="text-yellow-400">Code Editor</span></h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 mt-4 md:mt-0 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-laptop-code text-yellow-400 text-3xl"></i>
+                    <h2 class="text-2xl md:text-3xl font-bold">Live <span class="text-yellow-400">Code Editor</span></h2>
+                </div>
+                <div class="trial-badge px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 w-fit">
+                    <i class="fa-solid fa-bolt mr-1"></i> <span class="editor-remaining">3</span> Free Submissions Left
+                </div>
             </div>
             <p class="text-gray-400 text-sm mb-6 flex-shrink-0">Write HTML/CSS/JS code below and see the magical preview instantly.</p>
             
             <div class="grid lg:grid-cols-2 gap-6 flex-grow min-h-[300px]">
-                <textarea id="liveCodeEditor" class="w-full h-full min-h-[250px] glass-input bg-black/50 rounded-xl p-5 text-emerald-400 font-mono text-sm resize-none" placeholder="<h1 style='color: #22d3ee; font-family: sans-serif; text-align: center;'>Hello TechVerse!</h1>
+                <div class="flex flex-col h-full relative">
+                    <textarea id="liveCodeEditor" class="w-full h-full min-h-[250px] glass-input bg-black/50 rounded-xl p-5 text-emerald-400 font-mono text-sm resize-none" placeholder="<h1 style='color: #22d3ee; font-family: sans-serif; text-align: center;'>Hello TechVerse!</h1>
 <p style='color: white; text-align: center;'>Write code and see the magic.</p>"></textarea>
+                    <button onclick="triggerEditorAction()" class="absolute bottom-4 right-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-yellow-500/20 transition">
+                        Run Code <i class="fa-solid fa-play ml-1"></i>
+                    </button>
+                </div>
                 <div class="w-full h-full min-h-[250px] bg-white rounded-xl overflow-hidden border border-white/10 shadow-inner">
                     <iframe id="livePreview" class="w-full h-full bg-white border-none"></iframe>
                 </div>
@@ -650,9 +732,14 @@ encrypted += cipher.final('hex');</code>
             <button onclick="closeWorkspace('eeeBuilder')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-purple-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="flex items-center gap-3 mb-6 mt-4 md:mt-0">
-                <i class="fa-solid fa-cogs text-purple-400 text-3xl"></i>
-                <h2 class="text-2xl md:text-3xl font-bold">Smart EEE <span class="text-purple-400">Project Builder</span></h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 mt-4 md:mt-0">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-cogs text-purple-400 text-3xl"></i>
+                    <h2 class="text-2xl md:text-3xl font-bold">Smart EEE <span class="text-purple-400">Project Builder</span></h2>
+                </div>
+                <div class="trial-badge px-4 py-1.5 rounded-full text-xs font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-400 w-fit">
+                    <i class="fa-solid fa-bolt mr-1"></i> <span class="builder-remaining">3</span> Free Generations Left
+                </div>
             </div>
             
             <div class="grid md:grid-cols-3 gap-8 mt-4">
@@ -720,21 +807,84 @@ encrypted += cipher.final('hex');</code>
         </div>
     </section>
 
-    <div id="toast" class="fixed bottom-6 right-6 glass-panel border border-emerald-500/30 text-emerald-400 px-6 py-3.5 rounded-2xl text-sm font-semibold flex items-center gap-3 shadow-2xl opacity-0 translate-y-5 pointer-events-none transition-all duration-300 z-50">
+    <button id="scrollTopBtn" onclick="scrollToTop()" class="fixed bottom-24 left-6 w-12 h-12 bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 rounded-full flex items-center justify-center text-lg shadow-lg hover:bg-cyan-500/40 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none z-40 backdrop-blur-md md:bottom-6">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <div id="toast" class="fixed bottom-24 right-6 glass-panel border border-emerald-500/30 text-emerald-400 px-6 py-3.5 rounded-2xl text-sm font-semibold flex items-center gap-3 shadow-2xl opacity-0 translate-y-5 pointer-events-none transition-all duration-300 z-50 md:bottom-6">
         <div class="w-6 h-6 bg-emerald-500/10 rounded-full flex items-center justify-center">
             <i class="fa-solid fa-circle-check"></i>
         </div>
         <span>Message sent successfully!</span>
     </div>
 
-    <footer class="py-8 text-center text-gray-500 text-sm border-t border-white/5 mt-10">
+    <div id="bottom-nav" class="md:hidden fixed bottom-5 left-4 right-4 z-50 glass-panel rounded-2xl py-2 px-4 bg-[#050814]/70 backdrop-blur-xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
+        <div class="flex justify-between items-center relative">
+            <a href="#home" class="bottom-nav-link flex flex-col items-center gap-1 text-[10px] text-gray-400 font-medium w-12 transition-all">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span>Home</span>
+            </a>
+            <a href="#domains" class="bottom-nav-link flex flex-col items-center gap-1 text-[10px] text-gray-400 font-medium w-12 transition-all">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+                <span>Domains</span>
+            </a>
+            
+            <div class="relative -translate-y-6 flex items-center justify-center">
+                <div class="absolute w-14 h-14 bg-cyan-500/30 rounded-full blur-md animate-pulse"></div>
+                <button onclick="openWorkspace('editor')" class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-cyan-500/40 border border-cyan-300/30 transform active:scale-90 transition duration-200 z-10">
+                    <i class="fa-solid fa-code text-xl"></i>
+                </button>
+            </div>
+            
+            <a href="#projects" class="bottom-nav-link flex flex-col items-center gap-1 text-[10px] text-gray-400 font-medium w-12 transition-all">
+                <i class="fa-solid fa-diagram-project text-lg"></i>
+                <span>Projects</span>
+            </a>
+            <a href="#contact" class="bottom-nav-link flex flex-col items-center gap-1 text-[10px] text-gray-400 font-medium w-12 transition-all">
+                <i class="fa-solid fa-envelope text-lg"></i>
+                <span>Contact</span>
+            </a>
+        </div>
+    </div>
+
+    <footer class="py-8 text-center text-gray-500 text-sm border-t border-white/5 mt-10 mb-20 md:mb-0">
         <p>&copy; <span id="year"></span> TechVerse EEE & CSE. All rights reserved.</p>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     
     <script>
-        // 0. Preloader Logic
+        // 0. State Management Optimization (Auth & Paywall Systems)
+        let appState = {
+            isLoggedIn: false,
+            hasPremium: false,
+            editorTrialsUsed: 0,
+            builderTrialsUsed: 0,
+            maxTrials: 3,
+            pendingWorkspace: null
+        };
+
+        if(localStorage.getItem('techverse_state')) {
+            appState = JSON.parse(localStorage.getItem('techverse_state'));
+            updateUIState();
+        }
+
+        function saveState() {
+            localStorage.setItem('techverse_state', JSON.stringify(appState));
+        }
+
+        function updateUIState() {
+            const userStatus = document.getElementById('nav-user-status');
+            if(appState.isLoggedIn && userStatus) {
+                userStatus.classList.remove('hidden');
+                userStatus.classList.add('flex');
+            }
+            document.querySelectorAll('.editor-remaining').forEach(el => el.textContent = appState.maxTrials - appState.editorTrialsUsed);
+            document.querySelectorAll('.builder-remaining').forEach(el => el.textContent = appState.maxTrials - appState.builderTrialsUsed);
+        }
+
+        // Preloader Logic
         window.addEventListener('load', function() {
             setTimeout(function() {
                 const preloader = document.getElementById('preloader');
@@ -743,17 +893,30 @@ encrypted += cipher.final('hex');</code>
             }, 800);
         });
 
-        // 0.1 Cursor Glow Logic
+        // 0.1 PRO MAX Cursor Glow Logic (Smoother Tracking)
         const glow = document.getElementById('cursor-glow');
+        let cursorX = 0, cursorY = 0;
+        let targetX = 0, targetY = 0;
+        
         window.addEventListener('mousemove', (e) => {
-            if(glow) {
-                glow.style.left = e.clientX + 'px';
-                glow.style.top = e.clientY + 'px';
-            }
+            targetX = e.clientX;
+            targetY = e.clientY;
         });
 
+        function animateGlow() {
+            if(glow) {
+                // Smooth interpolation for premium feel
+                cursorX += (targetX - cursorX) * 0.15;
+                cursorY += (targetY - cursorY) * 0.15;
+                glow.style.left = cursorX + 'px';
+                glow.style.top = cursorY + 'px';
+            }
+            requestAnimationFrame(animateGlow);
+        }
+        animateGlow();
+
         // 0.2 Typewriter Effect Hero
-        const texts = ["Innovation", "Robotics & AI", "heard Logic","python","integration","tech verse", " EEE project","CSE project"];
+        const texts = ["Innovation", "Robotics & AI", "Hardware Logic","Python","Integration","Tech Verse", "EEE Project","CSE Project"];
         let count = 0, index = 0, currentText = '', letter = '';
         (function type() {
             if (count === texts.length) count = 0;
@@ -816,24 +979,42 @@ encrypted += cipher.final('hex');</code>
             });
         }
 
-        // 0.5 Code Block Copy Logic
+        // 0.5 Smart Code Block Copy Logic
         function copyCode(btn) {
             const codeBlock = btn.nextElementSibling.innerText.replace(/&nbsp;/g, ' ');
             navigator.clipboard.writeText(codeBlock).then(() => {
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied';
-                btn.classList.add('text-emerald-400');
+                btn.classList.add('text-emerald-400', 'bg-white/10');
+                
+                // Trigger Smart Global Toast Also
+                const toast = document.getElementById('toast');
+                toast.querySelector('span').textContent = "Code snippet copied to clipboard!";
+                toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
                 setTimeout(() => {
                     btn.innerHTML = originalHtml;
-                    btn.classList.remove('text-emerald-400');
+                    btn.classList.remove('text-emerald-400', 'bg-white/10');
+                    toast.classList.add('opacity-0', 'translate-y-5', 'pointer-events-none');
+                    toast.classList.remove('opacity-100', 'translate-y-0');
                 }, 2000);
             });
         }
 
-        // 1. Initialize Scroll Animation
+        // 1. Initialize Scroll Animation & Pro Max 3D Tilt
         AOS.init({ once: true, offset: 50, duration: 800 });
+        
+        VanillaTilt.init(document.querySelectorAll(".glass-card"), {
+            max: 3,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.15,
+            perspective: 1000
+        });
 
-        // 2. Smart Navbar Scroll Effect
+        // 2. Smart Navbar Scroll Effect & Scroll To Top Button
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
         window.addEventListener('scroll', () => {
             const navbar = document.getElementById('navbar');
             if (window.scrollY > 50) {
@@ -845,7 +1026,20 @@ encrypted += cipher.final('hex');</code>
                 navbar.classList.add('py-4');
                 navbar.classList.remove('py-2');
             }
+
+            // Pro Max Scroll to Top Logic
+            if (window.scrollY > 400) {
+                scrollTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                scrollTopBtn.classList.add('opacity-100', 'translate-y-0');
+            } else {
+                scrollTopBtn.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                scrollTopBtn.classList.remove('opacity-100', 'translate-y-0');
+            }
         });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         // 3. Mobile Menu Toggle Logic
         const menuBtn = document.getElementById('menu-btn');
@@ -868,9 +1062,10 @@ encrypted += cipher.final('hex');</code>
             });
         });
 
-        // 4. Scrollspy Logic
+        // 4. Scrollspy Logic (Desktop & Mobile Nav Sync)
         const sections = document.querySelectorAll('section');
         const navLinks = document.querySelectorAll('.nav-link');
+        const bottomNavLinks = document.querySelectorAll('.bottom-nav-link');
 
         window.addEventListener('scroll', () => {
             let current = '';
@@ -887,10 +1082,34 @@ encrypted += cipher.final('hex');</code>
                     link.classList.add('active');
                 }
             });
+
+            bottomNavLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
         });
 
-        // Workspace Interactive Control Logic
+        // ** CORE AUTH & PAYWALL ROUTING LOGIC **
         function openWorkspace(type) {
+            if (!appState.isLoggedIn) {
+                appState.pendingWorkspace = type;
+                openAuthModal();
+                return;
+            }
+
+            if (!appState.hasPremium) {
+                if (type === 'editor' && appState.editorTrialsUsed >= appState.maxTrials) {
+                    openPaywallModal();
+                    return;
+                }
+                if (type === 'eeeBuilder' && appState.builderTrialsUsed >= appState.maxTrials) {
+                    openPaywallModal();
+                    return;
+                }
+            }
+
             const workspace = document.getElementById(type + 'Workspace');
             document.body.style.overflow = 'hidden'; 
             workspace.classList.remove('hidden');
@@ -898,6 +1117,11 @@ encrypted += cipher.final('hex');</code>
             if(type === 'editor') {
                 const liveEditor = document.getElementById('liveCodeEditor');
                 const livePreview = document.getElementById('livePreview');
+                // Pro Max Auto-load from localStorage
+                const savedCode = localStorage.getItem('techverse_editor_code');
+                if (savedCode) {
+                    liveEditor.value = savedCode;
+                }
                 livePreview.srcdoc = liveEditor.value;
             }
 
@@ -905,6 +1129,7 @@ encrypted += cipher.final('hex');</code>
                 workspace.classList.remove('opacity-0');
                 workspace.classList.add('opacity-100');
             }, 50);
+            updateUIState();
         }
 
         function closeWorkspace(type) {
@@ -915,6 +1140,102 @@ encrypted += cipher.final('hex');</code>
             setTimeout(() => {
                 workspace.classList.add('hidden');
             }, 500);
+        }
+
+        function openAuthModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.classList.add('opacity-100'); }, 50);
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 500);
+        }
+
+        function openPaywallModal() {
+            const modal = document.getElementById('paywallModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.classList.add('opacity-100'); }, 50);
+        }
+
+        function closePaywallModal() {
+            const modal = document.getElementById('paywallModal');
+            modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 500);
+        }
+
+        function handleGoogleSignIn() {
+            const btn = document.querySelector('#authModal button');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-lg"></i> Connecting Securely...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                appState.isLoggedIn = true;
+                saveState();
+                updateUIState();
+                closeAuthModal();
+                
+                if(appState.pendingWorkspace) {
+                    openWorkspace(appState.pendingWorkspace);
+                    appState.pendingWorkspace = null;
+                }
+                
+                const toast = document.getElementById('toast');
+                toast.querySelector('span').textContent = "Google Sign-In Completed Successfully!";
+                toast.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                toast.style.color = "#10b981";
+                toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+                setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+                
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }, 1200);
+        }
+
+        function triggerEditorAction() {
+            if(!appState.hasPremium && appState.editorTrialsUsed >= appState.maxTrials) {
+                closeWorkspace('editor');
+                openPaywallModal();
+                return;
+            }
+
+            if(!appState.hasPremium) {
+                appState.editorTrialsUsed++;
+                saveState();
+                updateUIState();
+            }
+
+            const liveEditor = document.getElementById('liveCodeEditor');
+            const livePreview = document.getElementById('livePreview');
+            
+            // Smart Auto-save
+            localStorage.setItem('techverse_editor_code', liveEditor.value);
+            livePreview.srcdoc = liveEditor.value;
+        }
+
+        function simulatePayment() {
+            const payBtn = document.querySelector('#paywallModal button');
+            payBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Initializing Secure Gateway...';
+            payBtn.disabled = true;
+
+            setTimeout(() => {
+                appState.hasPremium = true;
+                saveState();
+                updateUIState();
+                closePaywallModal();
+                
+                const toast = document.getElementById('toast');
+                toast.querySelector('span').textContent = "Premium Activated! All Pro Access Restrictions Unlocked.";
+                toast.style.borderColor = "rgba(234, 179, 8, 0.3)";
+                toast.style.color = "#eab308";
+                toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+                setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 5000);
+            }, 1500);
         }
 
         function switchTab(domain, tabId) {
@@ -999,17 +1320,29 @@ encrypted += cipher.final('hex');</code>
             });
         });
 
-        // 7. Live Code Editor
+        // 7. Live Code Editor Interactivity Guard & Smart Auto-save
         const liveEditor = document.getElementById('liveCodeEditor');
         const livePreview = document.getElementById('livePreview');
         if (liveEditor && livePreview) {
             liveEditor.addEventListener('input', function() {
+                if(!appState.hasPremium && appState.editorTrialsUsed >= appState.maxTrials) {
+                    closeWorkspace('editor');
+                    openPaywallModal();
+                    return;
+                }
+                localStorage.setItem('techverse_editor_code', this.value);
                 livePreview.srcdoc = this.value;
             });
         }
 
-        // 8. EEE Project Builder Logic
+        // 8. EEE Project Builder Logic with Paywall Integration
         function generateEEEProject() {
+            if(!appState.hasPremium && appState.builderTrialsUsed >= appState.maxTrials) {
+                closeWorkspace('eeeBuilder');
+                openPaywallModal();
+                return;
+            }
+
             const checkboxes = document.querySelectorAll('.eee-comp:checked');
             const outputDiv = document.getElementById('eeeOutput');
             
@@ -1020,6 +1353,12 @@ encrypted += cipher.final('hex');</code>
                         <p class="text-red-400">Please select at least one component from the list.</p>
                     </div>`;
                 return;
+            }
+
+            if(!appState.hasPremium) {
+                appState.builderTrialsUsed++;
+                saveState();
+                updateUIState();
             }
 
             let comps = [];
@@ -1035,9 +1374,15 @@ encrypted += cipher.final('hex');</code>
             codeSnippet += 'void loop() {\n  // Write your core hardware logic here\n}';
 
             outputDiv.innerHTML = `
-                <div class="mb-5 bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg">
-                    <span class="text-purple-400 font-semibold block mb-1">Selected Active Modules:</span> 
-                    <span class="text-white text-xs">${comps.join(' <span class="text-gray-500 mx-1">•</span> ')}</span>
+                <div class="mb-5 bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg flex justify-between items-center">
+                    <div>
+                        <span class="text-purple-400 font-semibold block mb-1">Selected Active Modules:</span> 
+                        <span class="text-white text-xs">${comps.join(' <span class="text-gray-500 mx-1">•</span> ')}</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 px-3 py-1.5 rounded-lg text-xs transition border border-purple-500/30 flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i> Copy Code
+                    </button>
+                    <div class="hidden">${codeSnippet}</div>
                 </div>
                 <div class="relative p-5 bg-black/40 rounded-xl border border-white/5 font-mono text-xs text-indigo-300 overflow-x-auto shadow-inner">
                     <code class="whitespace-pre block">${codeSnippet}</code>
@@ -1056,6 +1401,5 @@ encrypted += cipher.final('hex');</code>
         const yearEl = document.getElementById('year');
         if(yearEl) yearEl.textContent = new Date().getFullYear();
     </script>
-
 </body>
 </html>
