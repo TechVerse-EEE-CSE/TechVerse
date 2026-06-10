@@ -16,134 +16,152 @@
             --text-main: #0F172A;
             --text-muted: #64748B;
             --danger: #EF4444;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05);
-            --glass-bg: rgba(255, 255, 255, 0.85);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08);
+            --glass-bg: rgba(255, 255, 255, 0.75);
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent;}
         
         body { 
-            background-color: #E2E8F0; 
+            /* Added mesh-like gradient for a premium feel */
+            background: radial-gradient(circle at top left, #E2E8F0, #F8FAFC, #E2E8F0);
             color: var(--text-main); 
             display: flex; 
             justify-content: center; 
-            height: 100vh; 
+            align-items: center;
+            height: 100dvh; /* dvh ensures mobile address bar doesn't hide bottom elements */
             overflow: hidden; 
         }
         
         #app-container {
-            width: 100%; max-width: 420px; height: 100%;
+            width: 100%; max-width: 420px; height: 100dvh; /* strictly fill mobile screen */
             background: var(--bg-color); position: relative;
             display: flex; flex-direction: column;
-            box-shadow: 0 0 30px rgba(0,0,0,0.15); overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1); overflow: hidden;
         }
 
         /* Header */
         .header {
             background: linear-gradient(135deg, #10B981, #059669);
-            color: white; padding: 18px 20px; display: flex;
+            color: white; padding: 20px 20px; display: flex;
             justify-content: space-between; align-items: center;
-            font-size: 1.3rem; font-weight: 700; z-index: 20; box-shadow: var(--shadow-md);
+            font-size: 1.4rem; font-weight: 700; z-index: 20; 
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;
         }
         .header button { 
-            background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); 
-            backdrop-filter: blur(5px); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            background: rgba(255,255,255,0.25); color: white; border: 1px solid rgba(255,255,255,0.5); 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
+            padding: 8px 18px; border-radius: 25px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
         }
         .header button:active { transform: scale(0.92); background: white; color: var(--primary);}
 
         /* Content Area */
-        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; scroll-behavior: smooth; }
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 110px; scroll-behavior: smooth; }
         .main-content::-webkit-scrollbar { width: 0px; }
         .section-title { font-size: 18px; color: var(--text-main); font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
         /* Product Grid */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .product-card {
-            background: var(--card-bg); border-radius: 16px; padding: 15px; text-align: center;
+            background: var(--card-bg); border-radius: 20px; padding: 15px; text-align: center;
             box-shadow: var(--shadow-sm); transition: all 0.3s ease; display: flex; flex-direction: column;
-            justify-content: space-between; border: 1px solid rgba(0,0,0,0.02);
+            justify-content: space-between; border: 1px solid rgba(255,255,255,0.8);
         }
         .product-card:active { transform: scale(0.96); box-shadow: var(--shadow-md); }
-        .product-img-wrapper { background: #F1F5F9; height: 80px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: 0.3s; }
-        .product-img { font-size: 35px; color: var(--primary); }
-        .product-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
-        .product-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
-        .product-price { font-size: 16px; color: var(--primary-dark); font-weight: 800; margin-bottom: 12px; }
-        .add-btn { background: var(--bg-color); color: var(--primary-dark); border: 1px solid var(--primary); width: 100%; padding: 8px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .product-img-wrapper { background: linear-gradient(145deg, #F1F5F9, #E2E8F0); height: 85px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .product-img { font-size: 38px; color: var(--primary); }
+        .product-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+        .product-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+        .product-price { font-size: 17px; color: var(--primary-dark); font-weight: 800; margin-bottom: 12px; }
+        .add-btn { background: rgba(16, 185, 129, 0.1); color: var(--primary-dark); border: 1px solid var(--primary); width: 100%; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .add-btn:active { background: var(--primary); color: white; }
 
-        /* Bottom Nav */
+        /* Bottom Nav - Improved Glassmorphism and Lifted */
         .bottom-nav {
-            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--glass-bg); backdrop-filter: blur(15px);
-            display: flex; justify-content: space-around; padding: 15px 0; border-radius: 25px 25px 0 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 20; border-top: 1px solid rgba(255,255,255,0.5);
+            position: absolute; bottom: 0; left: 0; width: 100%; 
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around; 
+            padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); /* Lifts nav for mobile safe areas */
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.06); z-index: 50; border-top: 1px solid rgba(255,255,255,0.8);
         }
-        .nav-item { text-align: center; color: var(--text-muted); cursor: pointer; flex: 1; font-size: 12px; font-weight: 600; transition: all 0.3s; position: relative; }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 5px; transition: 0.3s;}
+        .nav-item { text-align: center; color: var(--text-muted); cursor: pointer; flex: 1; font-size: 13px; font-weight: 600; transition: all 0.3s; position: relative; }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 5px; transition: 0.3s;}
         .nav-item.active { color: var(--primary); }
-        .nav-item.active i { transform: translateY(-4px) scale(1.1); }
-        .cart-badge { position: absolute; top: -6px; right: 28px; background: var(--danger); color: white; font-size: 10px; height: 18px; min-width: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; border: 2px solid white; transition: 0.3s; }
+        .nav-item.active i { transform: translateY(-5px) scale(1.15); filter: drop-shadow(0 4px 6px rgba(16,185,129,0.3)); }
+        .cart-badge { position: absolute; top: -6px; right: 26px; background: var(--danger); color: white; font-size: 11px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; border: 2px solid white; transition: 0.3s; box-shadow: 0 3px 6px rgba(239,68,68,0.3); }
 
         /* Screens */
         .screen { display: none; animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .screen.active { display: block; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Cart & Profile */
         .empty-state { text-align: center; color: var(--text-muted); margin-top: 60px; animation: slideIn 0.5s; }
-        .empty-state i { font-size: 50px; color: #CBD5E1; margin-bottom: 15px; }
-        .cart-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03); }
-        .cart-item-price { font-weight: 800; color: var(--primary-dark); font-size: 16px; }
-        .checkout-box { background: white; padding: 20px; border-radius: 16px; margin-top: 20px; box-shadow: var(--shadow-sm); }
-        .checkout-btn { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: 0.3s; }
-        .profile-card { text-align: center; background: white; padding: 30px 20px; border-radius: 20px; box-shadow: var(--shadow-sm); }
-        .profile-pic { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #E2E8F0; object-fit: cover; margin: 0 auto 15px; display: none; }
-        .profile-icon { font-size: 80px; color: #E2E8F0; margin-bottom: 15px; }
+        .empty-state i { font-size: 60px; color: #CBD5E1; margin-bottom: 15px; }
+        .cart-item { background: white; padding: 15px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.02); }
+        .cart-item-price { font-weight: 800; color: var(--primary-dark); font-size: 17px; }
+        .checkout-box { background: white; padding: 22px; border-radius: 20px; margin-top: 20px; box-shadow: var(--shadow-md); border: 1px solid rgba(255,255,255,0.5); }
+        .checkout-btn { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); transition: 0.3s; }
+        .checkout-btn:active { transform: scale(0.98); box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3); }
+        .profile-card { text-align: center; background: white; padding: 35px 20px; border-radius: 25px; box-shadow: var(--shadow-md); border: 1px solid rgba(255,255,255,0.5); }
+        .profile-pic { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E2E8F0; object-fit: cover; margin: 0 auto 15px; display: none; box-shadow: var(--shadow-sm); }
+        .profile-icon { font-size: 90px; color: #E2E8F0; margin-bottom: 15px; }
 
-        /* ---- NEW: PRO MAX AUTHENTICATION UI ---- */
-        .auth-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); z-index: 99; display: none; opacity: 0; transition: 0.3s; }
+        /* Auth UI Pro Max */
+        .auth-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 99; display: none; opacity: 0; transition: 0.3s; }
         .auth-overlay.active { display: block; opacity: 1; }
         
         .auth-sheet {
-            position: absolute; bottom: -100%; left: 0; width: 100%; background: white;
-            border-radius: 30px 30px 0 0; padding: 25px; box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            position: absolute; bottom: -100%; left: 0; width: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 35px 35px 0 0; padding: 30px 25px calc(25px + env(safe-area-inset-bottom)); 
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.15);
             transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); z-index: 100;
+            max-height: 90dvh; overflow-y: auto;
         }
         .auth-sheet.active { bottom: 0; }
         
-        .auth-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .auth-header h3 { font-size: 20px; color: var(--text-main); }
-        .close-btn { background: #F1F5F9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted); cursor: pointer; }
+        .auth-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .auth-header h3 { font-size: 22px; color: var(--text-main); font-weight: 800; }
+        .close-btn { background: #F1F5F9; border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted); font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .close-btn:active { background: #E2E8F0; transform: scale(0.9); }
         
-        .auth-tabs { display: flex; background: #F1F5F9; border-radius: 12px; pdding: 4px; margin-bottom: 20px; }
-        .auth-tab { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 600; color: var(--text-muted); border-radius: 10px; cursor: pointer; transition: 0.3s; }
-        .auth-tab.active { background: white; color: var(--primary-dark); box-shadow: var(--shadow-sm); }
+        .auth-tabs { display: flex; background: #F1F5F9; border-radius: 14px; padding: 5px; margin-bottom: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .auth-tab { flex: 1; padding: 12px; border: none; background: transparent; font-weight: 700; font-size: 15px; color: var(--text-muted); border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .auth-tab.active { background: white; color: var(--primary-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-        .custom-input { width: 100%; padding: 14px 15px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; margin-bottom: 12px; font-size: 15px; outline: none; transition: 0.3s; }
-        .custom-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .custom-input { width: 100%; padding: 15px 18px; background: white; border: 1.5px solid #E2E8F0; border-radius: 14px; margin-bottom: 15px; font-size: 15px; outline: none; transition: 0.3s; box-shadow: var(--shadow-sm); }
+        .custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
         
-        .auth-actions { display: flex; gap: 10px; margin-top: 5px; }
-        .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .auth-actions { display: flex; gap: 12px; margin-top: 5px; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: 100%; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-outline:active { background: #F8FAFC; transform: scale(0.98); }
         
-        .divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: #94A3B8; font-size: 13px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #E2E8F0; }
-        .divider span { padding: 0 10px; }
+        .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #94A3B8; font-size: 14px; font-weight: 600; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1.5px solid #E2E8F0; }
+        .divider span { padding: 0 15px; }
 
-        .btn-google { background: white; border: 1px solid #E2E8F0; width: 100%; padding: 12px; border-radius: 12px; font-weight: 600; color: var(--text-main); display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; box-shadow: var(--shadow-sm); }
+        .btn-google { background: white; border: 1.5px solid #E2E8F0; width: 100%; padding: 14px; border-radius: 14px; font-weight: 700; color: var(--text-main); display: flex; justify-content: center; align-items: center; gap: 12px; cursor: pointer; box-shadow: var(--shadow-sm); transition: 0.3s; }
+        .btn-google:active { transform: scale(0.98); background: #F8FAFC; }
+
+        .toggle-auth-mode { text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-muted); font-weight: 600; }
+        .toggle-auth-mode span { color: var(--primary); cursor: pointer; padding-left: 5px; }
 
         /* Toast */
-        #toast-container { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: toastEnter 0.4s forwards; }
+        #toast-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 200; display: flex; flex-direction: column; gap: 12px; }
+        .toast { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); color: white; padding: 14px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .toast.error { background: rgba(239, 68, 68, 0.95); }
-        @keyframes toastEnter { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toastEnter { from { opacity: 0; transform: translateY(-25px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div id="app-container">
     <div class="header">
-        <div><i class="fa-solid fa-store" style="margin-right: 5px;"></i> হালাল শপ</div>
+        <div><i class="fa-solid fa-store" style="margin-right: 8px;"></i> হালাল শপ</div>
         <button id="auth-btn" onclick="openAuthModal()">লগইন</button>
     </div>
 
@@ -160,7 +178,7 @@
             <div id="cart-container"></div>
             <div id="checkout-section" style="display: none;">
                 <div class="checkout-box">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 15px; font-size: 18px;">
                         <span>সর্বমোট:</span><span id="total-price" style="color: var(--primary-dark);">৳ 0</span>
                     </div>
                     <button class="checkout-btn" onclick="processCheckout()">চেকআউট করুন <i class="fa-solid fa-arrow-right"></i></button>
@@ -173,8 +191,8 @@
             <div class="profile-card">
                 <img id="profile-pic" class="profile-pic" src="">
                 <i id="profile-icon" class="fa-solid fa-circle-user profile-icon"></i>
-                <h2 id="profile-name" style="margin-top: 10px; color: var(--text-main);">গেস্ট ইউজার</h2>
-                <p id="profile-email" style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">পণ্য কিনতে অনুগ্রহ করে লগইন করুন</p>
+                <h2 id="profile-name" style="margin-top: 10px; color: var(--text-main); font-weight: 800;">গেস্ট ইউজার</h2>
+                <p id="profile-email" style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px; font-weight: 500;">পণ্য কিনতে অনুগ্রহ করে লগইন করুন</p>
                 <button id="profile-auth-btn" class="checkout-btn" onclick="openAuthModal()">লগইন করুন</button>
             </div>
         </div>
@@ -189,7 +207,7 @@
     <div id="auth-overlay" class="auth-overlay" onclick="closeAuthModal()"></div>
     <div id="auth-sheet" class="auth-sheet">
         <div class="auth-header">
-            <h3>লগইন / অ্যাকাউন্ট খুলুন</h3>
+            <h3 id="auth-modal-title">লগইন করুন</h3>
             <button class="close-btn" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
@@ -199,25 +217,34 @@
         </div>
 
         <div id="email-section">
-            <input type="email" id="email-input" class="custom-input" placeholder="আপনার ইমেইল অ্যাড্রেস">
-            <input type="password" id="pass-input" class="custom-input" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)">
-            <div style="text-align: right; margin-bottom: 15px;">
-                <a href="#" onclick="handleForgotPassword()" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600;">পাসওয়ার্ড ভুলে গেছেন?</a>
+            <div id="email-login-form">
+                <input type="email" id="login-email" class="custom-input" placeholder="আপনার ইমেইল অ্যাড্রেস">
+                <input type="password" id="login-pass" class="custom-input" placeholder="পাসওয়ার্ড">
+                <div style="text-align: right; margin-bottom: 20px;">
+                    <a href="#" onclick="handleForgotPassword()" style="font-size: 14px; color: var(--primary); text-decoration: none; font-weight: 700;">পাসওয়ার্ড ভুলে গেছেন?</a>
+                </div>
+                <button class="checkout-btn" onclick="handleEmailLogin()">লগইন করুন</button>
+                <div class="toggle-auth-mode">অ্যাকাউন্ট নেই? <span onclick="toggleEmailMode('signup')">নতুন অ্যাকাউন্ট খুলুন</span></div>
             </div>
-            <div class="auth-actions">
-                <button class="checkout-btn" style="flex: 1;" onclick="handleEmailLogin()">লগইন</button>
-                <button class="btn-outline" style="flex: 1;" onclick="handleEmailSignup()">সাইন আপ</button>
+
+            <div id="email-signup-form" style="display: none;">
+                <input type="text" id="signup-name" class="custom-input" placeholder="আপনার পুরো নাম">
+                <input type="email" id="signup-email" class="custom-input" placeholder="ইমেইল অ্যাড্রেস">
+                <input type="password" id="signup-pass" class="custom-input" placeholder="পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)">
+                <input type="password" id="signup-confirm-pass" class="custom-input" placeholder="কনফার্ম পাসওয়ার্ড">
+                <button class="checkout-btn" style="margin-top: 5px;" onclick="handleEmailSignup()">সাইন আপ করুন</button>
+                <div class="toggle-auth-mode">আগে থেকেই অ্যাকাউন্ট আছে? <span onclick="toggleEmailMode('login')">লগইন করুন</span></div>
             </div>
         </div>
 
         <div id="phone-section" style="display: none;">
             <div id="phone-input-step">
-                <div style="display: flex; gap: 10px;">
-                    <span style="background: #F1F5F9; padding: 14px; border-radius: 12px; border: 1px solid #E2E8F0; font-weight: bold;">+880</span>
+                <div style="display: flex; gap: 12px;">
+                    <span style="background: white; padding: 15px; border-radius: 14px; border: 1.5px solid #E2E8F0; font-weight: 800; box-shadow: var(--shadow-sm);">+880</span>
                     <input type="tel" id="phone-input" class="custom-input" style="margin: 0;" placeholder="1XXXXXXXXX">
                 </div>
-                <div id="recaptcha-container" style="margin-top: 10px;"></div>
-                <button class="checkout-btn" style="margin-top: 15px;" onclick="sendOTP()">ওটিপি (OTP) পাঠান</button>
+                <div id="recaptcha-container" style="margin-top: 15px;"></div>
+                <button class="checkout-btn" style="margin-top: 20px;" onclick="sendOTP()">ওটিপি (OTP) পাঠান</button>
             </div>
             <div id="otp-step" style="display: none;">
                 <input type="number" id="otp-input" class="custom-input" placeholder="৬-ডিজিটের কোড দিন">
@@ -228,7 +255,7 @@
         <div class="divider"><span>অথবা যুক্ত হোন</span></div>
         
         <button class="btn-google" onclick="handleGoogleLogin()">
-            <img src="https://cdn-icons-png.flaticon.com/512/3002/3002219.png" width="22">
+            <img src="https://cdn-icons-png.flaticon.com/512/3002/3002219.png" width="24">
             গুগল দিয়ে কন্টিনিউ করুন
         </button>
     </div>
@@ -239,7 +266,7 @@
     import { 
         getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
         createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-        RecaptchaVerifier, signInWithPhoneNumber
+        RecaptchaVerifier, signInWithPhoneNumber, updateProfile
     } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -260,7 +287,7 @@
 
     let currentUser = null;
     let myCart = JSON.parse(localStorage.getItem('halalProMaxCart')) || [];
-    let confirmationResult = null; // For Phone OTP
+    let confirmationResult = null; 
 
     // --- Toast & UI Utils ---
     window.showToast = function(msg, type = 'success') {
@@ -269,7 +296,7 @@
         toast.className = `toast ${type}`;
         toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${msg}`;
         container.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3500);
     }
 
     // --- Auth Modal Logic ---
@@ -280,11 +307,14 @@
         }
         document.getElementById('auth-overlay').classList.add('active');
         document.getElementById('auth-sheet').classList.add('active');
+        toggleEmailMode('login'); // Default to login view
     }
+    
     window.closeAuthModal = function() {
         document.getElementById('auth-overlay').classList.remove('active');
         document.getElementById('auth-sheet').classList.remove('active');
     }
+
     window.toggleAuthType = function(type) {
         document.getElementById('tab-email').classList.remove('active');
         document.getElementById('tab-phone').classList.remove('active');
@@ -294,14 +324,34 @@
         document.getElementById('phone-section').style.display = type === 'phone' ? 'block' : 'none';
     }
 
+    // Toggle between Login and Signup forms inside Email Tab
+    window.toggleEmailMode = function(mode) {
+        const title = document.getElementById('auth-modal-title');
+        if(mode === 'signup') {
+            document.getElementById('email-login-form').style.display = 'none';
+            document.getElementById('email-signup-form').style.display = 'block';
+            title.innerText = 'নতুন অ্যাকাউন্ট খুলুন';
+        } else {
+            document.getElementById('email-login-form').style.display = 'block';
+            document.getElementById('email-signup-form').style.display = 'none';
+            title.innerText = 'লগইন করুন';
+        }
+    }
+
     // --- Error Translator ---
     function translateError(errCode) {
         if(errCode.includes("email-already-in-use")) return "এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা আছে।";
         if(errCode.includes("invalid-credential") || errCode.includes("wrong-password")) return "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে।";
-        if(errCode.includes("weak-password")) return "পাসওয়ার্ডটি অন্তত ৬ অক্ষরের হতে হবে।";
         if(errCode.includes("user-not-found")) return "এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।";
         if(errCode.includes("invalid-phone-number")) return "ভুল ফোন নম্বর দেওয়া হয়েছে।";
         return "কোথাও কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।";
+    }
+
+    // --- Password Validator (Pro Max Security) ---
+    function isStrongPassword(password) {
+        // Requires: Min 8 chars, 1 uppercase, 1 lowercase, 1 number
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/;
+        return regex.test(password);
     }
 
     // --- Authentication Implementations --- //
@@ -314,22 +364,35 @@
         } catch (error) { showToast(translateError(error.code), "error"); }
     };
 
-    // 2. Email / Password Signup
+    // 2. Email / Password Signup (High Security)
     window.handleEmailSignup = async () => {
-        const email = document.getElementById('email-input').value;
-        const pass = document.getElementById('pass-input').value;
-        if(!email || pass.length < 6) return showToast("সঠিক ইমেইল এবং অন্তত ৬ অক্ষরের পাসওয়ার্ড দিন", "error");
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email').value;
+        const pass = document.getElementById('signup-pass').value;
+        const confirmPass = document.getElementById('signup-confirm-pass').value;
+        
+        if(!name || !email || !pass || !confirmPass) return showToast("সবগুলো তথ্য সঠিকভাবে দিন", "error");
+        if(pass !== confirmPass) return showToast("পাসওয়ার্ড দুটি মিলেনি। আবার চেষ্টা করুন।", "error");
+        
+        if(!isStrongPassword(pass)) {
+            return showToast("পাসওয়ার্ডে অন্তত ৮টি অক্ষর, একটি বড় ও ছোট হাতের অক্ষর (A-z) এবং একটি সংখ্যা (0-9) থাকতে হবে।", "error");
+        }
         
         try {
-            await createUserWithEmailAndPassword(auth, email, pass);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            // Update the display name
+            await updateProfile(userCredential.user, { displayName: name });
+            // Refresh local user state
+            auth.updateCurrentUser(userCredential.user);
+            
             closeAuthModal(); showToast("আলহামদুলিল্লাহ! অ্যাকাউন্ট খোলা সফল।");
         } catch (error) { showToast(translateError(error.code), "error"); }
     }
 
     // 3. Email / Password Login
     window.handleEmailLogin = async () => {
-        const email = document.getElementById('email-input').value;
-        const pass = document.getElementById('pass-input').value;
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
         if(!email || !pass) return showToast("ইমেইল ও পাসওয়ার্ড প্রদান করুন", "error");
 
         try {
@@ -340,8 +403,8 @@
 
     // 4. Forgot Password
     window.handleForgotPassword = async () => {
-        const email = document.getElementById('email-input').value;
-        if(!email) return showToast("পাসওয়ার্ড রিসেট করতে আগে ইমেইল বক্সে আপনার ইমেইলটি লিখুন", "error");
+        const email = document.getElementById('login-email').value;
+        if(!email) return showToast("পাসওয়ার্ড রিসেট করতে আগে লগইন বক্সে আপনার ইমেইলটি লিখুন", "error");
         
         try {
             await sendPasswordResetEmail(auth, email);
@@ -356,7 +419,6 @@
         
         const formatPhone = phone.startsWith('0') ? '+88' + phone : '+880' + phone;
 
-        // Initialize Recaptcha
         if(!window.recaptchaVerifier) {
             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'normal' });
         }
@@ -394,6 +456,7 @@
             headerBtn.innerText = "লগআউট";
             profileBtn.innerText = "লগআউট করুন";
             profileBtn.style.background = "var(--danger)";
+            profileBtn.style.boxShadow = "0 6px 15px rgba(239, 68, 68, 0.3)";
             document.getElementById('profile-name').innerText = displayId;
             document.getElementById('profile-email').innerText = user.email || "মোবাইল ইউজার";
             if(user.photoURL) {
@@ -405,6 +468,7 @@
             headerBtn.innerText = "লগইন";
             profileBtn.innerText = "লগইন করুন";
             profileBtn.style.background = "var(--primary)";
+            profileBtn.style.boxShadow = "0 6px 15px rgba(16, 185, 129, 0.3)";
             document.getElementById('profile-name').innerText = "গেস্ট ইউজার";
             document.getElementById('profile-email').innerText = "পণ্য কিনতে অনুগ্রহ করে লগইন করুন";
             document.getElementById('profile-icon').style.display = 'block';
@@ -474,7 +538,7 @@
         myCart.forEach(item => {
             total += item.price * item.qty;
             container.innerHTML += `<div class="cart-item">
-                <div><h4>${item.name}</h4><p style="color:gray;font-size:12px;">৳ ${item.price} x ${item.qty}টি</p></div>
+                <div><h4>${item.name}</h4><p style="color:gray;font-size:13px; font-weight:600;">৳ ${item.price} x ${item.qty}টি</p></div>
                 <div class="cart-item-price">৳ ${item.price * item.qty}</div>
             </div>`;
         });
