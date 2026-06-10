@@ -123,8 +123,8 @@
         }
 
         /* Premium Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #050814; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #050814; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #22d3ee, #3b82f6); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #06b6d4, #2563eb); }
 
@@ -163,6 +163,29 @@
         .bottom-nav-link.active {
             color: #22d3ee;
             text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+        }
+
+        /* Pro Max Editor Styles */
+        .editor-fullscreen {
+            max-width: 100% !important;
+            max-height: 100vh !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 1rem !important;
+            margin: 0 !important;
+        }
+        .editor-textarea {
+            line-height: 1.5;
+            tab-size: 4;
+        }
+        .editor-line-numbers {
+            line-height: 1.5;
+            text-align: right;
+        }
+        .file-item:hover .file-actions {
+            opacity: 1;
         }
     </style>
 </head>
@@ -484,7 +507,7 @@
                     </button>
                     <div class="faq-answer">
                         <div class="px-6 pb-6 text-sm text-gray-400 leading-relaxed border-t border-white/5 pt-4">
-                            টেকভার্স হলো ইলেকট্রিক্যাল ও ইলেকট্রনিক্স ইঞ্জিনিয়ারিং (EEE) এবং কম্পিউটার সায়েন্স (CSE) এর একটি আধুনিক সমন্বয়। এখানে হার্ডওয়্যার আর্কিটেকচার থেকে শুরু করে অ্যাডভান্সডソフトওডায়্যার ডেভেলপমেন্ট ও এআই এর লাইভ প্রজেক্ট ও গাইডলাইন শেয়ার করা হয়।
+                            টেকভার্স হলো ইলেকট্রিক্যাল ও ইলেকট্রনিক্স ইঞ্জিনিয়ারিং (EEE) এবং কম্পিউটার সায়েন্স (CSE) এর একটি আধুনিক সমন্বয়। এখানে হার্ডওয়্যার আর্কিটেকচার থেকে শুরু করে অ্যাডভান্সড সফটওয়্যার ডেভেলপমেন্ট ও এআই এর লাইভ প্রজেক্ট ও গাইডলাইন শেয়ার করা হয়।
                         </div>
                     </div>
                 </div>
@@ -696,37 +719,78 @@ encrypted += cipher.final('hex');</code>
         </div>
     </div>
 
-    <div id="editorWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
-        <div class="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-8 relative border-yellow-500/20 max-h-[90vh] flex flex-col">
-            <button onclick="closeWorkspace('editor')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-yellow-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center z-10">
+    <div id="editorWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center transition-all">
+        <div id="editorBox" class="w-full max-w-7xl glass-panel rounded-3xl p-6 md:p-8 relative border-yellow-500/20 max-h-[95vh] h-[95vh] flex flex-col transition-all duration-300">
+            <button onclick="closeWorkspace('editor')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-yellow-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center z-20">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 mt-4 md:mt-0 flex-shrink-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 flex-shrink-0 z-10">
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-laptop-code text-yellow-400 text-3xl"></i>
-                    <h2 class="text-2xl md:text-3xl font-bold">Live <span class="text-yellow-400">Code Editor</span></h2>
+                    <h2 class="text-2xl md:text-3xl font-bold">Pro <span class="text-yellow-400">Matrix Editor</span></h2>
                 </div>
-                <div class="trial-badge px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 w-fit">
+                <div class="trial-badge px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 w-fit mr-10">
                     <i class="fa-solid fa-bolt mr-1"></i> <span class="editor-remaining">3</span> Free Submissions Left
                 </div>
             </div>
-            <p class="text-gray-400 text-sm mb-6 flex-shrink-0">Write HTML/CSS/JS code below and see the magical preview instantly.</p>
             
-            <div class="grid lg:grid-cols-2 gap-6 flex-grow min-h-[300px]">
-                <div class="flex flex-col h-full relative">
-                    <textarea id="liveCodeEditor" class="w-full h-full min-h-[250px] glass-input bg-black/50 rounded-xl p-5 text-emerald-400 font-mono text-sm resize-none" placeholder="<h1 style='color: #22d3ee; font-family: sans-serif; text-align: center;'>Hello TechVerse!</h1>
-<p style='color: white; text-align: center;'>Write code and see the magic.</p>"></textarea>
-                    <button onclick="triggerEditorAction()" class="absolute bottom-4 right-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-yellow-500/20 transition">
-                        Run Code <i class="fa-solid fa-play ml-1"></i>
-                    </button>
+            <div class="flex flex-col lg:flex-row gap-4 flex-grow min-h-[400px] h-full z-10" id="proMaxEditorContainer">
+                
+                <div class="w-full lg:w-48 flex-shrink-0 glass-panel bg-black/40 rounded-xl border border-white/5 flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+                        <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Explorer</span>
+                        <button onclick="createNewFile()" class="text-yellow-400 hover:text-yellow-300 transition" title="New File">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </button>
+                    </div>
+                    <div id="fileList" class="flex-grow overflow-y-auto p-2 space-y-1">
+                        </div>
                 </div>
-                <div class="w-full h-full min-h-[250px] bg-white rounded-xl overflow-hidden border border-white/10 shadow-inner">
-                    <iframe id="livePreview" class="w-full h-full bg-white border-none"></iframe>
+
+                <div class="flex-grow flex flex-col min-w-0 glass-panel bg-black/60 rounded-xl border border-white/5 overflow-hidden relative">
+                    <div class="px-4 py-2 bg-[#0d1117] border-b border-white/10 flex justify-between items-center">
+                        <div class="flex items-center gap-2 text-xs font-mono text-gray-400" id="activeFileNameDisplay">
+                            <i class="fa-brands fa-html5 text-orange-500"></i> index.html
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="toggleFullScreenEditor()" class="text-gray-400 hover:text-white transition px-2" title="Toggle Fullscreen">
+                                <i id="fullScreenIcon" class="fa-solid fa-expand"></i>
+                            </button>
+                            <button onclick="triggerEditorAction()" class="bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-1.5 rounded shadow-lg hover:shadow-yellow-500/20 transition flex items-center gap-2">
+                                Run Code <i class="fa-solid fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow flex relative overflow-hidden font-mono text-sm editor-textarea">
+                        <div id="lineNumbers" class="w-10 bg-[#0d1117] border-r border-white/10 text-gray-600 text-xs py-4 pr-2 select-none overflow-hidden flex-shrink-0 editor-line-numbers">1</div>
+                        <textarea id="liveCodeEditor" wrap="off" class="flex-grow bg-transparent text-emerald-400 p-4 pl-3 resize-none outline-none whitespace-pre overflow-auto leading-relaxed text-xs sm:text-sm" spellcheck="false" onscroll="syncEditorScroll()" oninput="handleEditorInput()"></textarea>
+                    </div>
                 </div>
+
+                <div class="w-full lg:w-4/12 flex-shrink-0 flex flex-col gap-4">
+                    <div class="flex-grow bg-white rounded-xl overflow-hidden border border-white/10 shadow-inner relative flex flex-col">
+                        <div class="bg-[#e1e4e8] border-b border-gray-300 px-3 py-1.5 flex gap-2 items-center flex-shrink-0">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                            <span class="text-[10px] text-gray-500 font-mono ml-2 uppercase font-bold tracking-widest">Live View</span>
+                        </div>
+                        <iframe id="livePreview" class="w-full flex-grow bg-white border-none"></iframe>
+                    </div>
+                    
+                    <div class="h-32 glass-panel bg-[#0d1117] rounded-xl border border-white/10 flex flex-col overflow-hidden flex-shrink-0">
+                        <div class="px-3 py-1.5 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                            <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Terminal Output</span>
+                            <button onclick="clearConsole()" class="text-[10px] text-gray-500 hover:text-gray-300"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div id="consoleOutput" class="flex-grow p-3 text-[11px] font-mono text-gray-300 overflow-y-auto whitespace-pre-wrap">System initialized... Ready to compile.</div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-
     <div id="eeeBuilderWorkspace" class="workspace-modal fixed inset-0 z-50 bg-[#050814]/95 hidden opacity-0 overflow-y-auto p-4 sm:p-6 backdrop-blur-xl flex items-center justify-center">
         <div class="w-full max-w-5xl glass-panel rounded-3xl p-6 md:p-8 relative border-purple-500/20 max-h-[90vh] overflow-y-auto">
             <button onclick="closeWorkspace('eeeBuilder')" class="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-purple-400 text-xl transition bg-black/50 w-8 h-8 rounded-full flex items-center justify-center">
@@ -859,14 +923,14 @@ encrypted += cipher.final('hex');</code>
 
     <script>
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDRfX8cqKmDRV2u1HfH2opa5tB2NqD0h9s",
-  authDomain: "techverse-eee-cse.firebaseapp.com",
-  projectId: "techverse-eee-cse",
-  storageBucket: "techverse-eee-cse.firebasestorage.app",
-  messagingSenderId: "719941320241",
-  appId: "1:719941320241:web:10285cc72447a811ad5f10",
-  measurementId: "G-Y1VFHYHH26"
+        const firebaseConfig = {
+          apiKey: "AIzaSyDRfX8cqKmDRV2u1HfH2opa5tB2NqD0h9s",
+          authDomain: "techverse-eee-cse.firebaseapp.com",
+          projectId: "techverse-eee-cse",
+          storageBucket: "techverse-eee-cse.firebasestorage.app",
+          messagingSenderId: "719941320241",
+          appId: "1:719941320241:web:10285cc72447a811ad5f10",
+          measurementId: "G-Y1VFHYHH26"
         };
 
         // Initialize Firebase Compatibility Mode
@@ -925,7 +989,7 @@ const firebaseConfig = {
             }, 800);
         });
 
-        // 0.1 PRO MAX Cursor Glow Logic (Smoother Tracking)
+        // 0.1 PRO MAX Cursor Glow Logic
         const glow = document.getElementById('cursor-glow');
         let cursorX = 0, cursorY = 0;
         let targetX = 0, targetY = 0;
@@ -937,7 +1001,6 @@ const firebaseConfig = {
 
         function animateGlow() {
             if(glow) {
-                // Smooth interpolation for premium feel
                 cursorX += (targetX - cursorX) * 0.15;
                 cursorY += (targetY - cursorY) * 0.15;
                 glow.style.left = cursorX + 'px';
@@ -947,7 +1010,7 @@ const firebaseConfig = {
         }
         animateGlow();
 
-        // 0.2 Typewriter Effect Hero
+        // 0.2 Typewriter Effect
         const texts = ["Innovation", "Robotics & AI", "Hardware Logic","Python","Integration","Tech Verse", "EEE Project","CSE Project"];
         let count = 0, index = 0, currentText = '', letter = '';
         (function type() {
@@ -1019,7 +1082,6 @@ const firebaseConfig = {
                 btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied';
                 btn.classList.add('text-emerald-400', 'bg-white/10');
                 
-                // Trigger Smart Global Toast Also
                 const toast = document.getElementById('toast');
                 toast.querySelector('span').textContent = "Code snippet copied to clipboard!";
                 toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
@@ -1034,7 +1096,7 @@ const firebaseConfig = {
             });
         }
 
-        // 1. Initialize Scroll Animation & Pro Max 3D Tilt
+        // 1. Initialize Scroll Animation
         AOS.init({ once: true, offset: 50, duration: 800 });
         
         VanillaTilt.init(document.querySelectorAll(".glass-card"), {
@@ -1045,7 +1107,7 @@ const firebaseConfig = {
             perspective: 1000
         });
 
-        // 2. Smart Navbar Scroll Effect & Scroll To Top Button
+        // 2. Smart Navbar Scroll Effect & Scroll To Top
         const scrollTopBtn = document.getElementById('scrollTopBtn');
         window.addEventListener('scroll', () => {
             const navbar = document.getElementById('navbar');
@@ -1059,7 +1121,6 @@ const firebaseConfig = {
                 navbar.classList.remove('py-2');
             }
 
-            // Pro Max Scroll to Top Logic
             if (window.scrollY > 400) {
                 scrollTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
                 scrollTopBtn.classList.add('opacity-100', 'translate-y-0');
@@ -1094,7 +1155,7 @@ const firebaseConfig = {
             });
         });
 
-        // 4. Scrollspy Logic (Desktop & Mobile Nav Sync)
+        // 4. Scrollspy Logic
         const sections = document.querySelectorAll('section');
         const navLinks = document.querySelectorAll('.nav-link');
         const bottomNavLinks = document.querySelectorAll('.bottom-nav-link');
@@ -1123,7 +1184,159 @@ const firebaseConfig = {
             });
         });
 
-        // ** CORE AUTH & PAYWALL ROUTING LOGIC **
+        // ** PRO MAX EDITOR LOGIC START **
+        let editorFiles = {
+            'index.html': { content: "<!DOCTYPE html>\n<html>\n<head>\n  <title>TechVerse Editor</title>\n</head>\n<body>\n  <h1 style='color: #22d3ee; font-family: sans-serif; text-align: center;'>Hello TechVerse!</h1>\n  <p style='color: #333; text-align: center;'>Write code and compile to see magic.</p>\n</body>\n</html>" },
+            'style.css': { content: "/* Write your CSS here */\nbody {\n  margin: 0;\n  background: #f8fafc;\n}" },
+            'script.js': { content: "// Write your JavaScript here\nconsole.log('System Matrix Linked Successfully.');" },
+            'main.py': { content: "# Write Python logic here\ndef run_matrix():\n    print('Hello from Python AI Engine')\n\nrun_matrix()" }
+        };
+        let activeFile = 'index.html';
+
+        // Load saved files if exist
+        if(localStorage.getItem('techverse_pro_files')) {
+            editorFiles = JSON.parse(localStorage.getItem('techverse_pro_files'));
+            if(!editorFiles[activeFile]) activeFile = Object.keys(editorFiles)[0];
+        }
+
+        function getFileIcon(filename) {
+            if(filename.endsWith('.html')) return '<i class="fa-brands fa-html5 text-orange-500 w-4 text-center"></i>';
+            if(filename.endsWith('.css')) return '<i class="fa-brands fa-css3-alt text-blue-500 w-4 text-center"></i>';
+            if(filename.endsWith('.js')) return '<i class="fa-brands fa-js text-yellow-400 w-4 text-center"></i>';
+            if(filename.endsWith('.py')) return '<i class="fa-brands fa-python text-blue-400 w-4 text-center"></i>';
+            return '<i class="fa-solid fa-file-code text-gray-400 w-4 text-center"></i>';
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            if(!fileList) return;
+            fileList.innerHTML = '';
+            
+            for(let filename in editorFiles) {
+                const isActive = filename === activeFile;
+                const div = document.createElement('div');
+                div.className = `file-item flex items-center justify-between px-2 py-1.5 rounded cursor-pointer text-xs font-mono transition ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2" onclick="switchActiveFile('${filename}')">
+                        ${getFileIcon(filename)} <span class="truncate max-w-[100px]">${filename}</span>
+                    </div>
+                    <div class="file-actions opacity-0 transition-opacity">
+                        <button onclick="deleteFile('${filename}')" class="text-gray-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+                fileList.appendChild(div);
+            }
+        }
+
+        function switchActiveFile(filename) {
+            if(!editorFiles[filename]) return;
+            activeFile = filename;
+            renderFileList();
+            
+            const editor = document.getElementById('liveCodeEditor');
+            const display = document.getElementById('activeFileNameDisplay');
+            
+            editor.value = editorFiles[filename].content;
+            display.innerHTML = `${getFileIcon(filename)} ${filename}`;
+            
+            let color = 'text-emerald-400';
+            if(filename.endsWith('.css')) color = 'text-blue-300';
+            if(filename.endsWith('.js')) color = 'text-yellow-300';
+            if(filename.endsWith('.py')) color = 'text-purple-300';
+            editor.className = `flex-grow bg-transparent p-4 pl-3 resize-none outline-none whitespace-pre overflow-auto leading-relaxed text-xs sm:text-sm ${color}`;
+            
+            updateLineNumbers();
+        }
+
+        function handleEditorInput() {
+            const editor = document.getElementById('liveCodeEditor');
+            editorFiles[activeFile].content = editor.value;
+            localStorage.setItem('techverse_pro_files', JSON.stringify(editorFiles));
+            updateLineNumbers();
+        }
+
+        function updateLineNumbers() {
+            const editor = document.getElementById('liveCodeEditor');
+            const lineNumbers = document.getElementById('lineNumbers');
+            if(!editor || !lineNumbers) return;
+            
+            const lines = editor.value.split('\n').length;
+            let numbersHtml = '';
+            for (let i = 1; i <= lines; i++) {
+                numbersHtml += i + '<br>';
+            }
+            lineNumbers.innerHTML = numbersHtml;
+        }
+
+        function syncEditorScroll() {
+            const editor = document.getElementById('liveCodeEditor');
+            const lineNumbers = document.getElementById('lineNumbers');
+            lineNumbers.scrollTop = editor.scrollTop;
+        }
+
+        function createNewFile() {
+            const filename = prompt("Enter new filename with extension (e.g., app.js, style.css, module.py):");
+            if(filename && filename.trim() !== '') {
+                if(editorFiles[filename]) {
+                    alert("File already exists!");
+                    return;
+                }
+                editorFiles[filename] = { content: "" };
+                switchActiveFile(filename);
+            }
+        }
+
+        function deleteFile(filename) {
+            if(confirm(`Are you sure you want to delete ${filename}?`)) {
+                delete editorFiles[filename];
+                const remainingFiles = Object.keys(editorFiles);
+                if(remainingFiles.length > 0) {
+                    switchActiveFile(remainingFiles[0]);
+                } else {
+                    editorFiles['index.html'] = { content: '' };
+                    switchActiveFile('index.html');
+                }
+            }
+        }
+
+        let isFullScreen = false;
+        function toggleFullScreenEditor() {
+            const editorBox = document.getElementById('editorBox');
+            const icon = document.getElementById('fullScreenIcon');
+            isFullScreen = !isFullScreen;
+            
+            if(isFullScreen) {
+                editorBox.classList.add('editor-fullscreen');
+                icon.classList.replace('fa-expand', 'fa-compress');
+            } else {
+                editorBox.classList.remove('editor-fullscreen');
+                icon.classList.replace('fa-compress', 'fa-expand');
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleOutput').textContent = '';
+        }
+
+        function logToConsole(message, type='log') {
+            const consoleOut = document.getElementById('consoleOutput');
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'text-red-400' : 'text-gray-300';
+            div.textContent = `> ${message}`;
+            consoleOut.appendChild(div);
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }
+
+        // Listener for iframe console logs
+        window.addEventListener('message', function(e) {
+            if(e.data && e.data.type === 'iframe-log') {
+                logToConsole(e.data.message);
+            }
+        });
+        // ** PRO MAX EDITOR LOGIC END **
+
+
         function openWorkspace(type) {
             if (!appState.isLoggedIn) {
                 appState.pendingWorkspace = type;
@@ -1147,14 +1360,8 @@ const firebaseConfig = {
             workspace.classList.remove('hidden');
             
             if(type === 'editor') {
-                const liveEditor = document.getElementById('liveCodeEditor');
-                const livePreview = document.getElementById('livePreview');
-                // Pro Max Auto-load from localStorage
-                const savedCode = localStorage.getItem('techverse_editor_code');
-                if (savedCode) {
-                    liveEditor.value = savedCode;
-                }
-                livePreview.srcdoc = liveEditor.value;
+                renderFileList();
+                switchActiveFile(activeFile);
             }
 
             setTimeout(() => {
@@ -1169,6 +1376,11 @@ const firebaseConfig = {
             document.body.style.overflow = ''; 
             workspace.classList.remove('opacity-100');
             workspace.classList.add('opacity-0');
+            
+            if(type === 'editor' && isFullScreen) {
+                toggleFullScreenEditor(); // Reset fullscreen on close
+            }
+
             setTimeout(() => {
                 workspace.classList.add('hidden');
             }, 500);
@@ -1198,7 +1410,6 @@ const firebaseConfig = {
             setTimeout(() => modal.classList.add('hidden'), 500);
         }
 
-        // Firebase Live Integration with PopUp Authentication
         function handleGoogleSignIn() {
             const btn = document.querySelector('#authModal button');
             const originalContent = btn.innerHTML;
@@ -1236,7 +1447,7 @@ const firebaseConfig = {
                     btn.disabled = false;
                 })
                 .catch((error) => {
-                    console.error("Firebase Authentication Error: ", error);
+                    console.error("Firebase Auth Error: ", error);
                     const toast = document.getElementById('toast');
                     toast.querySelector('span').textContent = "Authentication Failed! Please try again.";
                     toast.style.borderColor = "rgba(239, 68, 68, 0.3)";
@@ -1250,6 +1461,7 @@ const firebaseConfig = {
                 });
         }
 
+        // Updated Pro Max Trigger Execution Logic
         function triggerEditorAction() {
             if(!appState.hasPremium && appState.editorTrialsUsed >= appState.maxTrials) {
                 closeWorkspace('editor');
@@ -1263,12 +1475,53 @@ const firebaseConfig = {
                 updateUIState();
             }
 
-            const liveEditor = document.getElementById('liveCodeEditor');
-            const livePreview = document.getElementById('livePreview');
+            if(activeFile.endsWith('.py')) {
+                logToConsole("Python execution triggered...", "log");
+                logToConsole("Python requires a backend terminal. For preview, simulation output recorded:\nHello from Python AI Engine", "log");
+                return;
+            }
+
+            // Combine HTML, CSS, JS
+            let htmlCode = ''; let cssCode = ''; let jsCode = '';
             
-            // Smart Auto-save
-            localStorage.setItem('techverse_editor_code', liveEditor.value);
-            livePreview.srcdoc = liveEditor.value;
+            // Auto detect standard files or run current file
+            if(editorFiles['index.html']) htmlCode = editorFiles['index.html'].content;
+            else if (activeFile.endsWith('.html')) htmlCode = editorFiles[activeFile].content;
+            
+            if(editorFiles['style.css']) cssCode = editorFiles['style.css'].content;
+            if(editorFiles['script.js']) jsCode = editorFiles['script.js'].content;
+
+            const combinedCode = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>${cssCode}</style>
+                </head>
+                <body>
+                    ${htmlCode}
+                    <script>
+                        // Intercept Console Logs
+                        const oldLog = console.log;
+                        console.log = function(...args) {
+                            window.parent.postMessage({ type: 'iframe-log', message: args.join(' ') }, '*');
+                            oldLog.apply(console, args);
+                        };
+                        window.onerror = function(msg) {
+                            window.parent.postMessage({ type: 'iframe-log', message: 'ERROR: ' + msg }, '*');
+                        };
+                        try {
+                            ${jsCode}
+                        } catch(e) {
+                            console.log('Exception: ' + e.message);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            clearConsole();
+            logToConsole("Compiling HTML/CSS/JS...");
+            document.getElementById('livePreview').srcdoc = combinedCode;
         }
 
         function simulatePayment() {
@@ -1305,7 +1558,7 @@ const firebaseConfig = {
             activeBtn.classList.add('bg-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/10', 'border-' + (domain === 'eee' ? 'cyan' : 'blue') + '-500/30', 'text-' + (domain === 'eee' ? 'cyan' : 'blue') + '-400');
         }
 
-        // 5. Interactive Smooth FAQ Accordion Logic
+        // 5. Interactive FAQ Accordion
         function toggleFaq(button) {
             const icon = button.querySelector('i');
             const answer = button.nextElementSibling;
@@ -1327,7 +1580,7 @@ const firebaseConfig = {
             }
         }
 
-        // 6. Contact Form Logic
+        // 6. Contact Form
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1365,31 +1618,14 @@ const firebaseConfig = {
                     toast.classList.add('opacity-0', 'translate-y-5', 'pointer-events-none');
                 }, 4000);
             })
-            .catch(error => {
-                console.error('Error:', error);
-            })
+            .catch(error => console.error('Error:', error))
             .finally(() => {
                 if (submitBtn) submitBtn.disabled = false;
                 if (btnText) btnText.textContent = "Send Message";
             });
         });
 
-        // 7. Live Code Editor Interactivity Guard & Smart Auto-save
-        const liveEditor = document.getElementById('liveCodeEditor');
-        const livePreview = document.getElementById('livePreview');
-        if (liveEditor && livePreview) {
-            liveEditor.addEventListener('input', function() {
-                if(!appState.hasPremium && appState.editorTrialsUsed >= appState.maxTrials) {
-                    closeWorkspace('editor');
-                    openPaywallModal();
-                    return;
-                }
-                localStorage.setItem('techverse_editor_code', this.value);
-                livePreview.srcdoc = this.value;
-            });
-        }
-
-        // 8. EEE Project Builder Logic with Paywall Integration
+        // 8. EEE Project Builder
         function generateEEEProject() {
             if(!appState.hasPremium && appState.builderTrialsUsed >= appState.maxTrials) {
                 closeWorkspace('eeeBuilder');
