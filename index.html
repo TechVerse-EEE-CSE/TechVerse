@@ -854,7 +854,26 @@ encrypted += cipher.final('hex');</code>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
     <script>
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDRfX8cqKmDRV2u1HfH2opa5tB2NqD0h9s",
+  authDomain: "techverse-eee-cse.firebaseapp.com",
+  projectId: "techverse-eee-cse",
+  storageBucket: "techverse-eee-cse.firebasestorage.app",
+  messagingSenderId: "719941320241",
+  appId: "1:719941320241:web:10285cc72447a811ad5f10",
+  measurementId: "G-Y1VFHYHH26"
+        };
+
+        // Initialize Firebase Compatibility Mode
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
         // 0. State Management Optimization (Auth & Paywall Systems)
         let appState = {
             isLoggedIn: false,
@@ -869,6 +888,19 @@ encrypted += cipher.final('hex');</code>
             appState = JSON.parse(localStorage.getItem('techverse_state'));
             updateUIState();
         }
+
+        // Firebase Auth State Persistent Synchronization Listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                appState.isLoggedIn = true;
+                saveState();
+                const displayNameEl = document.getElementById('user-display-name');
+                if (displayNameEl && user.displayName) {
+                    displayNameEl.textContent = user.displayName.split(' ')[0];
+                }
+                updateUIState();
+            }
+        });
 
         function saveState() {
             localStorage.setItem('techverse_state', JSON.stringify(appState));
@@ -1166,34 +1198,56 @@ encrypted += cipher.final('hex');</code>
             setTimeout(() => modal.classList.add('hidden'), 500);
         }
 
+        // Firebase Live Integration with PopUp Authentication
         function handleGoogleSignIn() {
             const btn = document.querySelector('#authModal button');
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-lg"></i> Connecting Securely...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                appState.isLoggedIn = true;
-                saveState();
-                updateUIState();
-                closeAuthModal();
-                
-                if(appState.pendingWorkspace) {
-                    openWorkspace(appState.pendingWorkspace);
-                    appState.pendingWorkspace = null;
-                }
-                
-                const toast = document.getElementById('toast');
-                toast.querySelector('span').textContent = "Google Sign-In Completed Successfully!";
-                toast.style.borderColor = "rgba(16, 185, 129, 0.3)";
-                toast.style.color = "#10b981";
-                toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
-                toast.classList.add('opacity-100', 'translate-y-0');
-                setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
-                
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }, 1200);
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    appState.isLoggedIn = true;
+                    saveState();
+                    
+                    const displayNameEl = document.getElementById('user-display-name');
+                    if (displayNameEl && user.displayName) {
+                        displayNameEl.textContent = user.displayName.split(' ')[0];
+                    }
+                    
+                    updateUIState();
+                    closeAuthModal();
+                    
+                    if(appState.pendingWorkspace) {
+                        openWorkspace(appState.pendingWorkspace);
+                        appState.pendingWorkspace = null;
+                    }
+                    
+                    const toast = document.getElementById('toast');
+                    toast.querySelector('span').textContent = "Google Sign-In Completed Successfully!";
+                    toast.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                    toast.style.color = "#10b981";
+                    toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                    toast.classList.add('opacity-100', 'translate-y-0');
+                    setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+                    
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                })
+                .catch((error) => {
+                    console.error("Firebase Authentication Error: ", error);
+                    const toast = document.getElementById('toast');
+                    toast.querySelector('span').textContent = "Authentication Failed! Please try again.";
+                    toast.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                    toast.style.color = "#ef4444";
+                    toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                    toast.classList.add('opacity-100', 'translate-y-0');
+                    setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 4000);
+                    
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                });
         }
 
         function triggerEditorAction() {
