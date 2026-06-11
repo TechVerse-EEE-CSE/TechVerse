@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halal Pro Max - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #10B981; 
+            --primary-dark: #059669;
+            --bg-color: #F1F5F9;
+            --sidebar-bg: #0F172A;
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.08);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Hind Siliguri', sans-serif; }
+        
+        body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- Login Screen --- */
+        #login-screen { position: absolute; inset: 0; background: var(--sidebar-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: var(--card-bg); padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: var(--shadow-md); text-align: center; }
+        .login-box h2 { margin-bottom: 25px; color: var(--text-main); font-weight: 800; font-size: 24px; }
+        .login-box i { font-size: 50px; color: var(--primary); margin-bottom: 15px; }
+        .custom-input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 15px; outline: none; transition: 0.3s; }
+        .custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
+        .btn-primary { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        /* --- Admin Layout --- */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 25px 0; transition: 0.3s; }
+        .sidebar-brand { font-size: 22px; font-weight: 800; padding: 0 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
+        .nav-item { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 16px; color: #CBD5E1; transition: 0.3s; }
+        .nav-item:hover, .nav-item.active { background: rgba(16, 185, 129, 0.15); color: var(--primary); border-right: 4px solid var(--primary); }
+        .logout-btn { margin-top: auto; color: var(--danger); }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-right: 4px solid var(--danger); }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 30px; position: relative; }
+        .header-title { font-size: 28px; font-weight: 800; margin-bottom: 25px; color: var(--sidebar-bg); }
+
+        /* --- Dashboard Stats --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 35px; }
+        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(0,0,0,0.03); }
+        .stat-info h4 { color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+        .stat-info h2 { color: var(--text-main); font-size: 28px; font-weight: 800; }
+        .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .icon-blue { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+        .icon-green { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .icon-orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .icon-red { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* --- Sections --- */
+        .admin-section { display: none; animation: fadeIn 0.4s ease; }
+        .admin-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Orders Table --- */
+        .panel-card { background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow-sm); padding: 25px; border: 1px solid rgba(0,0,0,0.03); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+        th { background: #F8FAFC; color: var(--text-muted); font-weight: 700; font-size: 14px; text-transform: uppercase; }
+        td { font-size: 15px; font-weight: 500; }
+        tr:hover { background: #F8FAFC; }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .badge-pending { background: #FEF3C7; color: #D97706; }
+        .badge-processing { background: #DBEAFE; color: #2563EB; }
+        .badge-delivered { background: #D1FAE5; color: #059669; }
+        .badge-cancelled { background: #FEE2E2; color: #DC2626; }
+
+        .status-select { padding: 8px; border-radius: 8px; border: 1px solid #CBD5E1; font-weight: 600; outline: none; background: white; cursor: pointer; }
+        
+        /* --- Products Grid --- */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .prod-card { background: white; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; text-align: center; position: relative; }
+        .prod-icon { font-size: 40px; color: var(--primary); margin-bottom: 15px; }
+        .del-btn { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .del-btn:hover { background: var(--danger); color: white; }
+
+        /* Toast */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: rgba(15, 23, 42, 0.95); color: white; padding: 15px 25px; border-radius: 10px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideLeft 0.4s ease forwards; display: flex; align-items: center; gap: 10px; }
+        .toast.error { background: rgba(239, 68, 68, 0.95); }
+        @keyframes slideLeft { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: var(--shadow-md); animation: fadeIn 0.3s; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: 800; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <i class="fa-solid fa-user-shield"></i>
+        <h2>অ্যাডমিন লগইন</h2>
+        <input type="email" id="admin-email" class="custom-input" placeholder="অ্যাডমিন ইমেইল">
+        <input type="password" id="admin-pass" class="custom-input" placeholder="পাসওয়ার্ড">
+        <button class="btn-primary" onclick="adminLogin()">লগইন করুন</button>
+    </div>
+</div>
+
+<div id="admin-dashboard" style="display: none; width: 100%;">
+    
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-store"></i> হালাল শপ অ্যাডমিন
+        </div>
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">
+            <i class="fa-solid fa-chart-pie"></i> ড্যাশবোর্ড
+        </div>
+        <div class="nav-item" onclick="switchTab('orders', this)">
+            <i class="fa-solid fa-cart-shopping"></i> সকল অর্ডার
+        </div>
+        <div class="nav-item" onclick="switchTab('products', this)">
+            <i class="fa-solid fa-box-open"></i> পণ্য পরিচালনা
+        </div>
+        <div class="nav-item logout-btn" onclick="adminLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> লগআউট
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="toast-container"></div>
+
+        <div id="dashboard-tab" class="admin-section active">
+            <h2 class="header-title">ড্যাশবোর্ড ওভারভিউ</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h4>মোট অর্ডার</h4>
+                        <h2 id="stat-total-orders">0</h2>
+                    </div>
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-shopping-bag"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h4>মোট আয় (৳)</h4>
+                        <h2 id="stat-total-revenue">0</h2>
+                    </div>
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-bangladeshi-taka-sign"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h4>পেন্ডিং অর্ডার</h4>
+                        <h2 id="stat-pending">0</h2>
+                    </div>
+                    <div class="stat-icon icon-orange"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h4>ডেলিভারি সম্পন্ন</h4>
+                        <h2 id="stat-delivered">0</h2>
+                    </div>
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-check-double"></i></div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <h3 style="margin-bottom: 15px; font-weight: 800;">সাম্প্রতিক অর্ডারসমূহ</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>অর্ডার আইডি</th>
+                                <th>গ্রাহক</th>
+                                <th>টাকা</th>
+                                <th>স্ট্যাটাস</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="orders-tab" class="admin-section">
+            <h2 class="header-title">অর্ডার ম্যানেজমেন্ট</h2>
+            <div class="panel-card" style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>তারিখ ও সময়</th>
+                            <th>অর্ডার আইডি</th>
+                            <th>কাস্টমার ইনফো</th>
+                            <th>আইটেম</th>
+                            <th>পেমেন্ট মেথড</th>
+                            <th>মোট মূল্য</th>
+                            <th>অ্যাকশন (স্ট্যাটাস)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-orders-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="products-tab" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 class="header-title" style="margin: 0;">পণ্য তালিকা</h2>
+                <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="openProductModal()">
+                    <i class="fa-solid fa-plus"></i> নতুন পণ্য যুক্ত করুন
+                </button>
+            </div>
+            
+            <div class="panel-card">
+                <div id="products-container" class="product-grid">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal-overlay" id="product-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>নতুন পণ্য যোগ করুন</span>
+            <button class="close-btn" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input type="text" id="prod-name" class="custom-input" placeholder="পণ্যের নাম (যেমন: প্রিমিয়াম আজওয়া)">
+        <input type="text" id="prod-desc" class="custom-input" placeholder="বিবরণ (যেমন: মদিনার অরিজিনাল)">
+        <input type="number" id="prod-price" class="custom-input" placeholder="মূল্য (৳)">
+        <input type="text" id="prod-icon" class="custom-input" placeholder="ফন্ট অসাম আইকন ক্লাস (যেমন: fa-solid fa-box)">
+        <button class="btn-primary" onclick="saveProduct()">সেভ করুন</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, query, doc, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // আপনার ফায়ারবেস কনফিগারেশন
+    const firebaseConfig = {
+        apiKey: "AIzaSyDU2yT6V6d6HPGsYj9e21ybKYEce3ne5VM",
+        authDomain: "just-trying1.firebaseapp.com",
+        projectId: "just-trying1",
+        storageBucket: "just-trying1.firebasestorage.app",
+        messagingSenderId: "669327838181",
+        appId: "1:669327838181:web:87c423bc6bcdf578bdbd0c",
+        measurementId: "G-62T19J3ZNP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Utility: Toast Notification ---
+    window.showToast = function(msg, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+    }
+
+    // --- Authentication Logic ---
+    window.adminLogin = async () => {
+        const email = document.getElementById('admin-email').value;
+        const pass = document.getElementById('admin-pass').value;
+        if(!email || !pass) return showToast("ইমেইল ও পাসওয়ার্ড দিন", "error");
+        
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            // এখানে চাইলে নির্দিষ্ট অ্যাডমিন ইমেইল চেক করতে পারেন
+            showToast("লগইন সফল!");
+        } catch (error) {
+            showToast("ভুল ইমেইল বা পাসওয়ার্ড", "error");
+        }
+    }
+
+    window.adminLogout = () => {
+        signOut(auth).then(() => {
+            showToast("লগআউট হয়েছে");
+        });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'flex';
+            loadRealtimeOrders();
+            loadRealtimeProducts();
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('admin-dashboard').style.display = 'none';
+        }
+    });
+
+    // --- Tab Switching ---
+    window.switchTab = function(tabName, element) {
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // --- Real-time Orders Listener ---
+    function loadRealtimeOrders() {
+        const q = query(collection(db, "orders"));
+        
+        onSnapshot(q, (snapshot) => {
+            let totalOrders = 0;
+            let totalRevenue = 0;
+            let pendingCount = 0;
+            let deliveredCount = 0;
+            
+            let ordersArray = [];
+
+            snapshot.forEach((doc) => {
+                let data = doc.data();
+                data.id = doc.id;
+                ordersArray.push(data);
+                
+                totalOrders++;
+                if(data.status !== 'Cancelled') totalRevenue += (data.totalAmount || 0);
+                if(data.status === 'Pending') pendingCount++;
+                if(data.status === 'Delivered') deliveredCount++;
+            });
+
+            // Update Stats
+            document.getElementById('stat-total-orders').innerText = totalOrders;
+            document.getElementById('stat-total-revenue').innerText = totalRevenue.toLocaleString('bn-BD');
+            document.getElementById('stat-pending').innerText = pendingCount;
+            document.getElementById('stat-delivered').innerText = deliveredCount;
+
+            // Sort newest first
+            ordersArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            renderOrdersTables(ordersArray);
+        });
+    }
+
+    function renderOrdersTables(orders) {
+        const allTbody = document.getElementById('all-orders-body');
+        const recentTbody = document.getElementById('recent-orders-body');
+        
+        allTbody.innerHTML = '';
+        recentTbody.innerHTML = '';
+
+        orders.forEach((order, index) => {
+            let d = new Date(order.timestamp);
+            let dateStr = d.toLocaleDateString('bn-BD') + " " + d.toLocaleTimeString('bn-BD', {hour:'2-digit', minute:'2-digit'});
+            
+            // Generate items string
+            let itemsStr = order.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+            // Status Badge class
+            let badgeClass = 'badge-pending';
+            if(order.status === 'Processing') badgeClass = 'badge-processing';
+            if(order.status === 'Delivered') badgeClass = 'badge-delivered';
+            if(order.status === 'Cancelled') badgeClass = 'badge-cancelled';
+
+            // Status Dropdown
+            let statusSelect = `
+                <select class="status-select" onchange="updateStatus('${order.id}', this.value)">
+                    <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                    <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            `;
+
+            // Full Table Row
+            let fullRow = `
+                <tr>
+                    <td><small style="color:var(--text-muted);">${dateStr}</small></td>
+                    <td style="font-weight:700;">${order.orderId || order.id}</td>
+                    <td>
+                        <strong>${order.userName || 'Guest'}</strong><br>
+                        <small>${order.userEmail}</small>
+                    </td>
+                    <td><small>${itemsStr}</small></td>
+                    <td>
+                        <span class="badge ${order.paymentMethod === 'Cash on Delivery' ? 'badge-processing' : 'badge-pending'}">${order.paymentMethod}</span>
+                        ${order.transactionId !== 'N/A' ? `<br><small>TrxID: ${order.transactionId}</small>` : ''}
+                    </td>
+                    <td style="font-weight:800; color:var(--primary-dark);">৳${order.totalAmount}</td>
+                    <td>${statusSelect}</td>
+                </tr>
+            `;
+            allTbody.innerHTML += fullRow;
+
+            // Recent Table Row (only top 5)
+            if(index < 5) {
+                let recentRow = `
+                    <tr>
+                        <td style="font-weight:700;">${order.orderId || order.id}</td>
+                        <td>${order.userName || 'Guest'}</td>
+                        <td style="font-weight:800; color:var(--primary-dark);">৳${order.totalAmount}</td>
+                        <td><span class="badge ${badgeClass}">${order.status}</span></td>
+                    </tr>
+                `;
+                recentTbody.innerHTML += recentRow;
+            }
+        });
+    }
+
+    // --- Update Order Status ---
+    window.updateStatus = async function(docId, newStatus) {
+        try {
+            await updateDoc(doc(db, "orders", docId), { status: newStatus });
+            showToast("স্ট্যাটাস আপডেট হয়েছে!");
+        } catch (error) {
+            showToast("আপডেট করতে সমস্যা হয়েছে", "error");
+            console.error(error);
+        }
+    }
+
+    // --- Product Management Logic ---
+    window.openProductModal = () => { document.getElementById('product-modal').classList.add('active'); }
+    window.closeProductModal = () => { document.getElementById('product-modal').classList.remove('active'); }
+
+    window.saveProduct = async () => {
+        const name = document.getElementById('prod-name').value;
+        const desc = document.getElementById('prod-desc').value;
+        const price = document.getElementById('prod-price').value;
+        let icon = document.getElementById('prod-icon').value;
+
+        if(!name || !price) return showToast("নাম এবং মূল্য অবশ্যই দিতে হবে", "error");
+        if(!icon) icon = "fa-solid fa-box";
+
+        try {
+            await addDoc(collection(db, "products"), {
+                name: name,
+                desc: desc,
+                price: Number(price),
+                icon: icon,
+                timestamp: new Date().toISOString()
+            });
+            showToast("পণ্য সফলভাবে যুক্ত হয়েছে!");
+            closeProductModal();
+            // Clear inputs
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-desc').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-icon').value = '';
+        } catch (error) {
+            showToast("পণ্য যুক্ত করতে সমস্যা হয়েছে", "error");
+        }
+    }
+
+    function loadRealtimeProducts() {
+        const q = query(collection(db, "products"));
+        onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            
+            if(snapshot.empty) {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">কোনো পণ্য ডেটাবেজে নেই। অনুগ্রহ করে পণ্য যুক্ত করুন।</p>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                let p = doc.data();
+                container.innerHTML += `
+                    <div class="prod-card">
+                        <button class="del-btn" onclick="deleteProduct('${doc.id}')" title="ডিলিট করুন"><i class="fa-solid fa-trash"></i></button>
+                        <i class="${p.icon} prod-icon"></i>
+                        <h3 style="font-size:18px; margin-bottom:5px;">${p.name}</h3>
+                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:10px;">${p.desc}</p>
+                        <div style="font-weight:800; font-size:18px; color:var(--primary-dark);">৳ ${p.price}</div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    window.deleteProduct = async (docId) => {
+        if(confirm("আপনি কি নিশ্চিত যে এই পণ্যটি ডিলিট করতে চান?")) {
+            try {
+                await deleteDoc(doc(db, "products", docId));
+                showToast("পণ্য ডিলিট হয়েছে!");
+            } catch (error) {
+                showToast("ডিলিট করতে সমস্যা হয়েছে", "error");
+            }
+        }
+    }
+
+</script>
+</body>
+</html>
