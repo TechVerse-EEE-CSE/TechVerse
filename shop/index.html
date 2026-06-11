@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Halal Pro Max E-Commerce</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght=400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -69,7 +69,7 @@
             justify-content: space-between; border: 1px solid rgba(255,255,255,0.8);
         }
         .product-card:active { transform: scale(0.96); box-shadow: var(--shadow-md); }
-        .product-img-wrapper { background: linear-gradient(145deg, #F1F5F9, #E2E8F0); height: 85px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .product-img-wrapper { background: linear-gradient(145deg, #F1F5F9, #E2E8F0); height: 85px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; overflow: hidden; }
         .product-img { font-size: 38px; color: var(--primary); }
         .product-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
         .product-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
@@ -146,12 +146,12 @@
         .toggle-auth-mode span { color: var(--primary); cursor: pointer; padding-left: 5px; }
 
         /* Toast */
-        #toast-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 200; display: flex; flex-direction: column; gap: 12px; }
+        #toast-container { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 300; display: flex; flex-direction: column; gap: 12px; }
         .toast { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); color: white; padding: 14px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .toast.error { background: rgba(239, 68, 68, 0.95); }
         @keyframes toastEnter { from { opacity: 0; transform: translateY(-25px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Payment Modal Styling (New - Smart Design) */
+        /* Payment Modal Styling */
         .payment-methods { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
         .payment-card { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1.5px solid #E2E8F0; border-radius: 14px; cursor: pointer; transition: 0.3s; background: white; }
         .payment-card.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.05); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1); }
@@ -162,6 +162,47 @@
         .payment-card.active .check-circle::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; }
         .payment-details { display: none; padding: 15px; background: #F8FAFC; border-radius: 12px; margin-bottom: 15px; border: 1px dashed #CBD5E1; animation: slideIn 0.3s; }
         .payment-details.active { display: block; }
+
+        /* Enhanced Modals (Smart Alerts & Forgot Password) */
+        .smart-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 199; display: none; opacity: 0; transition: 0.3s; }
+        .smart-overlay.active { display: block; opacity: 1; }
+
+        .smart-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.85);
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            width: 88%; max-width: 360px; padding: 30px 25px; border-radius: 28px; text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2); z-index: 200; opacity: 0; visibility: hidden; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.9);
+        }
+        .smart-box.active { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+        
+        .smart-box-icon {
+            font-size: 40px; margin: 0 auto 18px; width: 80px; height: 80px; 
+            display: flex; justify-content: center; align-items: center; border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1); color: var(--primary);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+        }
+        .smart-box-icon.google-icon { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+        .smart-box-icon.error-icon { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .smart-box-icon.email-icon { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+        
+        .smart-box h3 { font-size: 21px; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
+        .smart-box p { font-size: 15px; color: var(--text-muted); margin-bottom: 25px; font-weight: 600; line-height: 1.5; }
+
+        /* Order History Styles - Pro Max Level Premium Design */
+        .order-history-title { font-size: 16px; font-weight: 700; margin: 25px 0 12px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        .order-list { display: flex; flex-direction: column; gap: 14px; }
+        .order-card { background: white; border-radius: 20px; padding: 16px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03); transition: 0.3s; }
+        .order-card:active { transform: scale(0.98); }
+        .order-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #E2E8F0; padding-bottom: 10px; margin-bottom: 12px; }
+        .order-id-txt { font-size: 13px; font-weight: 800; color: var(--text-main); }
+        .order-status-badge { font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
+        .status-pending { background: #FFF7ED; color: #EA580C; border: 1px solid #FFEDD5; }
+        .status-success { background: #ECFDF5; color: #059669; border: 1px solid #D1FAE5; }
+        .order-card-body { font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
+        .order-item-line { display: flex; justify-content: space-between; color: var(--text-main); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+        .order-meta-info { font-size: 12px; color: var(--text-muted); margin-top: 8px; display: flex; justify-content: space-between; font-weight: 600; padding-top: 8px; border-top: 1px dashed #F1F5F9; }
     </style>
 </head>
 <body>
@@ -202,6 +243,11 @@
                 <p id="profile-email" style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px; font-weight: 500;">পণ্য কিনতে অনুগ্রহ করে লগইন করুন</p>
                 <button id="profile-auth-btn" class="checkout-btn" onclick="openAuthModal()">লগইন করুন</button>
             </div>
+            
+            <div id="order-history-section" style="display: none;">
+                <div class="order-history-title"><i class="fa-solid fa-clock-rotate-left"></i> আমার অর্ডারসমূহ</div>
+                <div id="order-list-container" class="order-list"></div>
+            </div>
         </div>
     </div>
 
@@ -228,7 +274,7 @@
                 <input type="email" id="login-email" class="custom-input" placeholder="আপনার ইমেইল অ্যাড্রেস">
                 <input type="password" id="login-pass" class="custom-input" placeholder="পাসওয়ার্ড">
                 <div style="text-align: right; margin-bottom: 20px;">
-                    <a href="#" onclick="handleForgotPassword()" style="font-size: 14px; color: var(--primary); text-decoration: none; font-weight: 700;">পাসওয়ার্ড ভুলে গেছেন?</a>
+                    <a href="#" onclick="openForgotPassModal()" style="font-size: 14px; color: var(--primary); text-decoration: none; font-weight: 700;">পাসওয়ার্ড ভুলে গেছেন?</a>
                 </div>
                 <button class="checkout-btn" onclick="handleEmailLogin()">লগইন করুন</button>
                 <div class="toggle-auth-mode">অ্যাকাউন্ট নেই? <span onclick="toggleEmailMode('signup')">নতুন অ্যাকাউন্ট খুলুন</span></div>
@@ -300,6 +346,25 @@
 
         <button class="checkout-btn" onclick="confirmFinalOrder()">অর্ডার নিশ্চিত করুন <i class="fa-solid fa-check-circle"></i></button>
     </div>
+
+    <div id="smart-alert-overlay" class="smart-overlay" onclick="closeSmartAlert()"></div>
+    <div id="smart-alert-box" class="smart-box">
+        <div id="smart-alert-icon" class="smart-box-icon error-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <h3 id="smart-alert-title">সতর্কতা</h3>
+        <p id="smart-alert-msg">মেসেজ</p>
+        <button class="checkout-btn" onclick="closeSmartAlert()">বুঝতে পেরেছি</button>
+    </div>
+
+    <div id="forgot-pass-overlay" class="smart-overlay" onclick="closeForgotPassModal()"></div>
+    <div id="forgot-pass-box" class="smart-box">
+        <button class="close-btn" style="position: absolute; top: 18px; right: 18px;" onclick="closeForgotPassModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="smart-box-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+        <h3>পাসওয়ার্ড রিসেট</h3>
+        <p>আপনার অ্যাকাউন্টের ইমেইল দিন, আমরা পাসওয়ার্ড রিসেট করার লিংক পাঠিয়ে দিবো।</p>
+        <input type="email" id="forgot-email-input" class="custom-input" placeholder="আপনার ইমেইল অ্যাড্রেস">
+        <button class="checkout-btn" onclick="processForgotPassword()">রিসেট লিংক পাঠান <i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
 </div>
 
 <script type="module">
@@ -307,9 +372,9 @@
     import { 
         getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
         createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-        RecaptchaVerifier, signInWithPhoneNumber, updateProfile
+        RecaptchaVerifier, signInWithPhoneNumber, updateProfile, fetchSignInMethodsForEmail
     } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDU2yT6V6d6HPGsYj9e21ybKYEce3ne5VM",
@@ -329,7 +394,9 @@
     let currentUser = null;
     let myCart = JSON.parse(localStorage.getItem('halalProMaxCart')) || [];
     let confirmationResult = null; 
-    window.selectedPaymentMethod = 'Cash on Delivery'; // Default payment logic
+    window.selectedPaymentMethod = 'Cash on Delivery'; 
+    let unsubscribeOrders = null;
+    let unsubscribeProducts = null;
 
     // --- Toast & UI Utils ---
     window.showToast = function(msg, type = 'success') {
@@ -341,6 +408,64 @@
         setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3500);
     }
 
+    // --- Smart Alert Modal ---
+    window.showSmartAlert = function(title, msg, type) {
+        document.getElementById('smart-alert-title').innerText = title;
+        document.getElementById('smart-alert-msg').innerText = msg;
+        
+        const iconBox = document.getElementById('smart-alert-icon');
+        iconBox.className = 'smart-box-icon'; 
+        if(type === 'google') {
+            iconBox.classList.add('google-icon');
+            iconBox.innerHTML = '<i class="fa-brands fa-google"></i>';
+        } else if (type === 'email') {
+            iconBox.classList.add('email-icon');
+            iconBox.innerHTML = '<i class="fa-solid fa-envelope"></i>';
+        } else {
+            iconBox.classList.add('error-icon');
+            iconBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+        }
+
+        document.getElementById('smart-alert-overlay').classList.add('active');
+        document.getElementById('smart-alert-box').classList.add('active');
+    }
+
+    window.closeSmartAlert = function() {
+        document.getElementById('smart-alert-overlay').classList.remove('active');
+        document.getElementById('smart-alert-box').classList.remove('active');
+    }
+
+    // --- Forgot Password Modal ---
+    window.openForgotPassModal = function() {
+        const loginEmail = document.getElementById('login-email').value;
+        if(loginEmail) document.getElementById('forgot-email-input').value = loginEmail;
+        
+        document.getElementById('forgot-pass-overlay').classList.add('active');
+        document.getElementById('forgot-pass-box').classList.add('active');
+    }
+
+    window.closeForgotPassModal = function() {
+        document.getElementById('forgot-pass-overlay').classList.remove('active');
+        document.getElementById('forgot-pass-box').classList.remove('active');
+    }
+
+    window.processForgotPassword = async function() {
+        const email = document.getElementById('forgot-email-input').value;
+        if(!email) return showToast("অনুগ্রহ করে আপনার ইমেইল দিন", "error");
+        
+        try {
+            await sendPasswordResetEmail(auth, email);
+            closeForgotPassModal();
+            showSmartAlert("সফল হয়েছে!", "পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে। দয়া করে ইনবক্স চেক করুন।", "email");
+        } catch (error) { 
+            if(error.code === 'auth/user-not-found') {
+                showSmartAlert("অ্যাকাউন্ট নেই!", "এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি। দয়া করে সঠিক ইমেইল দিন।", "error");
+            } else {
+                showToast(translateError(error.code), "error"); 
+            }
+        }
+    }
+
     // --- Auth Modal Logic ---
     window.openAuthModal = function() {
         if(currentUser) { 
@@ -349,7 +474,7 @@
         }
         document.getElementById('auth-overlay').classList.add('active');
         document.getElementById('auth-sheet').classList.add('active');
-        toggleEmailMode('login'); // Default to login view
+        toggleEmailMode('login'); 
     }
     
     window.closeAuthModal = function() {
@@ -366,7 +491,6 @@
         document.getElementById('phone-section').style.display = type === 'phone' ? 'block' : 'none';
     }
 
-    // Toggle between Login and Signup forms inside Email Tab
     window.toggleEmailMode = function(mode) {
         const title = document.getElementById('auth-modal-title');
         if(mode === 'signup') {
@@ -394,11 +518,22 @@
         return regex.test(password);
     }
 
+    // ==========================================
+    // PRO MAX AUTHENTICATION LOGIC STARTS HERE
+    // ==========================================
+
     window.handleGoogleLogin = async () => {
         try {
             await signInWithPopup(auth, googleProvider);
             closeAuthModal(); showToast("গুগল লগইন সফল!");
-        } catch (error) { showToast(translateError(error.code), "error"); }
+        } catch (error) { 
+            // PRO MAX Check: If user tries Google sign-in but account is already linked to Email/Password
+            if(error.code === 'auth/account-exists-with-different-credential' || error.code === 'auth/email-already-in-use') {
+                showSmartAlert("ইমেইলে অ্যাকাউন্ট বিদ্যমান!", "আপনি ইতিমধ্যে এই ইমেইলটি ব্যবহার করে একটি অ্যাকাউন্ট খুলেছেন। দয়া করে 'ইমেইল' অপশনে গিয়ে পাসওয়ার্ড দিয়ে লগইন করুন।", "email");
+            } else {
+                showToast(translateError(error.code), "error"); 
+            }
+        }
     };
 
     window.handleEmailSignup = async () => {
@@ -414,13 +549,35 @@
             return showToast("পাসওয়ার্ডে অন্তত ৮টি অক্ষর, একটি বড় ও ছোট হাতের অক্ষর (A-z) এবং একটি সংখ্যা (0-9) থাকতে হবে।", "error");
         }
         
+        // PRO MAX PRE-CHECK: Find out if user already has a Google/Email account before throwing generic error
+        try {
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.length > 0) {
+                if (methods.includes('google.com')) {
+                    showSmartAlert("গুগল অ্যাকাউন্ট বিদ্যমান!", "এই ইমেইল দিয়ে ইতিমধ্যে গুগল অ্যাকাউন্ট খোলা আছে। দয়া করে নিচে 'গুগল দিয়ে কন্টিনিউ করুন' বাটনে ক্লিক করে লগইন করুন।", "google");
+                    return;
+                } else if (methods.includes('password')) {
+                    showSmartAlert("অ্যাকাউন্ট বিদ্যমান!", "এই ইমেইল দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট খোলা আছে। দয়া করে লগইন করুন।", "email");
+                    return;
+                }
+            }
+        } catch (e) {
+            // Fallback gracefully if Firebase Enumeration Protection is ON
+        }
+        
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
             await updateProfile(userCredential.user, { displayName: name });
             auth.updateCurrentUser(userCredential.user);
             
             closeAuthModal(); showToast("আলহামদুলিল্লাহ! অ্যাকাউন্ট খোলা সফল।");
-        } catch (error) { showToast(translateError(error.code), "error"); }
+        } catch (error) { 
+            if (error.code === 'auth/email-already-in-use') {
+                showSmartAlert("অ্যাকাউন্ট বিদ্যমান!", "এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা আছে। দয়া করে লগইন করুন বা গুগল দিয়ে চেষ্টা করুন।", "error");
+            } else {
+                showToast(translateError(error.code), "error"); 
+            }
+        }
     }
 
     window.handleEmailLogin = async () => {
@@ -428,21 +585,36 @@
         const pass = document.getElementById('login-pass').value;
         if(!email || !pass) return showToast("ইমেইল ও পাসওয়ার্ড প্রদান করুন", "error");
 
+        // PRO MAX PRE-CHECK: Check if they are trying to login with an email that is actually a Google account
+        try {
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.includes('google.com') && !methods.includes('password')) {
+                return showSmartAlert("গুগল অ্যাকাউন্ট!", "আপনি ইতিমধ্যে এই ইমেইল দিয়ে গুগল অ্যাকাউন্ট খুলেছেন। দয়া করে নিচে 'গুগল দিয়ে কন্টিনিউ করুন' বাটনে ক্লিক করে লগইন করুন।", "google");
+            }
+        } catch(e) { 
+            // Fallback gracefully 
+        }
+
         try {
             await signInWithEmailAndPassword(auth, email, pass);
             closeAuthModal(); showToast("লগইন সফল হয়েছে!");
-        } catch (error) { showToast(translateError(error.code), "error"); }
+        } catch (error) { 
+            // Secondary catch block just in case pre-check was missed
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                try {
+                    const methods = await fetchSignInMethodsForEmail(auth, email);
+                    if (methods.includes('google.com') && !methods.includes('password')) {
+                        return showSmartAlert("গুগল অ্যাকাউন্ট!", "আপনি ইতিমধ্যে এই ইমেইল দিয়ে গুগল অ্যাকাউন্ট খুলেছেন। দয়া করে নিচে 'গুগল দিয়ে কন্টিনিউ করুন' বাটনে ক্লিক করে লগইন করুন।", "google");
+                    }
+                } catch(e){}
+            }
+            showToast(translateError(error.code), "error"); 
+        }
     }
 
-    window.handleForgotPassword = async () => {
-        const email = document.getElementById('login-email').value;
-        if(!email) return showToast("পাসওয়ার্ড রিসেট করতে আগে লগইন বক্সে আপনার ইমেইলটি লিখুন", "error");
-        
-        try {
-            await sendPasswordResetEmail(auth, email);
-            showToast("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে!");
-        } catch (error) { showToast(translateError(error.code), "error"); }
-    }
+    // ==========================================
+    // PRO MAX LOGIC ENDS HERE
+    // ==========================================
 
     window.sendOTP = async () => {
         const phone = document.getElementById('phone-input').value;
@@ -480,6 +652,7 @@
         currentUser = user;
         const profileBtn = document.getElementById('profile-auth-btn');
         const headerBtn = document.getElementById('auth-btn');
+        const orderSec = document.getElementById('order-history-section');
 
         if (user) {
             const displayId = user.displayName || user.email || user.phoneNumber;
@@ -494,6 +667,9 @@
                 document.getElementById('profile-pic').style.display = 'block';
                 document.getElementById('profile-pic').src = user.photoURL;
             }
+            
+            if(orderSec) orderSec.style.display = 'block';
+            listenToUserOrders(user.uid);
         } else {
             headerBtn.innerText = "লগইন";
             profileBtn.innerText = "লগইন করুন";
@@ -503,8 +679,88 @@
             document.getElementById('profile-email').innerText = "পণ্য কিনতে অনুগ্রহ করে লগইন করুন";
             document.getElementById('profile-icon').style.display = 'block';
             document.getElementById('profile-pic').style.display = 'none';
+            
+            if(orderSec) orderSec.style.display = 'none';
+            if(unsubscribeOrders) { unsubscribeOrders(); unsubscribeOrders = null; }
+            document.getElementById('order-list-container').innerHTML = '';
         }
     });
+
+    window.listenToUserOrders = function(uid) {
+        if(unsubscribeOrders) unsubscribeOrders();
+        
+        const q = query(collection(db, "orders"), where("userId", "==", uid));
+        
+        unsubscribeOrders = onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('order-list-container');
+            if(!container) return;
+            
+            if(snapshot.empty) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 30px 10px; font-weight: 600; font-size: 14px;">
+                        <i class="fa-solid fa-box-open" style="font-size: 40px; color: #CBD5E1; display: block; margin-bottom: 10px;"></i>
+                        আপনি এখন পর্যন্ত কোনো অর্ডার করেননি!
+                    </div>`;
+                return;
+            }
+            
+            let ordersArray = [];
+            snapshot.forEach(doc => {
+                ordersArray.push({ id: doc.id, ...doc.data() });
+            });
+            
+            ordersArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            container.innerHTML = '';
+            ordersArray.forEach(order => {
+                let formattedDate = "N/A";
+                if(order.timestamp) {
+                    const d = new Date(order.timestamp);
+                    formattedDate = d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) + " | " + d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+                }
+                
+                let statusClass = order.status === 'Pending' ? 'status-pending' : 'status-success';
+                let statusText = order.status === 'Pending' ? 'পেন্ডিং' : (order.status === 'Delivered' ? 'ডেলিভার্ড' : order.status);
+                
+                let itemsHtml = '';
+                if(order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="order-item-line">
+                                <span>${item.name} <small style="color:var(--text-muted);font-weight:500;">(x${item.qty})</small></span>
+                                <span>৳${item.price * item.qty}</span>
+                            </div>`;
+                    });
+                }
+                
+                container.innerHTML += `
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <span class="order-id-txt"><i class="fa-solid fa-hashtag"></i> ID: ${order.orderId ? order.orderId.replace('order_', '') : order.id}</span>
+                            <span class="order-status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="order-card-body">
+                            <div style="margin-bottom: 8px; border-bottom: 1px dashed #F1F5F9; padding-bottom: 6px;">
+                                ${itemsHtml}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-weight: 800; color: var(--text-main); font-size: 14px; margin-bottom: 2px;">
+                                <span>সর্বমোট মূল্য:</span>
+                                <span style="color: var(--primary-dark);">৳ ${order.totalAmount || 0}</span>
+                            </div>
+                            <div class="order-meta-info">
+                                <span><i class="fa-solid fa-wallet"></i> ${order.paymentMethod || 'N/A'}</span>
+                                <span><i class="fa-solid fa-calendar-day"></i> ${formattedDate}</span>
+                            </div>
+                            ${order.transactionId && order.transactionId !== 'N/A' ? `
+                            <div style="font-size: 11px; background: #F8FAFC; padding: 6px 10px; border-radius: 8px; margin-top: 8px; font-weight: 600; display: flex; justify-content: space-between; border: 1px solid #E2E8F0;">
+                                <span style="color:var(--text-muted);">TrxID:</span>
+                                <span style="color:var(--text-main); font-family: monospace;">${order.transactionId}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
+            });
+        });
+    }
 
     window.switchScreen = function(screenName, element) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -514,33 +770,69 @@
         if(screenName === 'cart') renderCart();
     }
 
-    const smartProducts = [
-        { id: "p1", name: "প্রিমিয়াম আজওয়া খেজুর", desc: "মদিনার অরিজিনাল", price: 1200, icon: "fa-solid fa-cubes-stacked" },
-        { id: "p2", name: "দুবাই আতর", desc: "অ্যালকোহল মুক্ত", price: 850, icon: "fa-solid fa-spray-can" },
-        { id: "p3", name: "টার্কিশ জায়নামাজ", desc: "আরামদায়ক", price: 1500, icon: "fa-solid fa-rug" },
-        { id: "p4", name: "ডিজিটাল তাসবিহ", desc: "স্মার্ট কাউন্টার", price: 250, icon: "fa-solid fa-stopwatch" }
-    ];
-    
-    setTimeout(() => {
+    // --- Pro Max Level Real-time Product Fetching ---
+    window.loadProductsFromFirestore = function() {
         const container = document.getElementById('product-container');
-        container.innerHTML = '';
-        smartProducts.forEach((p) => {
-            container.innerHTML += `
-                <div class="product-card">
-                    <div>
-                        <div class="product-img-wrapper"><i class="${p.icon} product-img"></i></div>
-                        <div class="product-title">${p.name}</div>
-                        <div class="product-desc">${p.desc}</div>
-                    </div>
-                    <div>
-                        <div class="product-price">৳ ${p.price}</div>
-                        <button class="add-btn" onclick="addToCart('${p.id}', '${p.name}', ${p.price})">
-                            <i class="fa-solid fa-cart-plus"></i> যুক্ত করুন
-                        </button>
-                    </div>
+        
+        // Loader
+        container.innerHTML = `
+            <div style="grid-column: span 2; text-align: center; padding: 40px 10px;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 35px; color: var(--primary);"></i>
+                <p style="margin-top:15px; color: var(--text-muted); font-weight: 600; font-size: 14px;">প্রোডাক্ট খোঁজা হচ্ছে...</p>
+            </div>`;
+
+        if(unsubscribeProducts) unsubscribeProducts();
+
+        const q = query(collection(db, "products"));
+        
+        unsubscribeProducts = onSnapshot(q, (snapshot) => {
+            if(snapshot.empty) {
+                container.innerHTML = `
+                    <div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 40px 10px;">
+                        <i class="fa-solid fa-box-open" style="font-size: 40px; color: #CBD5E1; margin-bottom: 15px; display:block;"></i>
+                        <h3 style="font-size: 16px; font-weight: 700;">কোনো প্রোডাক্ট পাওয়া যায়নি!</h3>
+                        <p style="font-size: 13px; margin-top: 5px;">অ্যাডমিন প্যানেল থেকে প্রোডাক্ট যুক্ত করুন।</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const p = { id: doc.id, ...doc.data() };
+                
+                let mediaHtml = '';
+                if(p.imageUrl || p.image) {
+                    mediaHtml = `<img src="${p.imageUrl || p.image}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 15px;">`;
+                } else {
+                    mediaHtml = `<i class="${p.icon || 'fa-solid fa-box'} product-img"></i>`;
+                }
+
+                container.innerHTML += `
+                    <div class="product-card">
+                        <div>
+                            <div class="product-img-wrapper">${mediaHtml}</div>
+                            <div class="product-title">${p.name || 'No Name'}</div>
+                            <div class="product-desc">${p.desc || ''}</div>
+                        </div>
+                        <div>
+                            <div class="product-price">৳ ${p.price || 0}</div>
+                            <button class="add-btn" onclick="addToCart('${p.id}', '${p.name ? p.name.replace(/'/g, "\\'") : 'Item'}', ${p.price || 0})">
+                                <i class="fa-solid fa-cart-plus"></i> যুক্ত করুন
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }, (error) => {
+            console.error("Error fetching products:", error);
+            container.innerHTML = `
+                <div style="grid-column: span 2; text-align: center; padding: 40px 10px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 35px; color: var(--danger); margin-bottom: 10px; display:block;"></i>
+                    <p style="color: var(--danger); font-weight: 700;">প্রোডাক্ট লোড করতে সমস্যা হয়েছে!</p>
                 </div>`;
         });
-    }, 500);
+    }
+
+    loadProductsFromFirestore();
 
     window.addToCart = function(id, name, price) {
         if(!currentUser) { showToast("অনুগ্রহ করে আগে লগইন করুন", "error"); openAuthModal(); return; }
@@ -574,7 +866,6 @@
         checkoutSec.style.display = 'block';
     }
 
-    // --- New Smart Payment Flow Logic ---
     window.closePaymentModal = function() {
         document.getElementById('payment-overlay').classList.remove('active');
         document.getElementById('payment-sheet').classList.remove('active');
@@ -587,7 +878,6 @@
         let targetId = method === 'Cash on Delivery' ? 'card-cod' : (method === 'bKash' ? 'card-bkash' : 'card-nagad');
         document.getElementById(targetId).classList.add('active');
 
-        // Show Transaction ID input only for bKash/Nagad
         if(method !== 'Cash on Delivery') {
             document.getElementById('mobile-banking-details').classList.add('active');
         } else {
@@ -595,22 +885,18 @@
         }
     }
 
-    // This overrides your previous basic checkout to smartly open the payment modal first
     window.processCheckout = function() {
         if(!currentUser) return showToast("অর্ডার করতে অনুগ্রহ করে লগইন করুন", "error");
         if(myCart.length === 0) return showToast("আপনার কার্ট ফাঁকা!", "error");
         
-        // Populate and show the modal
         document.getElementById('payment-total-price').innerText = document.getElementById('total-price').innerText;
         document.getElementById('payment-overlay').classList.add('active');
         document.getElementById('payment-sheet').classList.add('active');
         
-        // Reset to default selection every time it opens
         selectPayment('Cash on Delivery');
         document.getElementById('trx-id').value = ''; 
     }
 
-    // Final order processing function with Firestore database saving
     window.confirmFinalOrder = async function() {
         let trxId = document.getElementById('trx-id').value;
         if(window.selectedPaymentMethod !== 'Cash on Delivery' && trxId.trim() === '') {
@@ -625,7 +911,6 @@
             const orderDocRef = doc(db, "orders", orderId);
             let totalAmount = myCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            // Saves exactly to Firestore including the payment method
             await setDoc(orderDocRef, {
                 orderId: orderId,
                 userId: currentUser.uid,
