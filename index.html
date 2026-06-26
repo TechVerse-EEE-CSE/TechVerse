@@ -728,6 +728,28 @@ enc += cipher.final('hex');</code>
 
 
 
+<script>
+    // Service Worker রেজিস্টার করা
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('Service Worker Registered!', registration.scope);
+                })
+                .catch((error) => {
+                    console.log('Service Worker Registration Failed!', error);
+                });
+        });
+    }
+
+    // ইউজার সাইটে থাকা অবস্থায় হঠাৎ ইন্টারনেট চলে গেলে সাথে সাথে offline.html এ নিয়ে যাওয়া
+    window.addEventListener('offline', function() {
+        window.location.href = "offline.html";
+    });
+</script>
+
+
+
 
 
 <!-- Custom Install Button -->
