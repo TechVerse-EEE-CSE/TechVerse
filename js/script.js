@@ -579,3 +579,48 @@ if (yr) yr.textContent = new Date().getFullYear();
 
 // ===== DRAG MODE RESTORE =====
 if (appState.dragMode) toggleDragMode();
+
+
+
+
+
+
+
+//ইনস্টল পপ আপ 
+
+let deferredPrompt;
+const smartInstallBtn = document.getElementById('smart-install-btn');
+
+// ১. ব্রাউজার যখন ইনস্টলের জন্য প্রস্তুত হবে, তখন বাটনটি শো করবে
+window.addEventListener('beforeinstallprompt', (e) => {
+  // ডিফল্ট পপ-আপ বন্ধ রাখা হচ্ছে
+  e.preventDefault();
+  // ইভেন্টটি সেভ করে রাখা হচ্ছে যাতে পরে কল করা যায়
+  deferredPrompt = e;
+  // আমাদের কাস্টম বাটনটি ভিজিবল করা হচ্ছে
+  smartInstallBtn.style.display = 'block';
+});
+
+// ২. বাটনে ক্লিক করলে ইনস্টল পপ-আপ আসবে
+smartInstallBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    // সেভ করে রাখা ইভেন্ট থেকে ইনস্টল প্রম্পট কল করা
+    deferredPrompt.prompt();
+    // ইউজারের সিদ্ধান্তের জন্য অপেক্ষা করা
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    // ইউজার অ্যাক্সেপ্ট করলে বাটনটি হাইড করে দেওয়া
+    if (outcome === 'accepted') {
+      console.log('App Installed Successfully!');
+    }
+    
+    // প্রম্পট ক্লিয়ার করা
+    deferredPrompt = null;
+    smartInstallBtn.style.display = 'none';
+  }
+});
+
+// ৩. অ্যাপটি আগে থেকেই ইনস্টল করা থাকলে বাটনটি হাইড থাকবে
+window.addEventListener('appinstalled', () => {
+  smartInstallBtn.style.display = 'none';
+});
