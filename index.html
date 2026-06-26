@@ -254,12 +254,10 @@
             <a href="#creator" class="mobile-nav-link hover:text-cyan-400 transition py-1">Creator</a>
             
             
-            <a href="/code-editor/" class="mobile-nav-link hover:text-cyan-400 transition py-1 flex items-center gap-2">
-    <i class="fa-solid fa-laptop-code mr-1"></i>TV code editor
-</a>
+           
 
             
-            <a href="/editor/" onclick="openWorkspace('editor')" class="mobile-nav-link hover:text-yellow-400 transition py-1 text-yellow-500/80"><i class="fa-solid fa-laptop-code mr-1"></i> Special Editor Free </a>
+            <a href="/editor/" onclick="openWorkspace('editor')" class="mobile-nav-link hover:text-yellow-400 transition py-1 text-yellow-500/80"><i class="fa-solid fa-laptop-code mr-1"></i> code editor</a>
             <a href="javascript:void(0)" onclick="openWorkspace('eeeBuilder')" class="mobile-nav-link hover:text-purple-400 transition py-1 text-purple-500/80"><i class="fa-solid fa-cogs mr-1"></i> EEE Project Builder</a>
 
             <a href="#faq" class="mobile-nav-link hover:text-cyan-400 transition py-1">FAQ</a>
@@ -902,9 +900,12 @@ encrypted += cipher.final('hex');</code>
             </a>
             
             <div class="relative -translate-y-6 flex items-center justify-center">
-                <div class="absolute w-14 h-14 bg-cyan-500/30 rounded-full blur-md animate-pulse"></div>
-                <button onclick="openWorkspace('editor')" class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-cyan-500/40 border border-cyan-300/30 transform active:scale-90 transition duration-200 z-10">
-                    <i class="fa-solid fa-code text-xl"></i>
+    <div class="absolute w-14 h-14 bg-cyan-500/30 rounded-full blur-md animate-pulse"></div>
+    <a href="/editor/" class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-cyan-500/40 border border-cyan-300/30 transform active:scale-90 transition duration-200 z-10">
+        <i class="fa-solid fa-code text-xl"></i>
+    </a>
+</div>
+
                 </button>
             </div>
             
