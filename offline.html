@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You're Offline — Tech Verse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080C14;
+      --bg2:      #0D1420;
+      --card:     #111927;
+      --border:   #1E2D42;
+      --cyan:     #00E5FF;
+      --cyan-dim: #004F6B;
+      --red:      #FF3864;
+      --yellow:   #FFB020;
+      --text:     #C8D8E8;
+      --muted:    #4A6280;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      overflow: hidden;
+    }
+
+    /* ── Canvas bg ── */
+    #canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: .6;
+    }
+
+    /* ── Scan-line overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.12) 2px,
+        rgba(0,0,0,.12) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Layout ── */
+    .stage {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      gap: 2rem;
+    }
+
+    /* ── Status bar (top) ── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1.5rem;
+      background: rgba(8,12,20,.9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      color: var(--muted);
+      z-index: 10;
+    }
+    .topbar .logo { color: var(--cyan); font-weight: 700; letter-spacing: .08em; }
+    .topbar .clock { color: var(--text); }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,56,100,.1);
+      border: 1px solid rgba(255,56,100,.3);
+      border-radius: 99px;
+      padding: .2rem .7rem;
+      font-size: .65rem;
+      color: var(--red);
+      font-weight: 700;
+      letter-spacing: .1em;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    /* ── Icon / signal ── */
+    .signal-wrap {
+      position: relative;
+      width: 100px; height: 100px;
+    }
+    .signal-rings {
+      position: absolute;
+      inset: 0;
+    }
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid var(--cyan);
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+    }
+    .ring:nth-child(1) { width: 60px; height: 60px;  animation: pulse-ring 2.4s ease-out infinite 0s; }
+    .ring:nth-child(2) { width: 80px; height: 80px;  animation: pulse-ring 2.4s ease-out infinite .6s; }
+    .ring:nth-child(3) { width: 100px; height: 100px; animation: pulse-ring 2.4s ease-out infinite 1.2s; }
+
+    .signal-icon {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .signal-icon svg { filter: drop-shadow(0 0 10px var(--cyan)); }
+
+    /* ── Glitch headline ── */
+    .headline-wrap { text-align: center; }
+    .glitch {
+      font-family: var(--font-mono);
+      font-size: clamp(2.2rem, 6vw, 3.8rem);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -.02em;
+      position: relative;
+      display: inline-block;
+      animation: glitch-main 4s infinite;
+    }
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      background: transparent;
+    }
+    .glitch::before {
+      color: var(--cyan);
+      animation: glitch-top 4s infinite;
+      clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%);
+    }
+    .glitch::after {
+      color: var(--red);
+      animation: glitch-bot 4s infinite;
+      clip-path: polygon(0 62%, 100% 62%, 100% 100%, 0 100%);
+    }
+
+    .subtitle {
+      margin-top: .8rem;
+      font-size: clamp(.85rem, 2vw, 1rem);
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: .04em;
+    }
+    .subtitle span { color: var(--cyan); }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.6rem 2rem;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      animation: shimmer 3s linear infinite;
+    }
+
+    /* ── Diagnostic rows ── */
+    .diag-grid {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+    .diag-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: .75rem;
+    }
+    .diag-label { color: var(--muted); }
+    .diag-val {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-weight: 700;
+    }
+    .tag {
+      padding: .15rem .55rem;
+      border-radius: 4px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+    .tag-red   { background: rgba(255,56,100,.15); color: var(--red); border: 1px solid rgba(255,56,100,.3); }
+    .tag-yellow{ background: rgba(255,176,32,.12); color: var(--yellow); border: 1px solid rgba(255,176,32,.3); }
+    .tag-cyan  { background: rgba(0,229,255,.1);   color: var(--cyan);   border: 1px solid rgba(0,229,255,.3); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    /* ── Progress bar ── */
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      color: var(--muted);
+      margin-bottom: .4rem;
+    }
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), #00A0B8);
+      border-radius: 99px;
+      animation: progress-anim 8s ease-in-out infinite;
+      transform-origin: left;
+    }
+
+    /* ── Retry button ── */
+    .btn-retry {
+      width: 100%;
+      margin-top: 1.2rem;
+      padding: .85rem 1.5rem;
+      background: transparent;
+      border: 1.5px solid var(--cyan);
+      border-radius: 10px;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color .2s;
+    }
+    .btn-retry::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--cyan);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s cubic-bezier(.76,0,.24,1);
+      z-index: 0;
+    }
+    .btn-retry:hover::before { transform: scaleX(1); }
+    .btn-retry:hover { color: var(--bg); }
+    .btn-retry span { position: relative; z-index: 1; }
+
+    .btn-retry.spinning span::before { content: '↻ '; animation: spin .6s linear infinite; display: inline-block; }
+
+    /* ── Tips ── */
+    .tips {
+      max-width: 480px;
+      width: 100%;
+    }
+    .tips-title {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: .8rem;
+    }
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      font-size: .8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .tip-icon { color: var(--cyan); flex-shrink: 0; margin-top: .05rem; }
+
+    /* ── Countdown ── */
+    .auto-retry {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: .6rem;
+    }
+    .auto-retry strong { color: var(--yellow); }
+
+    /* ══ Animations ══ */
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .2; }
+    }
+    @keyframes pulse-ring {
+      0%   { transform: translate(-50%,-50%) scale(0); opacity: .7; }
+      100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+    }
+    @keyframes glitch-main {
+      0%,90%,100% { transform: translate(0); }
+      91%  { transform: translate(-2px, 1px); }
+      93%  { transform: translate( 2px,-1px); }
+      95%  { transform: translate(-1px, 2px); }
+      97%  { transform: translate( 1px,-2px); }
+    }
+    @keyframes glitch-top {
+      0%,90%,100% { transform: translate(0); opacity: 0; }
+      91%  { transform: translate(-3px,0); opacity: .9; }
+      93%  { transform: translate( 3px,0); opacity: .9; }
+      95%  { transform: translate( 0,  0); opacity: 0; }
+    }
+    @keyframes glitch-bot {
+      0%,91%,100% { transform: translate(0); opacity: 0; }
+      92%  { transform: translate( 2px,0); opacity: .8; }
+      94%  { transform: translate(-2px,0); opacity: .8; }
+      96%  { transform: translate( 0,  0); opacity: 0; }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    @keyframes progress-anim {
+      0%   { width: 20%; }
+      40%  { width: 70%; }
+      60%  { width: 70%; }
+      80%  { width: 92%; }
+      95%  { width: 92%; }
+      100% { width: 20%; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 1.2rem 1.2rem; }
+      .topbar { font-size: .6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="topbar">
+  <span class="logo">⬡ TECH VERSE</span>
+  <div class="status-pill">
+    <span class="status-dot"></span>
+    NO SIGNAL
+  </div>
+  <span class="clock" id="clock">--:--:--</span>
+</div>
+
+<main class="stage">
+
+  <!-- Signal icon -->
+  <div class="signal-wrap">
+    <div class="signal-rings">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+    </div>
+    <div class="signal-icon">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1L23 23" stroke="#FF3864" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.8" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+        <path d="M13.74 17.74A4 4 0 0 0 12 17" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="21" r="1" fill="#00E5FF"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Headline -->
+  <div class="headline-wrap">
+    <h1 class="glitch" data-text="YOU'RE OFFLINE">YOU'RE OFFLINE</h1>
+    <p class="subtitle">Connection lost — <span>Tech Verse</span> is waiting for your signal.</p>
+  </div>
+
+  <!-- Diagnostic card -->
+  <div class="card">
+    <div class="diag-grid">
+      <div class="diag-row">
+        <span class="diag-label">NETWORK STATUS</span>
+        <div class="diag-val"><span class="tag tag-red">DISCONNECTED</span></div>
+      </div>
+      <div class="diag-row">
+        <span class="diag-label">CACHED CONTENT</span>
+        <div class="diag-val"><span class="tag tag-yellow">PARTIAL</span></div>
+      </div>
+      <div class="diag-row">
+        <span class="diag-label">LAST ONLINE</span>
+        <div class="diag-val"><span id="lastOnline" style="color:var(--text); font-size:.75rem;">Checking...</span></div>
+      </div>
+      <div class="diag-row">
+        <span class="diag-label">BROWSER</span>
+        <div class="diag-val"><span class="tag tag-cyan" id="browserTag">—</span></div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="progress-label">
+      <span>Attempting reconnect…</span>
+      <span id="pct">—</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <button class="btn-retry" id="retryBtn" onclick="retryConnection()">
+      <span>↻ &nbsp;RETRY CONNECTION</span>
+    </button>
+
+    <p class="auto-retry">Auto-retry in <strong id="countdown">30</strong>s</p>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips">
+    <p class="tips-title">// Troubleshooting</p>
+    <div class="tips-list">
+      <div class="tip-item">
+        <span class="tip-icon">◈</span>
+        <span>Check your Wi-Fi or mobile data connection and make sure it's enabled.</span>
+      </div>
+      <div class="tip-item">
+        <span class="tip-icon">◈</span>
+        <span>Try toggling Airplane Mode on and off to refresh your network stack.</span>
+      </div>
+      <div class="tip-item">
+        <span class="tip-icon">◈</span>
+        <span>Restart your router or switch to a different network if available.</span>
+      </div>
+      <div class="tip-item">
+        <span class="tip-icon">◈</span>
+        <span>Some cached pages from Tech Verse may still be available while offline.</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ── Clock ── */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-GB', { hour12: false });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ── Last online ── */
+const lastOnlineKey = 'tv_last_online';
+if (navigator.onLine) {
+  localStorage.setItem(lastOnlineKey, Date.now());
+}
+const saved = localStorage.getItem(lastOnlineKey);
+const loEl = document.getElementById('lastOnline');
+if (saved) {
+  const diff = Math.round((Date.now() - parseInt(saved)) / 1000);
+  if (diff < 60)       loEl.textContent = diff + 's ago';
+  else if (diff < 3600) loEl.textContent = Math.round(diff/60) + 'm ago';
+  else                 loEl.textContent = Math.round(diff/3600) + 'h ago';
+} else {
+  loEl.textContent = 'Unknown';
+}
+
+/* ── Browser tag ── */
+const ua = navigator.userAgent;
+let browser = 'Unknown';
+if (/Edg/.test(ua))    browser = 'EDGE';
+else if (/Chrome/.test(ua))  browser = 'CHROME';
+else if (/Firefox/.test(ua)) browser = 'FIREFOX';
+else if (/Safari/.test(ua))  browser = 'SAFARI';
+document.getElementById('browserTag').textContent = browser;
+
+/* ── Progress pct readout ── */
+const fill = document.getElementById('progressFill');
+const pctEl = document.getElementById('pct');
+function updatePct() {
+  const w = parseFloat(getComputedStyle(fill).width);
+  const tw = fill.parentElement.clientWidth;
+  pctEl.textContent = Math.round((w / tw) * 100) + '%';
+}
+setInterval(updatePct, 500);
+
+/* ── Countdown + auto-retry ── */
+let countdown = 30;
+const cdEl = document.getElementById('countdown');
+const timer = setInterval(() => {
+  countdown--;
+  cdEl.textContent = countdown;
+  if (countdown <= 0) {
+    clearInterval(timer);
+    retryConnection();
+  }
+}, 1000);
+
+/* ── Retry ── */
+function retryConnection() {
+  const btn = document.getElementById('retryBtn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  countdown = 30;
+  cdEl.textContent = countdown;
+  setTimeout(() => {
+    window.location.reload();
+  }, 1800);
+}
+
+/* ── Listen for online event ── */
+window.addEventListener('online', () => {
+  localStorage.setItem(lastOnlineKey, Date.now());
+  window.location.reload();
+});
+
+/* ── Particle canvas ── */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); init(); });
+
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+function init() {
+  particles = [];
+  const count = Math.min(Math.floor(W * H / 9000), 120);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: rand(0, W),
+      y: rand(0, H),
+      r: rand(.5, 2.2),
+      vx: rand(-.3, .3),
+      vy: rand(-.5, -.1),
+      alpha: rand(.2, .8),
+      color: Math.random() > .7 ? '#00E5FF' : '#1E2D42',
+    });
+  }
+}
+init();
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  /* grid lines */
+  ctx.strokeStyle = 'rgba(30,45,66,.35)';
+  ctx.lineWidth = .5;
+  const step = 60;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+
+  /* particles */
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.y < -5)  p.y = H + 5;
+    if (p.x < -5)  p.x = W + 5;
+    if (p.x > W+5) p.x = -5;
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
