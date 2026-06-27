@@ -1,0 +1,17 @@
+# ══════════════════════════════════════
+#  .gitignore — Tech Verse Editor
+#  এই ফাইলগুলো GitHub এ যাবে না
+# ══════════════════════════════════════
+
+# 🔒 Firebase Secret Config — কখনো push করবেন না!
+config/firebase-config.js
+
+# Node
+node_modules/
+.env
+.env.local
+.env.production
+
+# OS Files
+.DS_Store
+Thumbs.db
