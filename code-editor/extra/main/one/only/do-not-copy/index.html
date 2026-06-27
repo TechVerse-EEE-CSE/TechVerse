@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tech Verse — code editor</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-ocean.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/nord.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/solarized.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/night.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="/favicon.png">
+
+<style>
+:root {
+  --bg-main: #0d0f14;
+  --bg-surface: #161921;
+  --bg-surface-light: #1e2230;
+  --bg-surface-hover: #252a3a;
+  --primary: #5b8dee;
+  --primary-glow: rgba(91,141,238,0.2);
+  --primary-hover: #4070d4;
+  --accent: #7c5cbf;
+  --success: #10c98f;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-main: #e8eaf0;
+  --text-muted: #6b7499;
+  --text-dim: #3d4360;
+  --border: #1f2435;
+  --border-light: #2a3050;
+  --sidebar-width: 300px;
+  --font-code: 'Fira Code', 'Consolas', monospace;
+  --font-size-editor: 15px;
+  --radius: 8px;
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  display: flex; flex-direction: column;
+  height: 100dvh; overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+/* ══════════════════════════════════════
+   AUTH SCREEN
+══════════════════════════════════════ */
+#authScreen {
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--bg-main);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+#authScreen::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background-image:
+    linear-gradient(rgba(91,141,238,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91,141,238,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridDrift 20s linear infinite;
+}
+@keyframes gridDrift { from { background-position: 0 0; } to { background-position: 40px 40px; } }
+
+.auth-glow-1 {
+  position: fixed; width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(91,141,238,0.12) 0%, transparent 70%);
+  top: -100px; left: -100px; pointer-events: none; animation: float1 8s ease-in-out infinite;
+}
+.auth-glow-2 {
+  position: fixed; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,191,0.1) 0%, transparent 70%);
+  bottom: -50px; right: -50px; pointer-events: none; animation: float2 10s ease-in-out infinite;
+}
+@keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,20px)} }
+@keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,-30px)} }
+
+.auth-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  width: 100%; max-width: 420px;
+  padding: 36px 36px 32px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(91,141,238,0.08);
+  position: relative; overflow: hidden;
+  animation: cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes cardIn { from { opacity:0; transform: translateY(30px) scale(0.96); } to { opacity:1; transform: none; } }
+
+.auth-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+}
+
+.auth-logo-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+}
+.auth-logo-badge {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 15px; color: white;
+  box-shadow: 0 8px 20px rgba(91,141,238,0.4);
+  flex-shrink: 0;
+}
+.auth-logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.auth-logo-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.auth-tabs {
+  display: flex; background: var(--bg-main);
+  border-radius: 10px; padding: 4px; margin-bottom: 28px;
+  border: 1px solid var(--border);
+}
+.auth-tab {
+  flex: 1; padding: 9px; text-align: center;
+  font-size: 13px; font-weight: 600;
+  border-radius: 7px; cursor: pointer;
+  transition: var(--transition); color: var(--text-muted);
+}
+.auth-tab.active {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  box-shadow: 0 4px 12px rgba(91,141,238,0.35);
+}
+
+.auth-form { display: none; flex-direction: column; gap: 14px; }
+.auth-form.active { display: flex; }
+
+.auth-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.4px;
+  margin-bottom: 4px; line-height: 1.2;
+}
+.auth-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+.auth-field label {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.auth-input-wrap { position: relative; }
+.auth-input-wrap i.field-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 14px; pointer-events: none;
+}
+.auth-input {
+  width: 100%; padding: 12px 13px 12px 38px;
+  background: var(--bg-main); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text-main); font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none; transition: var(--transition);
+}
+.auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91,141,238,0.18);
+  background: var(--bg-surface-light);
+}
+.auth-input::placeholder { color: var(--text-dim); }
+
+.pw-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 4px; border-radius: 4px; transition: var(--transition);
+  font-size: 14px;
+}
+.pw-toggle:hover { color: var(--primary); }
+
+.auth-forgot {
+  text-align: right; margin-top: -6px;
+}
+.auth-forgot a {
+  font-size: 12px; color: var(--primary); text-decoration: none;
+  font-weight: 500; transition: var(--transition);
+}
+.auth-forgot a:hover { opacity: 0.8; text-decoration: underline; }
+
+.auth-btn {
+  width: 100%; padding: 13px;
+  border: none; border-radius: 10px; cursor: pointer;
+  font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
+  transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px;
+  letter-spacing: 0.2px;
+}
+.auth-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(91,141,238,0.35);
+}
+.auth-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(91,141,238,0.45); }
+.auth-btn-primary:active { transform: translateY(0); }
+.auth-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--text-dim); font-size: 12px; font-weight: 500; letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.auth-btn-google {
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.auth-btn-google:hover { background: var(--bg-surface-hover); border-color: var(--primary); transform: translateY(-1px); }
+.auth-btn-google:active { transform: translateY(0); }
+
+.google-logo {
+  width: 18px; height: 18px;
+}
+
+.btn-spinner {
+  width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: none;
+}
+.auth-btn-google .btn-spinner { border-top-color: var(--primary); border-color: var(--border); }
+.auth-btn.loading .btn-spinner { display: block; }
+.auth-btn.loading .btn-label { display: none; }
+
+.auth-msg {
+  border-radius: 9px; padding: 11px 14px;
+  font-size: 13px; font-weight: 500;
+  display: none; align-items: center; gap: 9px; line-height: 1.4;
+}
+.auth-msg.show { display: flex; }
+.auth-msg.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+.auth-msg.success { background: rgba(16,201,143,0.1); border: 1px solid rgba(16,201,143,0.25); color: #6ee7b7; }
+.auth-msg.info { background: rgba(91,141,238,0.1); border: 1px solid rgba(91,141,238,0.25); color: #93c5fd; }
+
+.auth-switch { text-align: center; font-size: 13px; color: var(--text-muted); }
+.auth-switch a { color: var(--primary); text-decoration: none; font-weight: 600; transition: var(--transition); }
+.auth-switch a:hover { opacity: 0.8; }
+
+.pw-strength { margin-top: 4px; }
+.pw-strength-bar {
+  height: 3px; border-radius: 3px; background: var(--border);
+  overflow: hidden;
+}
+.pw-strength-fill {
+  height: 100%; border-radius: 3px; width: 0%; transition: width 0.4s, background 0.4s;
+}
+.pw-strength-text { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+.auth-terms {
+  display: flex; align-items: flex-start; gap: 10px; font-size: 12px;
+  color: var(--text-muted); line-height: 1.4;
+}
+.auth-terms input[type=checkbox] {
+  margin-top: 2px; accent-color: var(--primary); flex-shrink: 0;
+  width: 14px; height: 14px; cursor: pointer;
+}
+
+.reset-sent-state { text-align: center; padding: 10px 0; display: none; }
+.reset-sent-state.show { display: block; }
+.reset-sent-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(16,201,143,0.12); border: 2px solid rgba(16,201,143,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: var(--success);
+  margin: 0 auto 14px;
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.reset-sent-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.reset-sent-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface-light); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 5px;
+  cursor: pointer; transition: var(--transition); font-size: 12px;
+}
+.user-pill:hover { border-color: var(--primary); background: var(--primary-glow); }
+.user-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+  overflow: hidden;
+}
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); }
+
+.user-dropdown {
+  position: absolute; top: 56px; right: 14px;
+  background: var(--bg-surface); border: 1px solid var(--border-light);
+  border-radius: 12px; width: 220px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  z-index: 999; display: none; overflow: hidden;
+  animation: dropIn 0.2s ease;
+}
+@keyframes dropIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+.user-dropdown.show { display: block; }
+.user-dd-header {
+  padding: 16px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg-surface-light), var(--bg-surface));
+}
+.user-dd-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.user-dd-email { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-dd-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: white;
+  margin: 0 auto 10px; overflow: hidden;
+}
+.user-dd-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-dd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; font-size: 13px; cursor: pointer;
+  transition: var(--transition); color: var(--text-main);
+}
+.user-dd-item:hover { background: var(--bg-surface-hover); }
+.user-dd-item i { color: var(--text-muted); width: 14px; text-align: center; font-size: 13px; }
+.user-dd-item.danger { color: var(--danger); }
+.user-dd-item.danger i { color: var(--danger); }
+.user-dd-sep { height: 1px; background: var(--border); }
+
+/* ══════════════════════════════════════
+   ORIGINAL STYLES (UNCHANGED)
+══════════════════════════════════════ */
+.navbar {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  z-index: 100; flex-shrink: 0;
+  gap: 10px;
+}
+
+.nav-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.menu-btn {
+  font-size: 18px; color: var(--text-muted); cursor: pointer;
+  background: none; border: none; padding: 6px; border-radius: 6px;
+  transition: var(--transition); flex-shrink: 0;
+}
+.menu-btn:hover { color: var(--primary); background: var(--primary-glow); }
+
+.file-path {
+  font-size: 13.5px; font-weight: 500; color: var(--text-main);
+  display: flex; align-items: center; gap: 7px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-path .badge {
+  background: var(--primary-glow); color: var(--primary);
+  font-size: 10px; padding: 2px 7px; border-radius: 20px;
+  border: 1px solid var(--primary); font-weight: 600;
+}
+
+.nav-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+
+.icon-btn {
+  color: var(--text-muted); font-size: 16px; cursor: pointer;
+  background: none; border: none; padding: 7px 9px; border-radius: 6px;
+  transition: var(--transition); position: relative;
+}
+.icon-btn:hover { color: var(--primary); background: var(--primary-glow); }
+.icon-btn.run-btn { color: var(--success); }
+.icon-btn.run-btn:hover { background: rgba(16,201,143,0.15); }
+.icon-btn.save-btn.saved { color: var(--primary); }
+
+.autosave-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  position: absolute; top: 5px; right: 5px;
+  background: var(--warning); display: none;
+  animation: blink 1.2s infinite;
+}
+.autosave-dot.active { display: block; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.tab-bar {
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-shrink: 0;
+  padding: 0 6px;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; font-size: 12px;
+  color: var(--text-muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: var(--transition);
+  flex-shrink: 0; user-select: none;
+}
+.tab:hover { color: var(--text-main); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab .close-tab {
+  font-size: 10px; opacity: 0; margin-left: 2px;
+  transition: opacity 0.2s; padding: 1px 3px; border-radius: 3px;
+}
+.tab:hover .close-tab { opacity: 0.7; }
+.tab .close-tab:hover { opacity: 1; background: rgba(239,68,68,0.2); color: var(--danger); }
+
+.tab-new-btn {
+  color: var(--text-muted); font-size: 14px;
+  padding: 8px 10px; cursor: pointer; flex-shrink: 0;
+  transition: var(--transition); border-bottom: 2px solid transparent;
+}
+.tab-new-btn:hover { color: var(--primary); }
+
+.sidebar-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 500; opacity: 0; visibility: hidden;
+  backdrop-filter: blur(2px);
+  transition: var(--transition);
+}
+.sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+.sidebar {
+  position: fixed; top: 0; left: -105%; width: var(--sidebar-width);
+  height: 100%; background: var(--bg-surface);
+  z-index: 501; display: flex; flex-direction: column;
+  box-shadow: 8px 0 32px rgba(0,0,0,0.5);
+  transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+  border-right: 1px solid var(--border);
+}
+.sidebar.active { left: 0; }
+
+.sidebar-header {
+  padding: 16px 18px;
+  background: linear-gradient(135deg, var(--bg-surface-light), var(--bg-surface));
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-badge {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 13px; color: white; flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(91,141,238,0.4);
+}
+.logo-text { font-size: 15px; font-weight: 700; }
+.logo-sub { font-size: 10px; color: var(--text-muted); }
+
+.sidebar-tabs {
+  display: flex; background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-tab {
+  flex: 1; padding: 10px 5px; text-align: center;
+  font-size: 11px; color: var(--text-muted);
+  cursor: pointer; transition: var(--transition);
+  border-bottom: 2px solid transparent;
+}
+.sidebar-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.sidebar-tab i { display: block; font-size: 14px; margin-bottom: 3px; }
+
+.sidebar-panel { display: none; flex: 1; overflow-y: auto; }
+.sidebar-panel.active { display: flex; flex-direction: column; }
+
+.explorer-toolbar {
+  display: flex; gap: 6px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.explorer-toolbar button {
+  flex: 1; padding: 8px 6px; border: 1px solid var(--border);
+  background: var(--bg-surface-light); color: var(--text-main);
+  border-radius: 6px; font-size: 11px; cursor: pointer;
+  transition: var(--transition); display: flex; align-items: center;
+  justify-content: center; gap: 5px;
+}
+.explorer-toolbar button:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+
+.file-tree { list-style: none; padding: 8px 0; }
+.tree-folder {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 16px; font-size: 13px; font-weight: 600;
+  color: var(--warning); cursor: pointer; user-select: none;
+  transition: var(--transition);
+}
+.tree-folder:hover { background: rgba(245,158,11,0.08); }
+.tree-folder i.fa-chevron-right { font-size: 9px; transition: transform 0.2s; margin-left: auto; color: var(--text-muted); }
+.tree-folder.open i.fa-chevron-right { transform: rotate(90deg); }
+
+.tree-file {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 8px 36px; font-size: 12.5px;
+  color: var(--text-main); cursor: pointer;
+  transition: var(--transition); position: relative;
+}
+.tree-file:hover { background: var(--bg-surface-hover); }
+.tree-file.active-file { background: var(--primary-glow); color: var(--primary); }
+.tree-file::before {
+  content: ''; position: absolute; left: 26px; top: 0; bottom: 0;
+  width: 1px; background: var(--border);
+}
+.tree-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-file-actions { display: none; gap: 4px; }
+.tree-file:hover .tree-file-actions { display: flex; }
+.tree-file-actions button {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 2px 5px; border-radius: 4px;
+  font-size: 11px; transition: var(--transition);
+}
+.tree-file-actions button:hover { color: var(--danger); background: rgba(239,68,68,0.15); }
+.tree-root-file { padding-left: 24px; }
+.tree-root-file::before { left: 14px; }
+
+.settings-panel { padding: 0; }
+.settings-section { border-bottom: 1px solid var(--border); padding: 16px; }
+.settings-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--primary);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.settings-label { font-size: 13px; color: var(--text-main); }
+.settings-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.toggle-switch { position: relative; width: 42px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--bg-surface-light);
+  border-radius: 24px; cursor: pointer; transition: 0.3s;
+  border: 1px solid var(--border);
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-muted); top: 3px; left: 3px;
+  transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--primary); border-color: var(--primary); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: white; }
+
+.range-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.range-label { font-size: 13px; color: var(--text-main); flex: 1; }
+.range-val {
+  font-size: 12px; color: var(--primary); font-weight: 600;
+  min-width: 30px; text-align: right; font-family: var(--font-code);
+}
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  background: var(--border-light); border-radius: 4px; outline: none;
+  margin: 6px 0;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--primary);
+  cursor: pointer; box-shadow: 0 2px 6px rgba(91,141,238,0.5);
+}
+
+.settings-select {
+  background: var(--bg-main); border: 1px solid var(--border);
+  color: var(--text-main); border-radius: 6px; padding: 7px 10px;
+  font-size: 12px; outline: none; cursor: pointer;
+  transition: var(--transition);
+}
+.settings-select:focus { border-color: var(--primary); }
+
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.theme-card {
+  border: 2px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; gap: 8px;
+}
+.theme-card:hover { border-color: var(--primary); background: var(--primary-glow); }
+.theme-card.active { border-color: var(--primary); background: var(--primary-glow); }
+.theme-card.active::after { content: '✓'; margin-left: auto; color: var(--primary); font-size: 12px; font-weight: 700; }
+.theme-dots { display: flex; gap: 3px; }
+.theme-dot { width: 10px; height: 10px; border-radius: 50%; }
+.theme-name { font-size: 12px; font-weight: 500; }
+
+.font-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.font-btn {
+  padding: 6px 12px; border: 1px solid var(--border);
+  background: var(--bg-surface-light); color: var(--text-main);
+  border-radius: 6px; font-size: 12px; cursor: pointer;
+  transition: var(--transition);
+}
+.font-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+.font-btn:hover { border-color: var(--primary); }
+
+.shortcut-list { margin-top: 8px; }
+.shortcut-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.shortcut-item:last-child { border-bottom: none; }
+.shortcut-key {
+  background: var(--bg-surface-light); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px; font-family: var(--font-code);
+  font-size: 11px; color: var(--primary);
+}
+
+.editor-container { flex: 1; position: relative; overflow: hidden; }
+.CodeMirror {
+  height: 100% !important;
+  font-family: var(--font-code) !important;
+  font-size: var(--font-size-editor) !important;
+  background: var(--bg-main) !important;
+  line-height: 1.7 !important;
+}
+.CodeMirror-linenumber { color: var(--text-dim) !important; }
+.CodeMirror-gutters { background: var(--bg-main) !important; border-right: 1px solid var(--border) !important; }
+.CodeMirror-cursor { border-left: 2px solid var(--primary) !important; }
+.CodeMirror-selected { background: rgba(91,141,238,0.15) !important; }
+
+.statusbar {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+  height: 22px; display: flex; align-items: center; gap: 0;
+  padding: 0 12px; font-size: 11px; color: rgba(255,255,255,0.9);
+  font-family: var(--font-code); flex-shrink: 0; gap: 18px;
+  overflow: hidden;
+}
+.statusbar-item { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.statusbar-item i { font-size: 10px; opacity: 0.8; }
+.statusbar-sep { width: 1px; height: 12px; background: rgba(255,255,255,0.3); }
+.statusbar-right { margin-left: auto; }
+
+.quick-keyboard {
+  background: var(--bg-surface);
+  padding: 7px 10px; display: flex; gap: 6px;
+  overflow-x: auto; white-space: nowrap;
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.quick-keyboard::-webkit-scrollbar { display: none; }
+
+.key-btn {
+  background: var(--bg-surface-light);
+  color: var(--text-main); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 13px; font-size: 13px;
+  font-family: var(--font-code); cursor: pointer; transition: var(--transition);
+  flex-shrink: 0; user-select: none;
+}
+.key-btn:active { background: var(--primary); border-color: var(--primary); color: white; transform: scale(0.95); }
+.key-btn.special { color: var(--primary); border-color: rgba(91,141,238,0.3); }
+
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  z-index: 2000; display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: 0.2s;
+  backdrop-filter: blur(4px);
+}
+.modal.active { opacity: 1; visibility: visible; }
+.modal-content {
+  background: var(--bg-surface); width: 340px; padding: 24px;
+  border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  border: 1px solid var(--border); transform: translateY(-20px) scale(0.97);
+  transition: 0.3s;
+}
+.modal.active .modal-content { transform: none; }
+.modal h3 { font-size: 17px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.modal h3 i { color: var(--primary); }
+.modal-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.modal input, .modal select {
+  width: 100%; padding: 11px 13px; margin-bottom: 14px;
+  background: var(--bg-main); border: 1px solid var(--border);
+  color: var(--text-main); border-radius: 8px; outline: none;
+  font-size: 14px; transition: var(--transition);
+}
+.modal input:focus, .modal select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+.btn-group { display: flex; gap: 10px; }
+.btn { flex: 1; padding: 11px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: var(--transition); }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-cancel { background: var(--bg-surface-light); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-cancel:hover { color: var(--text-main); }
+
+#renameModal .modal-content { width: 300px; }
+
+.preview-overlay {
+  position: fixed; inset: 0;
+  background: #fff; z-index: 3000; display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.preview-overlay.show { transform: none; }
+.preview-header {
+  background: #1a1a2e; color: #e0e0e0;
+  padding: 10px 16px; display: flex; align-items: center;
+  gap: 12px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.preview-url {
+  flex: 1; background: rgba(255,255,255,0.08); border-radius: 20px;
+  padding: 6px 14px; font-size: 13px; font-family: var(--font-code);
+  display: flex; align-items: center; gap: 7px;
+}
+.preview-url i { color: var(--success); font-size: 11px; }
+.preview-close {
+  background: none; border: none; color: #999; font-size: 20px;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition);
+}
+.preview-close:hover { color: var(--danger); background: rgba(239,68,68,0.15); }
+.preview-frame { flex: 1; width: 100%; border: none; }
+
+.toast-container {
+  position: fixed; bottom: 80px; right: 16px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px; font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px;
+  animation: toast-in 0.3s ease; max-width: 260px;
+}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--primary); }
+@keyframes toast-in { from { transform: translateX(120%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes toast-out { from { opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+.toast.out { animation: toast-out 0.3s ease forwards; }
+
+.search-bar {
+  background: var(--bg-surface); border-bottom: 1px solid var(--border);
+  padding: 8px 12px; display: none; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.search-bar.active { display: flex; }
+.search-input {
+  flex: 1; background: var(--bg-main); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 12px; color: var(--text-main); font-size: 13px; outline: none;
+}
+.search-input:focus { border-color: var(--primary); }
+.search-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 6px 8px; border-radius: 5px; font-size: 13px; transition: var(--transition); }
+.search-btn:hover { color: var(--primary); }
+.search-info { font-size: 11px; color: var(--text-muted); }
+
+.ctx-menu {
+  position: fixed; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 0; z-index: 5000; min-width: 160px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none;
+}
+.ctx-menu.show { display: block; }
+.ctx-item {
+  padding: 9px 16px; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; transition: var(--transition);
+  color: var(--text-main);
+}
+.ctx-item:hover { background: var(--bg-surface-hover); }
+.ctx-item.danger { color: var(--danger); }
+.ctx-item i { width: 14px; text-align: center; color: var(--text-muted); }
+.ctx-item.danger i { color: var(--danger); }
+.ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+.editor-loading {
+  position: absolute; inset: 0; background: var(--bg-main);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px; z-index: 50;
+}
+.loader-ring {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { font-size: 13px; color: var(--text-muted); }
+
+.empty-workspace {
+  padding: 30px 20px; text-align: center; color: var(--text-muted);
+  font-size: 13px;
+}
+.empty-workspace i { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+/* ══════════════════════════════════════
+   NEW: PROFILE SETTINGS MODAL
+══════════════════════════════════════ */
+#profileModal .modal-content {
+  width: 380px; max-width: 95vw;
+}
+.profile-avatar-section {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-bottom: 20px; padding: 16px;
+  background: var(--bg-surface-light); border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.profile-avatar-big {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: white; overflow: hidden;
+  box-shadow: 0 6px 20px rgba(91,141,238,0.4);
+}
+.profile-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+.profile-name-display { font-size: 16px; font-weight: 700; }
+.profile-email-display { font-size: 12px; color: var(--text-muted); }
+
+/* ══════════════════════════════════════
+   NEW: SOURCE VIEW OVERLAY
+══════════════════════════════════════ */
+.source-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg-main); z-index: 3500; display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.source-overlay.show { transform: none; }
+.source-header {
+  background: #1a1a2e; color: #e0e0e0;
+  padding: 10px 16px; display: flex; align-items: center;
+  gap: 12px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.source-title {
+  flex: 1; font-size: 13px; font-family: var(--font-code);
+  display: flex; align-items: center; gap: 8px;
+}
+.source-title i { color: var(--primary); }
+.source-body {
+  flex: 1; overflow: auto; padding: 20px;
+  font-family: var(--font-code); font-size: 13px; line-height: 1.7;
+  color: var(--text-main); white-space: pre-wrap; word-break: break-all;
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-glow-1"></div>
+  <div class="auth-glow-2"></div>
+
+  <div class="auth-card">
+    <div class="auth-logo-row">
+      <div class="auth-logo-badge">TV</div>
+      <div>
+        <div class="auth-logo-text">Code Editor</div>
+        <div class="auth-logo-sub">Tech Verse IDE — Sign in to continue</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs" id="authTabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form active" id="loginForm">
+      <div class="auth-title">Welcome tech verse</div>
+      <div class="auth-subtitle">Sign in to your Tech Verse account.</div>
+      <div id="loginMsg" class="auth-msg"></div>
+      <div class="auth-field">
+        <label>Email</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-envelope field-icon"></i>
+          <input class="auth-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input class="auth-input" type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+          <button class="pw-toggle" type="button" onclick="togglePw('loginPassword',this)"><i class="fa-solid fa-eye"></i></button>
+        </div>
+      </div>
+      <div class="auth-forgot"><a href="#" onclick="switchAuthTab('reset');return false;">Forgot password?</a></div>
+      <button class="auth-btn auth-btn-primary" id="loginBtn" onclick="doLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label"><i class="fa-solid fa-right-to-bracket"></i> Sign In</span>
+      </button>
+      <div class="auth-divider">or continue with</div>
+      <button class="auth-btn auth-btn-google" id="loginGoogleBtn" onclick="doGoogleLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">
+          <svg class="google-logo" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </span>
+      </button>
+      <div class="auth-switch">Don't have an account? <a href="#" onclick="switchAuthTab('register');return false;">Register</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="auth-form" id="registerForm">
+      <div class="auth-title">Create Your Account</div>
+      <div class="auth-subtitle">Join Tech Verse and start (website building , web designer, skill development, hosting) for free only some days.</div>
+      <div id="registerMsg" class="auth-msg"></div>
+      <div class="auth-field">
+        <label>Developer Name</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-user field-icon"></i>
+          <input class="auth-input" type="text" id="registerName" placeholder="Input Name" autocomplete="name">
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>Developer Email</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-envelope field-icon"></i>
+          <input class="auth-input" type="email" id="registerEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input class="auth-input" type="password" id="registerPassword" placeholder="must be 6 digit" autocomplete="new-password" oninput="checkPwStrength(this.value)">
+          <button class="pw-toggle" type="button" onclick="togglePw('registerPassword',this)"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+          <div class="pw-strength-text" id="pwStrengthText"></div>
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>Confirm Password</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input class="auth-input" type="password" id="registerConfirm" placeholder="confirm password" autocomplete="new-password">
+          <button class="pw-toggle" type="button" onclick="togglePw('registerConfirm',this)"><i class="fa-solid fa-eye"></i></button>
+        </div>
+      </div>
+      <label class="auth-terms">
+        <input type="checkbox" id="termsCheck">
+        I agree to the <a href="#" style="color:var(--primary);margin:0 2px;">Terms of Service</a> and <a href="#" style="color:var(--primary);margin:0 2px;">Privacy Policy</a>
+      </label>
+      <button class="auth-btn auth-btn-primary" id="registerBtn" onclick="doRegister()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label"><i class="fa-solid fa-user-plus"></i> Create Account</span>
+      </button>
+      <div class="auth-divider">or</div>
+      <button class="auth-btn auth-btn-google" id="registerGoogleBtn" onclick="doGoogleLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">
+          <svg class="google-logo" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign up with Google
+        </span>
+      </button>
+      <div class="auth-switch">Already have an account? <a href="#" onclick="switchAuthTab('login');return false;">Sign in</a></div>
+    </div>
+
+    <!-- FORGOT PASSWORD FORM -->
+    <div class="auth-form" id="resetForm">
+      <div class="auth-title">Reset your password</div>
+      <div class="auth-subtitle">Enter your email and we'll send you a reset link.</div>
+      <div id="resetMsg" class="auth-msg"></div>
+      <div id="resetNormal">
+        <div class="auth-field" style="margin-bottom:14px;">
+          <label>register Email</label>
+          <div class="auth-input-wrap">
+            <i class="fa-solid fa-envelope field-icon"></i>
+            <input class="auth-input" type="email" id="resetEmail" placeholder="you@example.com">
+          </div>
+        </div>
+        <button class="auth-btn auth-btn-primary" id="resetBtn" onclick="doReset()">
+          <div class="btn-spinner"></div>
+          <span class="btn-label"><i class="fa-solid fa-paper-plane"></i> Send Reset Link</span>
+        </button>
+      </div>
+      <div class="reset-sent-state" id="resetSent">
+        <div class="reset-sent-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+        <div class="reset-sent-title">Email sent!</div>
+        <div class="reset-sent-text">Check your inbox for the password reset link. It may take a minute or two.</div>
+      </div>
+      <div class="auth-switch" style="margin-top:14px;"><a href="#" onclick="switchAuthTab('login');return false;"><i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px;"></i>Back to Sign In</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- USER DROPDOWN -->
+<div class="user-dropdown" id="userDropdown">
+  <div class="user-dd-header">
+    <div class="user-dd-avatar" id="ddAvatar">?</div>
+    <div class="user-dd-name" id="ddName">—</div>
+    <div class="user-dd-email" id="ddEmail">—</div>
+  </div>
+  <div class="user-dd-item" onclick="openProfileModal()"><i class="fa-solid fa-user-gear"></i> Profile Settings</div>
+  <div class="user-dd-item" onclick="copyEmail()"><i class="fa-regular fa-copy"></i> Copy email</div>
+  <div class="user-dd-sep"></div>
+  <div class="user-dd-item danger" onclick="doSignOut()"><i class="fa-solid fa-right-from-bracket"></i> Sign out</div>
+</div>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-left">
+    <button class="menu-btn" onclick="toggleSidebar()" title="Explorer (Ctrl+B)">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="file-path" id="headerPath">
+      <i class="fa-brands fa-html5" style="color:#e34f26"></i>
+      <span>index.html</span>
+      <span class="badge" id="modifiedBadge" style="display:none">●</span>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <button class="icon-btn" onclick="toggleSearch()" title="Find (Ctrl+F)"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <button class="icon-btn save-btn" id="saveBtn" onclick="saveData(true)" title="Save (Ctrl+S)">
+      <i class="fa-regular fa-floppy-disk"></i>
+      <span class="autosave-dot" id="autosaveDot"></span>
+    </button>
+    <button class="icon-btn" onclick="viewSource()" title="View Source"><i class="fa-solid fa-code"></i></button>
+    <button class="icon-btn run-btn" onclick="runCode()" title="Run (Ctrl+Enter)"><i class="fa-solid fa-play"></i></button>
+    <button class="icon-btn" onclick="openCreateModal()" title="New File"><i class="fa-solid fa-file-circle-plus"></i></button>
+    <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserDropdown()">
+      <div class="user-avatar" id="navAvatar">?</div>
+      <span class="user-name" id="navName">User</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar" id="tabBar">
+  <div class="tab-new-btn" onclick="openCreateModal()" title="New file"><i class="fa-solid fa-plus"></i></div>
+</div>
+
+<!-- SEARCH BAR -->
+<div class="search-bar" id="searchBar">
+  <input type="text" class="search-input" id="searchInput" placeholder="Find in file…">
+  <input type="text" class="search-input" id="replaceInput" placeholder="Replace with…" style="display:none">
+  <button class="search-btn" onclick="searchFind()" title="Next"><i class="fa-solid fa-arrow-down"></i></button>
+  <button class="search-btn" id="replaceToggle" onclick="toggleReplace()" title="Toggle Replace"><i class="fa-solid fa-arrows-rotate"></i></button>
+  <button class="search-btn" id="replaceDoBtn" onclick="doReplace()" style="display:none" title="Replace"><i class="fa-solid fa-check"></i></button>
+  <button class="search-btn" onclick="toggleSearch()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+  <span class="search-info" id="searchInfo"></span>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-badge">TV</div>
+    <div>
+      <div class="logo-text">code editor</div>
+      <div class="logo-sub">Tech Verse IDE</div>
+    </div>
+  </div>
+
+  <div class="sidebar-tabs">
+    <div class="sidebar-tab active" onclick="switchSideTab('explorer',this)" title="Explorer">
+      <i class="fa-solid fa-folder-open"></i>Files
+    </div>
+    <div class="sidebar-tab" onclick="switchSideTab('settings',this)" title="Settings">
+      <i class="fa-solid fa-gear"></i>Settings
+    </div>
+    <div class="sidebar-tab" onclick="switchSideTab('shortcuts',this)" title="Shortcuts">
+      <i class="fa-solid fa-keyboard"></i>Keys
+    </div>
+  </div>
+
+  <!-- FILE EXPLORER -->
+  <div class="sidebar-panel active" id="panel-explorer">
+    <div class="explorer-toolbar">
+      <button onclick="openCreateModal('file')"><i class="fa-solid fa-file-plus"></i> File</button>
+      <button onclick="openCreateModal('folder')"><i class="fa-solid fa-folder-plus"></i> Folder</button>
+      <button onclick="collapseAll()"><i class="fa-solid fa-compress"></i> Collapse</button>
+    </div>
+    <ul class="file-tree" id="fileTree"></ul>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="sidebar-panel" id="panel-settings">
+    <div class="settings-panel">
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-palette"></i> Theme</div>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-font"></i> Font</div>
+        <div class="font-btns" id="fontBtns"></div>
+        <div style="margin-top:12px">
+          <div class="range-row">
+            <span class="range-label">Font Size</span>
+            <span class="range-val" id="fontSizeVal">15px</span>
+          </div>
+          <input type="range" min="11" max="24" value="15" id="fontSizeSlider" oninput="changeFontSize(this.value)">
+        </div>
+        <div style="margin-top:10px">
+          <div class="range-row">
+            <span class="range-label">Line Height</span>
+            <span class="range-val" id="lineHeightVal">1.7</span>
+          </div>
+          <input type="range" min="12" max="24" value="17" id="lineHeightSlider" oninput="changeLineHeight(this.value)">
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-sliders"></i> Editor</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Line Numbers</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="lineNumbersToggle" onchange="applyEditorSetting('lineNumbers',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Word Wrap</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="wordWrapToggle" onchange="applyEditorSetting('lineWrapping',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Auto Close Tags</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="autoCloseToggle" onchange="applyEditorSetting('autoCloseTags',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Auto Save</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="autoSaveToggle" onchange="toggleAutoSave(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Bracket Matching</div></div>
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="matchBracketsToggle" onchange="applyEditorSetting('matchBrackets',this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Tab Size</div></div>
+          <select class="settings-select" onchange="applyEditorSetting('tabSize',parseInt(this.value));applyEditorSetting('indentUnit',parseInt(this.value))">
+            <option value="2">2 Spaces</option>
+            <option value="4" selected>4 Spaces</option>
+            <option value="8">8 Spaces</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title"><i class="fa-solid fa-trash-can"></i> Data</div>
+        <button class="btn btn-cancel" style="width:100%;margin-bottom:8px;" onclick="exportProject()">
+          <i class="fa-solid fa-download"></i> Export Project (JSON)
+        </button>
+        <button class="btn" style="width:100%;background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3);" onclick="clearStorage()">
+          <i class="fa-solid fa-bomb"></i> Clear All Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHORTCUTS -->
+  <div class="sidebar-panel" id="panel-shortcuts">
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="fa-solid fa-keyboard"></i> Keyboard Shortcuts</div>
+      <div class="shortcut-list" id="shortcutList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div class="editor-container" id="editorContainer">
+  <div class="editor-loading" id="editorLoading">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Loading editor…</div>
+  </div>
+  <textarea id="code-editor"></textarea>
+</div>
+
+<!-- QUICK KEYBOARD -->
+<div class="quick-keyboard" id="quickKeyboard">
+  <button class="key-btn special" data-insert="<>" data-cursor="-1">&lt;&gt;</button>
+  <button class="key-btn" data-insert="<div></div>" data-cursor="-6">div</button>
+  <button class="key-btn" data-insert="<span></span>" data-cursor="-7">span</button>
+  <button class="key-btn" data-insert=" class=&quot;&quot;" data-cursor="-1">.class</button>
+  <button class="key-btn" data-insert=" id=&quot;&quot;" data-cursor="-1">#id</button>
+  <button class="key-btn special" data-insert="{}" data-cursor="-1">{ }</button>
+  <button class="key-btn special" data-insert="()" data-cursor="-1">( )</button>
+  <button class="key-btn special" data-insert="[]" data-cursor="-1">[ ]</button>
+  <button class="key-btn" data-insert='=""' data-cursor="-1">=""</button>
+  <button class="key-btn" data-insert=";">;</button>
+  <button class="key-btn" data-insert=":">:</button>
+  <button class="key-btn" data-insert="<">&lt;</button>
+  <button class="key-btn" data-insert=">">&gt;</button>
+  <button class="key-btn" data-insert="/">/</button>
+  <button class="key-btn" data-insert="!">!</button>
+  <button class="key-btn" data-insert="$">$</button>
+  <button class="key-btn" data-insert="&amp;">@</button>
+  <button class="key-btn" data-insert="&&"> &amp;&amp;</button>
+  <button class="key-btn" data-insert="=>">⇒</button>
+</div>
+
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <div class="statusbar-item"><i class="fa-solid fa-circle" style="color:var(--success)"></i> Ready</div>
+  <div class="statusbar-sep"></div>
+  <div class="statusbar-item" id="sbLang"><i class="fa-solid fa-code"></i> HTML</div>
+  <div class="statusbar-sep"></div>
+  <div class="statusbar-item" id="sbCursor"><i class="fa-solid fa-i-cursor"></i> Ln 1, Col 1</div>
+  <div class="statusbar-sep"></div>
+  <div class="statusbar-item" id="sbChars"><i class="fa-solid fa-font"></i> 0 chars</div>
+  <div class="statusbar-item statusbar-right" id="sbTheme"><i class="fa-solid fa-palette"></i> material-ocean</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <h3><i class="fa-solid fa-file-circle-plus"></i> Create New</h3>
+    <div class="modal-label">Type</div>
+    <select id="createType">
+      <option value="file">📄 File (e.g., style.css, app.js)</option>
+      <option value="folder">📁 Folder</option>
+    </select>
+    <div class="modal-label">Name</div>
+    <input type="text" id="itemName" placeholder="e.g., style.css or components">
+    <div class="btn-group">
+      <button class="btn btn-cancel" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createNewItem()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="renameModal">
+  <div class="modal-content">
+    <h3><i class="fa-solid fa-pen"></i> Rename File</h3>
+    <div class="modal-label">New Name</div>
+    <input type="text" id="renameInput" placeholder="New name…">
+    <div class="btn-group">
+      <button class="btn btn-cancel" onclick="closeModal('renameModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: PROFILE SETTINGS MODAL -->
+<div class="modal" id="profileModal">
+  <div class="modal-content" style="width:380px;max-width:95vw;">
+    <h3><i class="fa-solid fa-user-gear"></i> Profile Settings</h3>
+    <div class="profile-avatar-section">
+      <div class="profile-avatar-big" id="profileAvatarBig">?</div>
+      <div class="profile-name-display" id="profileNameDisplay">—</div>
+      <div class="profile-email-display" id="profileEmailDisplay">—</div>
+    </div>
+    <div class="modal-label">Display Name</div>
+    <input type="text" id="profileNameInput" placeholder="Your display name">
+    <div class="modal-label">Photo URL <span style="color:var(--text-dim);font-size:10px;">(optional)</span></div>
+    <input type="url" id="profilePhotoInput" placeholder="https://example.com/photo.jpg">
+    <div id="profileMsg" class="auth-msg" style="margin-bottom:14px;"></div>
+    <div class="btn-group">
+      <button class="btn btn-cancel" onclick="closeModal('profileModal')">Cancel</button>
+      <button class="btn btn-primary" id="profileSaveBtn" onclick="saveProfile()">
+        <span id="profileSaveLabel"><i class="fa-solid fa-floppy-disk"></i> Save</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-header">
+    <button class="preview-close" onclick="closePreview()"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="preview-url"><i class="fa-solid fa-lock"></i> <span id="previewUrlText">localhost / index.html</span></div>
+    <button class="preview-close" onclick="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <iframe class="preview-frame" id="liveFrame" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
+</div>
+
+<!-- NEW: SOURCE VIEW OVERLAY -->
+<div class="source-overlay" id="sourceOverlay">
+  <div class="source-header">
+    <button class="preview-close" onclick="closeSource()"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="source-title"><i class="fa-solid fa-file-code"></i> <span id="sourceTitle">Source: index.html</span></div>
+    <button class="preview-close" onclick="copySource()" title="Copy source"><i class="fa-regular fa-copy"></i></button>
+    <button class="preview-close" onclick="closeSource()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <pre class="source-body" id="sourceBody"></pre>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxOpen()"><i class="fa-solid fa-file-code"></i> Open</div>
+  <div class="ctx-item" onclick="ctxPreview()"><i class="fa-solid fa-play"></i> Preview</div>
+  <div class="ctx-item" onclick="ctxViewSource()"><i class="fa-solid fa-code"></i> View Source</div>
+  <div class="ctx-item" onclick="ctxRename()"><i class="fa-solid fa-pen"></i> Rename</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()"><i class="fa-solid fa-trash"></i> Delete</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  signOut,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDRfX8cqKmDRV2u1HfH2opa5tB2NqD0h9s",
+  authDomain: "techverse-eee-cse.firebaseapp.com",
+  projectId: "techverse-eee-cse",
+  storageBucket: "techverse-eee-cse.firebasestorage.app",
+  messagingSenderId: "719941320241",
+  appId: "1:719941320241:web:10285cc72447a811ad5f10",
+  measurementId: "G-Y1VFHYHH26"
+};
+
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const gProvider = new GoogleAuthProvider();
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    enterEditor(user);
+  } else {
+    showAuthScreen();
+  }
+});
+
+function enterEditor(user) {
+  document.getElementById('authScreen').style.display = 'none';
+
+  const pill   = document.getElementById('userPill');
+  const navAv  = document.getElementById('navAvatar');
+  const navNm  = document.getElementById('navName');
+  const ddAv   = document.getElementById('ddAvatar');
+  const ddNm   = document.getElementById('ddName');
+  const ddEm   = document.getElementById('ddEmail');
+
+  const displayName = user.displayName || user.email.split('@')[0];
+  const initials    = displayName.slice(0,2).toUpperCase();
+
+  navNm.textContent = displayName;
+  ddNm.textContent  = displayName;
+  ddEm.textContent  = user.email;
+
+  if (user.photoURL) {
+    navAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
+    ddAv.innerHTML  = `<img src="${user.photoURL}" alt="">`;
+  } else {
+    navAv.textContent = initials;
+    ddAv.textContent  = initials;
+  }
+
+  pill.style.display = 'flex';
+  initEditorIfNeeded();
+
+  // expose auth + updateProfile for profile settings
+  window._firebaseAuth = auth;
+  window._updateProfile = updateProfile;
+}
+
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('userPill').style.display = 'none';
+}
+
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  if (!email || !pass) return showAuthMsg('loginMsg', 'error', 'Please fill in all fields.');
+  setLoading('loginBtn', true);
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    showAuthMsg('loginMsg', 'success', 'Signed in! Loading editor…');
+  } catch(e) {
+    setLoading('loginBtn', false);
+    showAuthMsg('loginMsg', 'error', friendlyError(e.code));
+  }
+};
+
+window.doRegister = async function() {
+  const name    = document.getElementById('registerName').value.trim();
+  const email   = document.getElementById('registerEmail').value.trim();
+  const pass    = document.getElementById('registerPassword').value;
+  const confirm = document.getElementById('registerConfirm').value;
+
+  if (!name)  return showAuthMsg('registerMsg', 'error', 'Enter your display name.');
+  if (!email) return showAuthMsg('registerMsg', 'error', 'Enter your email address.');
+  if (pass.length < 6) return showAuthMsg('registerMsg', 'error', 'Password must be at least 6 characters.');
+  if (pass !== confirm) return showAuthMsg('registerMsg', 'error', 'Passwords do not match.');
+  if (!document.getElementById('termsCheck').checked)
+    return showAuthMsg('registerMsg', 'error', 'Please accept the terms to continue.');
+
+  setLoading('registerBtn', true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+    showAuthMsg('registerMsg', 'success', 'Account created! Welcome to Tech Verse 🎉');
+  } catch(e) {
+    setLoading('registerBtn', false);
+    showAuthMsg('registerMsg', 'error', friendlyError(e.code));
+  }
+};
+
+window.doGoogleLogin = async function() {
+  const btnIds = ['loginGoogleBtn','registerGoogleBtn'];
+  btnIds.forEach(id => setLoading(id, true));
+  try {
+    await signInWithPopup(auth, gProvider);
+  } catch(e) {
+    btnIds.forEach(id => setLoading(id, false));
+    const msgId = document.getElementById('loginForm').classList.contains('active') ? 'loginMsg' : 'registerMsg';
+    showAuthMsg(msgId, 'error', friendlyError(e.code));
+  }
+};
+
+window.doReset = async function() {
+  const email = document.getElementById('resetEmail').value.trim();
+  if (!email) return showAuthMsg('resetMsg', 'error', 'Enter your email address.');
+  setLoading('resetBtn', true);
+  try {
+    await sendPasswordResetEmail(auth, email);
+    document.getElementById('resetNormal').style.display = 'none';
+    document.getElementById('resetSent').classList.add('show');
+    document.getElementById('resetMsg').classList.remove('show');
+  } catch(e) {
+    setLoading('resetBtn', false);
+    showAuthMsg('resetMsg', 'error', friendlyError(e.code));
+  }
+};
+
+window.doSignOut = async function() {
+  await signOut(auth);
+  document.getElementById('userDropdown').classList.remove('show');
+  showToast('Signed out', 'info', 'fa-right-from-bracket');
+};
+
+window.copyEmail = function() {
+  const em = document.getElementById('ddEmail').textContent;
+  navigator.clipboard.writeText(em).then(() => showToast('Email copied!', 'success', 'fa-copy'));
+  document.getElementById('userDropdown').classList.remove('show');
+};
+
+// NEW: Save profile
+window.saveProfile = async function() {
+  const auth = window._firebaseAuth;
+  const updateFn = window._updateProfile;
+  if (!auth || !updateFn) return;
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const newName  = document.getElementById('profileNameInput').value.trim();
+  const newPhoto = document.getElementById('profilePhotoInput').value.trim();
+
+  if (!newName) {
+    const msg = document.getElementById('profileMsg');
+    msg.className = 'auth-msg error show';
+    msg.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Name cannot be empty.';
+    return;
+  }
+
+  document.getElementById('profileSaveBtn').disabled = true;
+  document.getElementById('profileSaveLabel').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+  try {
+    await updateFn(user, {
+      displayName: newName,
+      photoURL: newPhoto || null
+    });
+
+    // Refresh UI
+    const initials = newName.slice(0,2).toUpperCase();
+    document.getElementById('navName').textContent = newName;
+    document.getElementById('ddName').textContent  = newName;
+    document.getElementById('profileNameDisplay').textContent = newName;
+
+    if (newPhoto) {
+      document.getElementById('navAvatar').innerHTML  = `<img src="${newPhoto}" alt="">`;
+      document.getElementById('ddAvatar').innerHTML   = `<img src="${newPhoto}" alt="">`;
+      document.getElementById('profileAvatarBig').innerHTML = `<img src="${newPhoto}" alt="">`;
+    } else {
+      document.getElementById('navAvatar').textContent  = initials;
+      document.getElementById('ddAvatar').textContent   = initials;
+      document.getElementById('profileAvatarBig').textContent = initials;
+    }
+
+    const msg = document.getElementById('profileMsg');
+    msg.className = 'auth-msg success show';
+    msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> Profile updated!';
+    showToast('Profile saved!', 'success', 'fa-user-check');
+    setTimeout(() => closeModal('profileModal'), 1200);
+  } catch(e) {
+    const msg = document.getElementById('profileMsg');
+    msg.className = 'auth-msg error show';
+    msg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${e.message}`;
+  } finally {
+    document.getElementById('profileSaveBtn').disabled = false;
+    document.getElementById('profileSaveLabel').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save';
+  }
+};
+
+function friendlyError(code) {
+  const map = {
+    'auth/invalid-email':              'Invalid email address.',
+    'auth/user-not-found':             'No account found with this email.',
+    'auth/wrong-password':             'Incorrect password. Try again.',
+    'auth/email-already-in-use':       'This email is already registered.',
+    'auth/weak-password':              'Password is too weak (min. 6 chars).',
+    'auth/too-many-requests':          'Too many attempts. Please wait a moment.',
+    'auth/network-request-failed':     'Network error. Check your connection.',
+    'auth/popup-closed-by-user':       'Google sign-in was cancelled.',
+    'auth/cancelled-popup-request':    'Only one sign-in popup at a time.',
+    'auth/invalid-credential':         'Incorrect email or password.',
+    'auth/user-disabled':              'This account has been disabled.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.classList.toggle('loading', loading);
+  btn.disabled = loading;
+}
+
+function showAuthMsg(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = `auth-msg ${type} show`;
+  el.innerHTML = `<i class="fa-solid ${type==='error'?'fa-circle-exclamation':type==='success'?'fa-circle-check':'fa-circle-info'}"></i> ${msg}`;
+}
+
+window._firebaseReady = true;
+</script>
+
+<!-- CodeMirror -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/mark-selection.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════
+//  AUTH UI HELPERS
+// ══════════════════════════════════════════
+function switchAuthTab(tab) {
+  const tabs  = document.querySelectorAll('.auth-tab');
+  const forms = document.querySelectorAll('.auth-form');
+  forms.forEach(f => f.classList.remove('active'));
+  tabs.forEach(t => t.classList.remove('active'));
+
+  if (tab === 'login') {
+    document.getElementById('loginForm').classList.add('active');
+    tabs[0].classList.add('active');
+    document.getElementById('authTabs').style.display = 'flex';
+  } else if (tab === 'register') {
+    document.getElementById('registerForm').classList.add('active');
+    tabs[1].classList.add('active');
+    document.getElementById('authTabs').style.display = 'flex';
+  } else if (tab === 'reset') {
+    document.getElementById('resetForm').classList.add('active');
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('resetNormal').style.display = '';
+    document.getElementById('resetSent').classList.remove('show');
+  }
+
+  document.querySelectorAll('.auth-msg').forEach(m => m.classList.remove('show'));
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const isText = inp.type === 'text';
+  inp.type = isText ? 'password' : 'text';
+  btn.querySelector('i').className = isText ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+}
+
+function checkPwStrength(val) {
+  const fill = document.getElementById('pwStrengthFill');
+  const text = document.getElementById('pwStrengthText');
+  if (!val) { fill.style.width='0%'; text.textContent=''; return; }
+  let score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^a-zA-Z0-9]/.test(val)) score++;
+  const levels = [
+    { w:'20%', c:'#ef4444', t:'Very weak' },
+    { w:'40%', c:'#f97316', t:'Weak' },
+    { w:'60%', c:'#eab308', t:'Fair' },
+    { w:'80%', c:'#84cc16', t:'Strong' },
+    { w:'100%',c:'#10c98f', t:'Very strong' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w;
+  fill.style.background = l.c;
+  text.textContent = l.t;
+  text.style.color = l.c;
+}
+
+function toggleUserDropdown() {
+  document.getElementById('userDropdown').classList.toggle('show');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#userPill') && !e.target.closest('#userDropdown'))
+    document.getElementById('userDropdown').classList.remove('show');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('authScreen').style.display === 'none') return;
+  if (document.getElementById('loginForm').classList.contains('active'))    window.doLogin?.();
+  if (document.getElementById('registerForm').classList.contains('active')) window.doRegister?.();
+  if (document.getElementById('resetForm').classList.contains('active'))    window.doReset?.();
+});
+
+// NEW: Open profile modal
+function openProfileModal() {
+  document.getElementById('userDropdown').classList.remove('show');
+  const auth = window._firebaseAuth;
+  if (!auth) return;
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const displayName = user.displayName || '';
+  const email       = user.email || '';
+  const photoURL    = user.photoURL || '';
+  const initials    = displayName ? displayName.slice(0,2).toUpperCase() : '?';
+
+  // Fill avatar
+  const avEl = document.getElementById('profileAvatarBig');
+  if (photoURL) { avEl.innerHTML = `<img src="${photoURL}" alt="">`; }
+  else { avEl.textContent = initials; }
+
+  document.getElementById('profileNameDisplay').textContent  = displayName || '—';
+  document.getElementById('profileEmailDisplay').textContent = email;
+  document.getElementById('profileNameInput').value  = displayName;
+  document.getElementById('profilePhotoInput').value = photoURL;
+
+  // Clear msg
+  const msg = document.getElementById('profileMsg');
+  msg.className = 'auth-msg';
+  msg.innerHTML = '';
+
+  openModal('profileModal');
+}
+
+// ══════════════════════════════════════════
+//  EDITOR (original code — untouched)
+// ══════════════════════════════════════════
+const STORAGE_KEY  = 'tv_promax_v3';
+const SETTINGS_KEY = 'tv_promax_settings_v3';
+
+const DEFAULT_FS = {
+  'index.html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>My Project</title>\n    <link rel="stylesheet" href="css/style.css">\n</head>\n<body>\n\n    <h1>my project</h1>\n    <p>this is amazing website Tech Verse Web.</p>\n\n    <script src="js/app.js"><\/script>\n</body>\n</html>`,
+  'css/style.css': `/* ── Styles ── */\nbody {\n    margin: 0;\n    font-family: 'Segoe UI', sans-serif;\n    background: #0f172a;\n    color: #e2e8f0;\n    min-height: 100vh;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    flex-direction: column;\n    gap: 12px;\n}\n\nh1 { color: #5b8dee; }\np { color: #94a3b8; }`,
+  'js/app.js': `// ── App Logic ──\nconsole.log('TrebEdit Pro Max - Ready!');\n\ndocument.addEventListener('DOMContentLoaded', () => {\n    console.log('DOM loaded.');\n});`
+};
+
+let fs   = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(DEFAULT_FS));
+let cfg  = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+const defaults = {
+  theme: 'material-ocean', font: 'Fira Code', fontSize: 15, lineHeight: 1.7,
+  lineNumbers: true, wordWrap: true, autoClose: true, autoSave: true,
+  matchBrackets: true, tabSize: 4
+};
+cfg = Object.assign({}, defaults, cfg);
+
+let currentFile = 'index.html';
+let openTabs    = ['index.html'];
+let ctxTarget   = null;
+let renamingFile = null;
+let autoSaveTimer = null;
+let searchCursor = null;
+let editor;
+let editorInitialized = false;
+
+const THEMES = [
+  { id: 'material-ocean', name: 'Material Ocean', dots: ['#0f111a','#c792ea','#89ddff'] },
+  { id: 'dracula',        name: 'Dracula',         dots: ['#282a36','#ff79c6','#50fa7b'] },
+  { id: 'monokai',        name: 'Monokai',         dots: ['#272822','#f92672','#a6e22e'] },
+  { id: 'nord',           name: 'Nord',            dots: ['#2e3440','#81a1c1','#88c0d0'] },
+  { id: 'solarized dark', name: 'Solarized',       dots: ['#002b36','#268bd2','#859900'] },
+  { id: 'night',          name: 'Night',           dots: ['#0a0e14','#5ccfe6','#bae67e'] },
+];
+
+const FONTS = ['Fira Code', 'JetBrains Mono', 'Consolas', 'monospace'];
+
+const SHORTCUTS = [
+  { key: 'Ctrl+S',     desc: 'Save current file' },
+  { key: 'Ctrl+Enter', desc: 'Run / Preview' },
+  { key: 'Ctrl+B',     desc: 'Toggle sidebar' },
+  { key: 'Ctrl+F',     desc: 'Find in file' },
+  { key: 'Ctrl+Z',     desc: 'Undo' },
+  { key: 'Ctrl+Y',     desc: 'Redo' },
+  { key: 'Ctrl+A',     desc: 'Select all' },
+  { key: 'Ctrl+/',     desc: 'Toggle comment' },
+  { key: 'Tab',        desc: 'Indent line' },
+  { key: 'Alt+↑↓',    desc: 'Move line up/down' },
+];
+
+function initEditorIfNeeded() {
+  if (editorInitialized) return;
+  editorInitialized = true;
+
+  editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+    mode: 'xml',
+    theme: cfg.theme,
+    lineNumbers: cfg.lineNumbers,
+    autoCloseTags: cfg.autoClose,
+    autoCloseBrackets: true,
+    matchBrackets: cfg.matchBrackets,
+    indentUnit: cfg.tabSize,
+    tabSize: cfg.tabSize,
+    lineWrapping: cfg.wordWrap,
+    extraKeys: {
+      'Ctrl-S':     () => saveData(true),
+      'Ctrl-Enter': runCode,
+      'Ctrl-B':     toggleSidebar,
+      'Ctrl-F':     toggleSearch,
+    }
+  });
+
+  applyFontStyle();
+  buildThemeGrid();
+  buildFontBtns();
+  buildShortcutList();
+  applySettingsUI();
+
+  editor.on('change', onEditorChange);
+  editor.on('cursorActivity', updateStatusbar);
+
+  document.getElementById('editorLoading').style.display = 'none';
+
+  openFile(currentFile);
+  renderTabs();
+  renderFileTree();
+
+  document.addEventListener('keydown', handleGlobalKey);
+}
+
+function getFileIcon(name) {
+  if (name.endsWith('.html')) return '<i class="fa-brands fa-html5" style="color:#e34f26"></i>';
+  if (name.endsWith('.css'))  return '<i class="fa-brands fa-css3-alt" style="color:#264de4"></i>';
+  if (name.endsWith('.js'))   return '<i class="fa-brands fa-js" style="color:#f7df1e"></i>';
+  return '<i class="fa-regular fa-file-code" style="color:#8b92a5"></i>';
+}
+
+function getMode(path) {
+  if (path.endsWith('.css'))  return 'css';
+  if (path.endsWith('.js'))   return 'javascript';
+  return 'xml';
+}
+
+function getLangName(path) {
+  if (path.endsWith('.css'))  return 'CSS';
+  if (path.endsWith('.js'))   return 'JavaScript';
+  if (path.endsWith('.html')) return 'HTML';
+  return 'Text';
+}
+
+function openFile(path) {
+  if (!fs[path] && fs[path] !== '') return;
+  if (currentFile !== path) fs[currentFile] = editor.getValue();
+  currentFile = path;
+  editor.setValue(fs[path] || '');
+  editor.setOption('mode', getMode(path));
+  editor.clearHistory();
+  editor.refresh();
+  const base = path.includes('/') ? path.split('/').pop() : path;
+  document.getElementById('headerPath').innerHTML =
+    `${getFileIcon(base)} <span>${path}</span> <span class="badge" id="modifiedBadge" style="display:none">●</span>`;
+  if (!openTabs.includes(path)) openTabs.push(path);
+  renderTabs();
+  renderFileTree();
+  updateStatusbar();
+  document.getElementById('sbLang').innerHTML = `<i class="fa-solid fa-code"></i> ${getLangName(path)}`;
+  if (window.innerWidth < 768) closeSidebar();
+}
+
+function saveData(manual = false) {
+  fs[currentFile] = editor.getValue();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(fs));
+  document.getElementById('autosaveDot').classList.remove('active');
+  const badge = document.getElementById('modifiedBadge');
+  if (badge) badge.style.display = 'none';
+  if (manual) showToast('Saved', 'success', 'fa-floppy-disk');
+}
+
+function onEditorChange() {
+  fs[currentFile] = editor.getValue();
+  document.getElementById('autosaveDot').classList.add('active');
+  const badge = document.getElementById('modifiedBadge');
+  if (badge) badge.style.display = '';
+  updateStatusbar();
+  if (cfg.autoSave) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => saveData(), 1500);
+  }
+}
+
+function updateStatusbar() {
+  const cursor = editor.getCursor();
+  document.getElementById('sbCursor').innerHTML =
+    `<i class="fa-solid fa-i-cursor"></i> Ln ${cursor.line+1}, Col ${cursor.ch+1}`;
+  document.getElementById('sbChars').innerHTML =
+    `<i class="fa-solid fa-font"></i> ${editor.getValue().length} chars`;
+}
+
+let collapsedFolders = new Set();
+
+function renderFileTree() {
+  const tree = document.getElementById('fileTree');
+  tree.innerHTML = '';
+  const folders = new Map();
+  const rootFiles = [];
+  Object.keys(fs).forEach(path => {
+    if (path.includes('/')) {
+      const folder = path.split('/')[0];
+      if (!folders.has(folder)) folders.set(folder, []);
+      folders.get(folder).push(path);
+    } else {
+      rootFiles.push(path);
+    }
+  });
+  folders.forEach((files, folder) => {
+    const isOpen = !collapsedFolders.has(folder);
+    const li = document.createElement('li');
+    li.innerHTML = `<div class="tree-folder ${isOpen?'open':''}" onclick="toggleFolder('${folder}',this)">
+      <i class="fa-solid fa-folder" style="color:#facc15;font-size:13px"></i>
+      <span>${folder}</span>
+      <i class="fa-solid fa-chevron-right"></i>
+    </div>`;
+    tree.appendChild(li);
+    if (isOpen) {
+      files.forEach(path => {
+        const base = path.split('/').pop();
+        const fileLi = document.createElement('li');
+        fileLi.innerHTML = `<div class="tree-file ${currentFile===path?'active-file':''}"
+             onclick="openFile('${path}')" oncontextmenu="showCtxMenu(event,'${path}')">
+          ${getFileIcon(base)}
+          <span class="tree-file-name">${base}</span>
+          <div class="tree-file-actions">
+            <button onclick="event.stopPropagation();startRename('${path}')"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="event.stopPropagation();deleteFile('${path}')"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>`;
+        tree.appendChild(fileLi);
+      });
+    }
+  });
+  rootFiles.forEach(file => {
+    const li = document.createElement('li');
+    li.innerHTML = `<div class="tree-file tree-root-file ${currentFile===file?'active-file':''}"
+         onclick="openFile('${file}')" oncontextmenu="showCtxMenu(event,'${file}')">
+      ${getFileIcon(file)}
+      <span class="tree-file-name">${file}</span>
+      <div class="tree-file-actions">
+        <button onclick="event.stopPropagation();startRename('${file}')"><i class="fa-solid fa-pen"></i></button>
+        ${file!=='index.html'?`<button onclick="event.stopPropagation();deleteFile('${file}')"><i class="fa-solid fa-trash"></i></button>`:''}
+      </div>
+    </div>`;
+    tree.appendChild(li);
+  });
+  if (Object.keys(fs).length === 0)
+    tree.innerHTML = `<li><div class="empty-workspace"><i class="fa-solid fa-folder-open"></i><br>No files yet.<br>Create one above.</div></li>`;
+}
+
+function toggleFolder(name, el) {
+  if (collapsedFolders.has(name)) collapsedFolders.delete(name);
+  else collapsedFolders.add(name);
+  renderFileTree();
+}
+
+function collapseAll() {
+  const folders = new Set();
+  Object.keys(fs).forEach(p => { if (p.includes('/')) folders.add(p.split('/')[0]); });
+  folders.forEach(f => collapsedFolders.add(f));
+  renderFileTree();
+}
+
+function deleteFile(path) {
+  if (!confirm(`Delete "${path}"?`)) return;
+  delete fs[path];
+  openTabs = openTabs.filter(t => t !== path);
+  if (currentFile === path) {
+    currentFile = openTabs[0] || 'index.html';
+    if (!fs[currentFile]) fs[currentFile] = DEFAULT_FS['index.html'] || '';
+    editor.setValue(fs[currentFile]);
+  }
+  saveData();
+  renderTabs();
+  renderFileTree();
+  showToast(`Deleted ${path.split('/').pop()}`, 'info', 'fa-trash');
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabBar');
+  const newBtn = bar.querySelector('.tab-new-btn');
+  bar.innerHTML = '';
+  openTabs.forEach(path => {
+    const base = path.includes('/') ? path.split('/').pop() : path;
+    const div = document.createElement('div');
+    div.className = `tab ${path===currentFile?'active':''}`;
+    div.innerHTML = `${getFileIcon(base)} ${base} <span class="close-tab" onclick="closeTab(event,'${path}')"><i class="fa-solid fa-xmark"></i></span>`;
+    div.addEventListener('click', e => { if (!e.target.closest('.close-tab')) openFile(path); });
+    bar.appendChild(div);
+  });
+  bar.appendChild(newBtn || (() => {
+    const b = document.createElement('div');
+    b.className='tab-new-btn'; b.innerHTML='<i class="fa-solid fa-plus"></i>'; b.onclick=()=>openCreateModal(); return b;
+  })());
+}
+
+function closeTab(e, path) {
+  e.stopPropagation();
+  if (openTabs.length === 1) return;
+  openTabs = openTabs.filter(t => t !== path);
+  if (currentFile === path) {
+    currentFile = openTabs[openTabs.length-1];
+    editor.setValue(fs[currentFile]||'');
+    editor.setOption('mode', getMode(currentFile));
+  }
+  renderTabs(); renderFileTree();
+}
+
+function openCreateModal(type) {
+  if (type) document.getElementById('createType').value = type;
+  document.getElementById('itemName').value = '';
+  openModal('createModal');
+  setTimeout(() => document.getElementById('itemName').focus(), 300);
+}
+
+function createNewItem() {
+  const type = document.getElementById('createType').value;
+  let name = document.getElementById('itemName').value.trim();
+  if (!name) { showToast('Enter a name!', 'error', 'fa-triangle-exclamation'); return; }
+  if (type === 'folder') {
+    if (!name.endsWith('/')) name += '/';
+    const placeholder = name + 'index.html';
+    if (!fs[placeholder]) fs[placeholder] = `<!-- ${name}index.html -->`;
+    showToast(`Folder "${name.slice(0,-1)}" created`, 'success', 'fa-folder-plus');
+    saveData(); renderFileTree();
+  } else {
+    if (fs[name] !== undefined) { showToast('File already exists!', 'error', 'fa-triangle-exclamation'); return; }
+    fs[name] = ''; saveData(); openFile(name);
+    showToast(`Created ${name}`, 'success', 'fa-file-plus');
+  }
+  closeModal('createModal');
+}
+
+function startRename(path) {
+  renamingFile = path;
+  document.getElementById('renameInput').value = path.includes('/') ? path.split('/').pop() : path;
+  openModal('renameModal');
+  setTimeout(() => document.getElementById('renameInput').focus(), 300);
+}
+
+function doRename() {
+  const newName = document.getElementById('renameInput').value.trim();
+  if (!newName || !renamingFile) return;
+  const dir = renamingFile.includes('/') ? renamingFile.split('/')[0]+'/' : '';
+  const newPath = dir + newName;
+  if (newPath === renamingFile) { closeModal('renameModal'); return; }
+  if (fs[newPath] !== undefined) { showToast('File already exists!', 'error'); return; }
+  fs[newPath] = fs[renamingFile];
+  delete fs[renamingFile];
+  if (currentFile === renamingFile) currentFile = newPath;
+  openTabs = openTabs.map(t => t===renamingFile ? newPath : t);
+  saveData(); renderTabs(); renderFileTree();
+  closeModal('renameModal');
+  showToast(`Renamed to ${newName}`, 'success', 'fa-pen');
+}
+
+// UPDATED: runCode now previews current file if HTML, else index.html
+function runCode() {
+  saveData();
+  const targetFile = currentFile.endsWith('.html') ? currentFile : 'index.html';
+  let html = fs[targetFile] || '';
+  Object.keys(fs).forEach(path => {
+    if (path.endsWith('.css')) {
+      const base = path.split('/').pop();
+      html = html.replace(new RegExp(`<link[^>]+${base}[^>]*>`, 'gi'), `<style>\n${fs[path]}\n</style>`);
+    }
+    if (path.endsWith('.js')) {
+      const base = path.split('/').pop();
+      html = html.replace(new RegExp(`<script[^>]+${base}[^>]*><\\/script>`, 'gi'), `<script>${fs[path]}<\/script>`);
+    }
+  });
+  document.getElementById('previewUrlText').textContent = `localhost / ${targetFile}`;
+  document.getElementById('previewOverlay').classList.add('show');
+  const frameDoc = document.getElementById('liveFrame').contentWindow.document;
+  frameDoc.open(); frameDoc.write(html); frameDoc.close();
+}
+
+// NEW: Preview any HTML file from context menu
+function previewFile(path) {
+  if (!path || !path.endsWith('.html')) {
+    showToast('Only HTML files can be previewed', 'info', 'fa-circle-info');
+    return;
+  }
+  saveData();
+  let html = fs[path] || '';
+  Object.keys(fs).forEach(p => {
+    if (p.endsWith('.css')) {
+      const base = p.split('/').pop();
+      html = html.replace(new RegExp(`<link[^>]+${base}[^>]*>`, 'gi'), `<style>\n${fs[p]}\n</style>`);
+    }
+    if (p.endsWith('.js')) {
+      const base = p.split('/').pop();
+      html = html.replace(new RegExp(`<script[^>]+${base}[^>]*><\\/script>`, 'gi'), `<script>${fs[p]}<\/script>`);
+    }
+  });
+  document.getElementById('previewUrlText').textContent = `localhost / ${path}`;
+  document.getElementById('previewOverlay').classList.add('show');
+  const frameDoc = document.getElementById('liveFrame').contentWindow.document;
+  frameDoc.open(); frameDoc.write(html); frameDoc.close();
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('show');
+}
+
+// NEW: View source of current file
+function viewSource() {
+  fs[currentFile] = editor.getValue();
+  const src = fs[currentFile] || '';
+  document.getElementById('sourceTitle').textContent = `Source: ${currentFile}`;
+  document.getElementById('sourceBody').textContent = src;
+  document.getElementById('sourceOverlay').classList.add('show');
+}
+
+// NEW: Close source view
+function closeSource() {
+  document.getElementById('sourceOverlay').classList.remove('show');
+}
+
+// NEW: Copy source to clipboard
+function copySource() {
+  const src = document.getElementById('sourceBody').textContent;
+  navigator.clipboard.writeText(src).then(() => showToast('Source copied!', 'success', 'fa-copy'));
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('active');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+  if (document.getElementById('sidebar').classList.contains('active')) renderFileTree();
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('active');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+function switchSideTab(panel, el) {
+  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+}
+
+let searchOpen = false;
+let replaceOpen = false;
+
+function toggleSearch() {
+  searchOpen = !searchOpen;
+  document.getElementById('searchBar').classList.toggle('active', searchOpen);
+  if (searchOpen) setTimeout(() => document.getElementById('searchInput').focus(), 100);
+  else { searchCursor = null; document.getElementById('searchInfo').textContent = ''; }
+}
+
+function toggleReplace() {
+  replaceOpen = !replaceOpen;
+  document.getElementById('replaceInput').style.display = replaceOpen ? '' : 'none';
+  document.getElementById('replaceDoBtn').style.display = replaceOpen ? '' : 'none';
+}
+
+function searchFind() {
+  const q = document.getElementById('searchInput').value;
+  if (!q) return;
+  searchCursor = editor.getSearchCursor(q, searchCursor ? searchCursor.pos : null);
+  if (!searchCursor.findNext()) {
+    searchCursor = editor.getSearchCursor(q);
+    searchCursor.findNext();
+  }
+  if (searchCursor.from()) {
+    editor.setSelection(searchCursor.from(), searchCursor.to());
+    editor.scrollIntoView(searchCursor.from(), 80);
+    document.getElementById('searchInfo').textContent = 'Found';
+  } else {
+    document.getElementById('searchInfo').textContent = 'Not found';
+  }
+}
+
+function doReplace() {
+  const q = document.getElementById('searchInput').value;
+  const r = document.getElementById('replaceInput').value;
+  if (!q) return;
+  const c = editor.getSearchCursor(q);
+  let count = 0;
+  while (c.findNext()) { c.replace(r); count++; }
+  showToast(`Replaced ${count} instance(s)`, 'success', 'fa-arrows-rotate');
+}
+
+document.addEventListener('keydown', e => {
+  if (searchOpen && e.key === 'Enter' && document.activeElement === document.getElementById('searchInput')) searchFind();
+  if (searchOpen && e.key === 'Escape') toggleSearch();
+});
+
+function showCtxMenu(e, path) {
+  e.preventDefault();
+  ctxTarget = path;
+  const menu = document.getElementById('ctxMenu');
+  // Show/hide preview option based on file type
+  const previewItem = menu.querySelectorAll('.ctx-item')[1];
+  const sourceItem  = menu.querySelectorAll('.ctx-item')[2];
+  if (path.endsWith('.html')) {
+    previewItem.style.display = '';
+    sourceItem.style.display  = '';
+  } else {
+    previewItem.style.display = 'none';
+    sourceItem.style.display  = '';
+  }
+  menu.style.display = 'block';
+  menu.style.left = Math.min(e.clientX, window.innerWidth-170)+'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight-140)+'px';
+  menu.classList.add('show');
+  e.stopPropagation();
+}
+function hideCtxMenu() { document.getElementById('ctxMenu').classList.remove('show'); }
+function ctxOpen()       { if (ctxTarget) openFile(ctxTarget); hideCtxMenu(); }
+function ctxPreview()    { if (ctxTarget) previewFile(ctxTarget); hideCtxMenu(); }
+function ctxViewSource() { if (ctxTarget) { openFile(ctxTarget); setTimeout(() => viewSource(), 100); } hideCtxMenu(); }
+function ctxRename()     { if (ctxTarget) startRename(ctxTarget); hideCtxMenu(); }
+function ctxDelete()     { if (ctxTarget) deleteFile(ctxTarget); hideCtxMenu(); }
+
+document.querySelectorAll('.key-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    let text = this.getAttribute('data-insert');
+    const offset = parseInt(this.getAttribute('data-cursor') || '0');
+    const doc = editor.getDoc();
+    const cursor = doc.getCursor();
+    doc.replaceRange(text, cursor);
+    if (offset !== 0) doc.setCursor({ line: cursor.line, ch: cursor.ch + text.length + offset });
+    editor.focus();
+  });
+});
+
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  THEMES.forEach(t => {
+    const card = document.createElement('div');
+    card.className = `theme-card ${cfg.theme===t.id?'active':''}`;
+    card.dataset.id = t.id;
+    card.innerHTML = `<div class="theme-dots">${t.dots.map(d=>`<div class="theme-dot" style="background:${d}"></div>`).join('')}</div><span class="theme-name">${t.name}</span>`;
+    card.onclick = () => applyTheme(t.id);
+    grid.appendChild(card);
+  });
+}
+
+function applyTheme(id) {
+  cfg.theme = id;
+  editor.setOption('theme', id);
+  document.getElementById('sbTheme').innerHTML = `<i class="fa-solid fa-palette"></i> ${id}`;
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.id===id));
+  saveSettings();
+  showToast(`Theme: ${id}`, 'info', 'fa-palette');
+}
+
+function buildFontBtns() {
+  const container = document.getElementById('fontBtns');
+  container.innerHTML = '';
+  FONTS.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = `font-btn ${cfg.font===f?'active':''}`;
+    btn.textContent = f; btn.style.fontFamily = f;
+    btn.onclick = () => applyFont(f);
+    container.appendChild(btn);
+  });
+}
+
+function applyFont(font) {
+  cfg.font = font; applyFontStyle();
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.toggle('active', b.textContent===font));
+  saveSettings();
+  showToast(`Font: ${font}`, 'info', 'fa-font');
+}
+
+function applyFontStyle() {
+  document.querySelector('.CodeMirror') && (document.querySelector('.CodeMirror').style.fontFamily = cfg.font + ', monospace');
+  document.documentElement.style.setProperty('--font-code', `'${cfg.font}', monospace`);
+}
+
+function changeFontSize(val) {
+  cfg.fontSize = parseInt(val);
+  document.getElementById('fontSizeVal').textContent = val+'px';
+  document.documentElement.style.setProperty('--font-size-editor', val+'px');
+  if (editor) {
+    const cm = document.querySelector('.CodeMirror');
+    if (cm) cm.style.fontSize = val+'px';
+    editor.refresh();
+  }
+  saveSettings();
+}
+
+function changeLineHeight(val) {
+  const lh = (val/10).toFixed(1);
+  cfg.lineHeight = parseFloat(lh);
+  document.getElementById('lineHeightVal').textContent = lh;
+  const cm = document.querySelector('.CodeMirror');
+  if (cm) cm.style.lineHeight = lh;
+  editor && editor.refresh();
+  saveSettings();
+}
+
+function applyEditorSetting(key, val) {
+  cfg[key] = val;
+  editor && editor.setOption(key, val);
+  saveSettings();
+}
+
+function toggleAutoSave(val) {
+  cfg.autoSave = val;
+  if (!val) { clearTimeout(autoSaveTimer); document.getElementById('autosaveDot').classList.remove('active'); }
+  saveSettings();
+  showToast(`Auto-save ${val?'on':'off'}`, 'info', 'fa-cloud');
+}
+
+function applySettingsUI() {
+  document.getElementById('lineNumbersToggle').checked   = cfg.lineNumbers;
+  document.getElementById('wordWrapToggle').checked      = cfg.wordWrap;
+  document.getElementById('autoCloseToggle').checked     = cfg.autoClose;
+  document.getElementById('autoSaveToggle').checked      = cfg.autoSave;
+  document.getElementById('matchBracketsToggle').checked = cfg.matchBrackets;
+  document.getElementById('fontSizeSlider').value        = cfg.fontSize;
+  document.getElementById('fontSizeVal').textContent     = cfg.fontSize+'px';
+  document.getElementById('lineHeightSlider').value      = Math.round(cfg.lineHeight*10);
+  document.getElementById('lineHeightVal').textContent   = cfg.lineHeight;
+  document.getElementById('sbTheme').innerHTML = `<i class="fa-solid fa-palette"></i> ${cfg.theme}`;
+  changeFontSize(cfg.fontSize);
+  changeLineHeight(Math.round(cfg.lineHeight*10));
+}
+
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); }
+
+function buildShortcutList() {
+  document.getElementById('shortcutList').innerHTML = SHORTCUTS.map(s =>
+    `<div class="shortcut-item"><span>${s.desc}</span><span class="shortcut-key">${s.key}</span></div>`
+  ).join('');
+}
+
+function exportProject() {
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(fs, null, 2));
+  a.download = 'techverse-project.json';
+  a.click();
+  showToast('Exported!', 'success', 'fa-download');
+}
+
+function clearStorage() {
+  if (!confirm('Delete ALL project files and settings? This cannot be undone.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(SETTINGS_KEY);
+  location.reload();
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) closeModal(m.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['createModal','renameModal','profileModal'].forEach(id => {
+      if (document.getElementById(id).classList.contains('active')) closeModal(id);
+    });
+    if (document.getElementById('sourceOverlay').classList.contains('show')) closeSource();
+  }
+  if (e.key === 'Enter') {
+    if (document.getElementById('createModal').classList.contains('active')) createNewItem();
+    if (document.getElementById('renameModal').classList.contains('active')) doRename();
+  }
+});
+
+function showToast(msg, type='info', icon='fa-circle-info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<i class="fa-solid ${icon}" style="color:${type==='success'?'var(--success)':type==='error'?'var(--danger)':'var(--primary)'}"></i> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 2500);
+}
+
+function handleGlobalKey(e) {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key==='s') { e.preventDefault(); saveData(true); }
+    if (e.key==='Enter') { e.preventDefault(); runCode(); }
+    if (e.key==='b') { e.preventDefault(); toggleSidebar(); }
+    if (e.key==='f') { e.preventDefault(); toggleSearch(); }
+  }
+}
+
+document.addEventListener('click', () => hideCtxMenu());
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    });
+  }
+</script>
+
+</body>
+</html>
