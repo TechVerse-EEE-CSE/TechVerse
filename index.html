@@ -728,23 +728,63 @@ enc += cipher.final('hex');</code>
 
 
 
+
+
+
+
 <!--offline showing registration-->
 
-<script>
-  // Service Worker রেজিস্ট্রেশন
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then(() => {
-        console.log('[SW] Registered ✓');
-      }).catch((err) => {
-        console.warn('[SW] Registration failed:', err);
-      });
-    });
+<!--
+  ════════════════════════════════════════════════════════
+  register-sw.html  —  Service Worker Registration Snippet
+  ════════════════════════════════════════════════════════
 
-    // বর্তমান URL সেভ করো (offline হলে ফেরত আসার জন্য)
-    sessionStorage.setItem('offlineReturnURL', window.location.href);
-  }
+  INSTRUCTIONS
+  ────────────
+  Copy the <script> block below and paste it just before
+  the closing </body> tag on EVERY page of your website.
+
+  What it does:
+    1. Registers /sw.js so the browser can intercept requests.
+    2. Saves the current page URL to sessionStorage so that
+       offline.html knows where to send the user back.
+    3. Keeps the stored URL updated on every SPA navigation.
+-->
+
+<script>
+  (function () {
+    if (!('serviceWorker' in navigator)) return; // Browser not supported — exit silently
+
+    /* ── Save the current URL immediately (before any navigation) ── */
+    function saveReturnURL() {
+      const url = window.location.href;
+      // Do not save the offline page itself
+      if (!url.includes('offline')) {
+        sessionStorage.setItem('offlineReturnURL', url);
+      }
+    }
+
+    saveReturnURL();
+
+    /* ── Keep it updated on SPA / back-forward navigation ── */
+    window.addEventListener('popstate',   saveReturnURL);
+    window.addEventListener('pushstate',  saveReturnURL); // fires if you patch history.pushState
+    window.addEventListener('hashchange', saveReturnURL);
+
+    /* ── Register the Service Worker ── */
+    window.addEventListener('load', function () {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .then(function (registration) {
+          console.log('[SW] Registered successfully. Scope:', registration.scope);
+        })
+        .catch(function (error) {
+          console.warn('[SW] Registration failed:', error);
+        });
+    });
+  })();
 </script>
+
 
 
 
