@@ -692,10 +692,7 @@ function loadScript(src) {
 // ক্লিয়ার ডেটা 
 
 window.clearStorage = function () {
-  document.getElementById('clearStorageModal').classList.add('show');
-};
-
-window.confirmClearStorage = function () {
+  if (!confirm('সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।')) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(SETTINGS_KEY);
   location.reload();
