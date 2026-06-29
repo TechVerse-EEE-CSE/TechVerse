@@ -353,6 +353,8 @@
   <textarea id="code-editor"></textarea>
 </div>
 
+
+
 <!-- ══ QUICK KEYBOARD ══ -->
 <div class="quick-keyboard" id="quickKeyboard">
   <button class="key-btn special" data-insert="<>" data-cursor="-1">&lt;&gt;</button>
@@ -374,7 +376,98 @@
   <button class="key-btn" data-insert="&amp;">@</button>
   <button class="key-btn" data-insert="&&">&amp;&amp;</button>
   <button class="key-btn" data-insert="=>">⇒</button>
+
+  <!-- ── HTML Tags ── -->
+  <button class="key-btn" data-insert="<p></p>" data-cursor="-4">p</button>
+  <button class="key-btn" data-insert="<h1></h1>" data-cursor="-5">h1</button>
+  <button class="key-btn" data-insert="<h2></h2>" data-cursor="-5">h2</button>
+  <button class="key-btn" data-insert="<h3></h3>" data-cursor="-5">h3</button>
+  <button class="key-btn" data-insert="<a href=&quot;&quot;></a>" data-cursor="-4">a</button>
+  <button class="key-btn" data-insert="<img src=&quot;&quot; alt=&quot;&quot;>" data-cursor="-1">img</button>
+  <button class="key-btn" data-insert="<ul></ul>" data-cursor="-5">ul</button>
+  <button class="key-btn" data-insert="<li></li>" data-cursor="-5">li</button>
+  <button class="key-btn" data-insert="<button></button>" data-cursor="-9">btn</button>
+  <button class="key-btn" data-insert="<input type=&quot;text&quot;>" data-cursor="-1">input</button>
+  <button class="key-btn" data-insert="<form></form>" data-cursor="-7">form</button>
+  <button class="key-btn" data-insert="<table></table>" data-cursor="-8">table</button>
+  <button class="key-btn" data-insert="<tr></tr>" data-cursor="-5">tr</button>
+  <button class="key-btn" data-insert="<td></td>" data-cursor="-5">td</button>
+  <button class="key-btn" data-insert="<section></section>" data-cursor="-10">sec</button>
+  <button class="key-btn" data-insert="<header></header>" data-cursor="-9">hdr</button>
+  <button class="key-btn" data-insert="<footer></footer>" data-cursor="-9">ftr</button>
+  <button class="key-btn" data-insert="<nav></nav>" data-cursor="-6">nav</button>
+  <button class="key-btn" data-insert="<main></main>" data-cursor="-7">main</button>
+  <button class="key-btn" data-insert="<label></label>" data-cursor="-8">label</button>
+  <button class="key-btn" data-insert="<select></select>" data-cursor="-9">select</button>
+  <button class="key-btn" data-insert="<option></option>" data-cursor="-9">option</button>
+  <button class="key-btn" data-insert="<textarea></textarea>" data-cursor="-11">txtarea</button>
+  <button class="key-btn" data-insert="<br>" data-cursor="-1">br</button>
+  <button class="key-btn" data-insert="<hr>" data-cursor="-1">hr</button>
+  <button class="key-btn" data-insert="<!-- -->" data-cursor="-4">&lt;!--</button>
+
+  <!-- ── CSS Properties ── -->
+  <button class="key-btn" data-insert="display: flex;" data-cursor="-1">flex</button>
+  <button class="key-btn" data-insert="display: grid;" data-cursor="-1">grid</button>
+  <button class="key-btn" data-insert="display: none;" data-cursor="-1">none</button>
+  <button class="key-btn" data-insert="display: block;" data-cursor="-1">block</button>
+  <button class="key-btn" data-insert="position: relative;" data-cursor="-1">rel</button>
+  <button class="key-btn" data-insert="position: absolute;" data-cursor="-1">abs</button>
+  <button class="key-btn" data-insert="position: fixed;" data-cursor="-1">fixed</button>
+  <button class="key-btn" data-insert="width: 100%;" data-cursor="-1">w100</button>
+  <button class="key-btn" data-insert="height: 100%;" data-cursor="-1">h100</button>
+  <button class="key-btn" data-insert="margin: 0 auto;" data-cursor="-1">m:auto</button>
+  <button class="key-btn" data-insert="padding: 0;" data-cursor="-1">pad</button>
+  <button class="key-btn" data-insert="border-radius: ;" data-cursor="-1">radius</button>
+  <button class="key-btn" data-insert="background-color: ;" data-cursor="-1">bg</button>
+  <button class="key-btn" data-insert="color: ;" data-cursor="-1">color</button>
+  <button class="key-btn" data-insert="font-size: ;" data-cursor="-1">fs</button>
+  <button class="key-btn" data-insert="font-weight: bold;" data-cursor="-1">fw</button>
+  <button class="key-btn" data-insert="text-align: center;" data-cursor="-1">center</button>
+  <button class="key-btn" data-insert="justify-content: center;" data-cursor="-1">jc</button>
+  <button class="key-btn" data-insert="align-items: center;" data-cursor="-1">ai</button>
+  <button class="key-btn" data-insert="flex-direction: column;" data-cursor="-1">col</button>
+  <button class="key-btn" data-insert="gap: ;" data-cursor="-1">gap</button>
+  <button class="key-btn" data-insert="box-shadow: 0 4px 12px rgba(0,0,0,0.2);" data-cursor="-1">shadow</button>
+  <button class="key-btn" data-insert="transition: all 0.3s ease;" data-cursor="-1">trans</button>
+  <button class="key-btn" data-insert="overflow: hidden;" data-cursor="-1">hidden</button>
+  <button class="key-btn" data-insert="z-index: ;" data-cursor="-1">z</button>
+  <button class="key-btn" data-insert="opacity: ;" data-cursor="-1">opacity</button>
+  <button class="key-btn" data-insert="cursor: pointer;" data-cursor="-1">pointer</button>
+  <button class="key-btn" data-insert="grid-template-columns: repeat(3, 1fr);" data-cursor="-1">cols</button>
+
+  <!-- ── JS Snippets ── -->
+  <button class="key-btn" data-insert="console.log();" data-cursor="-2">log</button>
+  <button class="key-btn" data-insert="document.getElementById('')" data-cursor="-2">getEl</button>
+  <button class="key-btn" data-insert="document.querySelector('')" data-cursor="-2">query</button>
+  <button class="key-btn" data-insert="addEventListener('click', () => {})" data-cursor="-2">click</button>
+  <button class="key-btn" data-insert="addEventListener('DOMContentLoaded', () => {})" data-cursor="-2">DOM</button>
+  <button class="key-btn" data-insert="const  = " data-cursor="-3">const</button>
+  <button class="key-btn" data-insert="let  = " data-cursor="-3">let</button>
+  <button class="key-btn" data-insert="function () {}" data-cursor="-3">fn</button>
+  <button class="key-btn" data-insert="() => {}" data-cursor="-2">arrow</button>
+  <button class="key-btn" data-insert="if () {}" data-cursor="-4">if</button>
+  <button class="key-btn" data-insert="for (let i = 0; i < ; i++) {}" data-cursor="-8">for</button>
+  <button class="key-btn" data-insert="forEach(item => {})" data-cursor="-2">each</button>
+  <button class="key-btn" data-insert=".map(item => )" data-cursor="-1">map</button>
+  <button class="key-btn" data-insert=".filter(item => )" data-cursor="-1">filter</button>
+  <button class="key-btn" data-insert="async function () {}" data-cursor="-3">async</button>
+  <button class="key-btn" data-insert="await " data-cursor="-1">await</button>
+  <button class="key-btn" data-insert="try {} catch (e) {}" data-cursor="-1">try</button>
+  <button class="key-btn" data-insert="JSON.stringify()" data-cursor="-1">JSON</button>
+  <button class="key-btn" data-insert="localStorage.setItem('', )" data-cursor="-1">setItem</button>
+  <button class="key-btn" data-insert="localStorage.getItem('')" data-cursor="-2">getItem</button>
+  <button class="key-btn" data-insert="setTimeout(() => {}, 1000)" data-cursor="-1">timeout</button>
+  <button class="key-btn" data-insert="setInterval(() => {}, 1000)" data-cursor="-1">interval</button>
+  <button class="key-btn" data-insert="import  from ''" data-cursor="-1">import</button>
+  <button class="key-btn" data-insert="export default " data-cursor="-1">export</button>
+  <button class="key-btn" data-insert="return " data-cursor="-1">return</button>
+  <button class="key-btn" data-insert="typeof " data-cursor="-1">typeof</button>
+  <button class="key-btn" data-insert="||" data-cursor="-1">||</button>
+  <button class="key-btn" data-insert="??" data-cursor="-1">??</button>
+  <button class="key-btn" data-insert="===" data-cursor="-1">===</button>
+  <button class="key-btn" data-insert="!==" data-cursor="-1">!==</button>
 </div>
+
 
 <!-- ══ STATUS BAR ══ -->
 <div class="statusbar">
