@@ -142,10 +142,36 @@ window.openFile = function (path) {
 window.saveData = function (manual = false) {
   fs[currentFile] = editor.getValue();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(fs));
+  // local save time রাখো (cloud load এর সাথে তুলনার জন্য)
+  localStorage.setItem('tv_promax_localtime', Date.now().toString());
+
   document.getElementById('autosaveDot').classList.remove('active');
   const badge = document.getElementById('modifiedBadge');
   if (badge) badge.style.display = 'none';
-  if (manual) showToast('সেভ হয়েছে', 'success', 'fa-floppy-disk');
+
+  if (manual) {
+    showToast('সেভ হয়েছে', 'success', 'fa-floppy-disk');
+    // ── শুধু manual Ctrl+S এ cloud save ──
+    // autosave এ cloud save হবে না → Firestore safe থাকবে
+    if (typeof window.cloudSave === 'function') {
+      window.cloudSave(fs);
+    }
+  }
+};
+
+// ── Cloud load হলে fs reload ──
+window.reloadFsFromStorage = function () {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return;
+  try {
+    fs = JSON.parse(stored);
+    editor.setValue(fs[currentFile] || '');
+    renderTabs();
+    renderFileTree();
+    showToast('Cloud থেকে project লোড হয়েছে', 'info', 'fa-cloud-arrow-down');
+  } catch (e) {
+    console.error('reloadFsFromStorage error:', e);
+  }
 };
 
 function onEditorChange() {
