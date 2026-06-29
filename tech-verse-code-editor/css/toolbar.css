@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════
-   FLOATING TOOLBAR — css/toolbar.css (FIXED)
-   css/styles.css এর পরে link করুন
+   FLOATING TOOLBAR — css/toolbar.css
+   css/styles.css এর শেষে যোগ করুন
 ══════════════════════════════════════ */
 
 /* ── Floating Toolbar ── */
@@ -21,15 +21,13 @@
   align-items: center;
   gap: 2px;
   box-shadow: -4px 0 24px rgba(0,0,0,0.4);
-  transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1),
+              right 0.3s cubic-bezier(0.4,0,0.2,1);
   min-width: 64px;
 }
 
-/* ══ BUG FIX: collapsed হলে শুধু toggle টুকু দেখাবে ══ */
 .float-toolbar.collapsed {
-  right: -48px; /* toolbar width ~64px, তাই 64-16=48 লুকাবে */
-  min-width: 64px; /* width ঠিক রাখো */
-  border-radius: 16px 0 0 16px;
+  right: -52px;
 }
 
 /* ── প্রতিটি item ── */
@@ -65,7 +63,11 @@
 }
 
 .ftb-item:hover .ftb-icon { color: #5b8dee; }
-.ftb-icon svg { width: 100%; height: 100%; }
+
+.ftb-icon svg {
+  width: 100%;
+  height: 100%;
+}
 
 .ftb-label {
   font-size: 10px;
@@ -113,49 +115,37 @@
   margin: 2px 0;
 }
 
-/* ══ BUG FIX: Toggle button ══ */
+/* ── Toggle Button ── */
 .ftb-toggle {
-  width: 36px;         /* একটু বড় করা হয়েছে — সহজে চাপা যাবে */
-  height: 36px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: rgba(255,255,255,0.5);
-  border-radius: 10px;
-  transition: color 0.2s, background 0.2s;
-  margin: 4px 0;
-  flex-shrink: 0;
-  /* ══ গুরুত্বপূর্ণ: collapsed এ toggle সবসময় দেখাবে ══ */
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  color: rgba(255,255,255,0.3);
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s, transform 0.3s;
+  margin: 6px 0 4px;
 }
 
-.ftb-toggle:hover {
-  color: #5b8dee;
-  background: rgba(91,141,238,0.15);
-}
+.ftb-toggle:hover { color: #5b8dee; background: rgba(91,141,238,0.1); }
+.ftb-toggle svg { width: 16px; height: 16px; }
 
-.ftb-toggle svg { width: 18px; height: 18px; }
-
-/* collapsed হলে arrow ঘুরবে */
 .float-toolbar.collapsed .ftb-toggle svg {
   transform: rotate(180deg);
 }
 
-/* ══ BUG FIX: collapsed এ items লুকাবে কিন্তু toggle দেখাবে ══ */
-.float-toolbar.collapsed .ftb-item {
-  display: none;
-}
-
+/* collapsed হলে শুধু toggle দেখাবে */
+.float-toolbar.collapsed .ftb-item,
 .float-toolbar.collapsed .ftb-sep {
   display: none;
 }
 
-/* toggle কখনো লুকাবে না */
-.float-toolbar .ftb-toggle {
-  display: flex !important;
+.float-toolbar.collapsed {
+  padding: 6px 0;
+  min-width: 32px;
+  border-radius: 12px 0 0 12px;
 }
 
 /* ══════════════════════════════════════
@@ -366,23 +356,51 @@
   transform: scale(1.15);
 }
 
-/* ── Mobile ── */
+/* ── Toast সাথে conflict না হওয়ার জন্য ── */
 @media (max-width: 480px) {
-  .float-toolbar {
-    top: auto;
-    bottom: 120px;
-    transform: none;
-  }
-  .float-toolbar.collapsed {
-    right: -48px;
-    bottom: 120px;
-    transform: none;
-  }
-  .color-popup {
-    top: auto;
-    bottom: 120px;
-    transform: none;
-    right: 72px;
-  }
+  .float-toolbar { top: auto; bottom: 120px; transform: none; }
+  .color-popup   { top: auto; bottom: 120px; transform: none; right: 72px; }
   .color-popup.show { transform: none; }
+}
+
+/* ── Peek Button (toolbar collapsed হলে দেখা যায়) ── */
+#ftbPeekBtn {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 801;
+  width: 20px;
+  height: 48px;
+  background: rgba(22, 25, 33, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(91,141,238,0.2);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.35);
+  box-shadow: -3px 0 16px rgba(0,0,0,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, color 0.2s, background 0.2s, width 0.2s;
+}
+
+#ftbPeekBtn.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#ftbPeekBtn:hover {
+  color: #5b8dee;
+  background: rgba(22, 25, 33, 0.97);
+  width: 24px;
+}
+
+#ftbPeekBtn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
