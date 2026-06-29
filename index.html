@@ -677,6 +677,124 @@ enc += cipher.final('hex');</code>
         <span id="toastMsg">Done!</span>
     </div>
 
+
+
+
+<!-- ══════════════════════════════════════
+     FLOATING TOOLBAR — js/toolbar.js এর HTML অংশ
+     index.html এ </body> এর আগে যোগ করুন
+══════════════════════════════════════ -->
+
+<!-- FLOATING TOOLBAR -->
+<div class="float-toolbar" id="floatToolbar">
+
+  <!-- Color Picker -->
+  <div class="ftb-item" id="ftbColorWrap" title="Color Picker">
+    <div class="ftb-color-preview" id="ftbColorPreview"></div>
+    <input type="color" id="ftbColorInput" class="ftb-color-hidden" value="#5b8dee">
+    <span class="ftb-label">Picker</span>
+  </div>
+
+  <div class="ftb-sep"></div>
+
+  <!-- Undo -->
+  <div class="ftb-item" onclick="ftbUndo()" title="Undo (Ctrl+Z)">
+    <div class="ftb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v6h6"/>
+        <path d="M3 13C5 7 10 4 16 6s8 6 5 11"/>
+      </svg>
+    </div>
+    <span class="ftb-label">Undo</span>
+  </div>
+
+  <!-- Redo -->
+  <div class="ftb-item" onclick="ftbRedo()" title="Redo (Ctrl+Y)">
+    <div class="ftb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 7v6h-6"/>
+        <path d="M21 13C19 7 14 4 8 6S0 12 3 17"/>
+      </svg>
+    </div>
+    <span class="ftb-label">Redo</span>
+  </div>
+
+  <div class="ftb-sep"></div>
+
+  <!-- Tab -->
+  <div class="ftb-item" onclick="ftbTab()" title="Insert Tab">
+    <div class="ftb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="18" y2="12"/>
+        <polyline points="13 7 18 12 13 17"/>
+        <line x1="21" y1="5" x2="21" y2="19"/>
+      </svg>
+    </div>
+    <span class="ftb-label">Tab</span>
+  </div>
+
+  <!-- Backspace -->
+  <div class="ftb-item" onclick="ftbBackspace()" title="Backspace">
+    <div class="ftb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12H7"/>
+        <polyline points="12 7 7 12 12 17"/>
+        <line x1="7" y1="12" x2="7" y2="12"/>
+      </svg>
+    </div>
+    <span class="ftb-label">⌫</span>
+  </div>
+
+  <div class="ftb-sep"></div>
+
+  <!-- Toggle বাটন -->
+  <div class="ftb-toggle" id="ftbToggle" onclick="toggleFloatToolbar()" title="Hide/Show">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Color Picker Popup -->
+<div class="color-popup" id="colorPopup">
+  <div class="color-popup-header">
+    <span>Color Picker</span>
+    <button onclick="closeColorPopup()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <!-- বড় color picker -->
+  <div class="color-popup-main">
+    <input type="color" id="colorPickerBig" value="#5b8dee">
+    <div class="color-preview-box" id="colorPreviewBox" style="background:#5b8dee"></div>
+  </div>
+
+  <!-- HEX / RGB / HSL -->
+  <div class="color-format-tabs">
+    <button class="cf-tab active" onclick="setColorFormat('hex',this)">HEX</button>
+    <button class="cf-tab" onclick="setColorFormat('rgb',this)">RGB</button>
+    <button class="cf-tab" onclick="setColorFormat('hsl',this)">HSL</button>
+  </div>
+
+  <div class="color-value-row">
+    <input type="text" id="colorValueInput" class="color-value-input" value="#5b8dee" readonly>
+    <button class="color-copy-btn" onclick="copyColorValue()" title="Copy">
+      <i class="fa-regular fa-copy"></i>
+    </button>
+  </div>
+
+  <!-- Insert বাটন -->
+  <button class="color-insert-btn" onclick="insertColorToEditor()">
+    <i class="fa-solid fa-code"></i> Editor এ Insert করুন
+  </button>
+
+  <!-- Preset Colors -->
+  <div class="color-presets-title">Presets</div>
+  <div class="color-presets" id="colorPresets"></div>
+</div>
+
+
+
+
     <nav id="bottom-nav" class="md:hidden">
         <div class="bottom-nav-inner">
             <a href="#home" class="bottom-nav-link active"><i class="fa-solid fa-house"></i><span>Home</span></a>
