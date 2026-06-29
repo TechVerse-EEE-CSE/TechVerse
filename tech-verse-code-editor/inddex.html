@@ -245,6 +245,8 @@
     <div class="sidebar-tab active" onclick="switchSideTab('explorer',this)"><i class="fa-solid fa-folder-open"></i>Files</div>
     <div class="sidebar-tab" onclick="switchSideTab('settings',this)"><i class="fa-solid fa-gear"></i>Settings</div>
     <div class="sidebar-tab" onclick="switchSideTab('shortcuts',this)"><i class="fa-solid fa-keyboard"></i>Keys</div>
+
+<div class="sidebar-tab" onclick="switchSideTab('proeditor',this);renderProPanel()"><i class="fa-solid fa-star"></i>info</div>
   </div>
 
   <!-- FILE EXPLORER -->
@@ -332,6 +334,14 @@
       <div class="shortcut-list" id="shortcutList"></div>
     </div>
   </div>
+
+
+<!-- PRO EDITOR -->
+<div class="sidebar-panel" id="panel-proeditor">
+  <div class="settings-panel" id="proEditorContent">
+    <div class="pro-loading"><i class="fa-solid fa-star"></i> Pro Editor লোড হচ্ছে…</div>
+  </div>
+</div>
 </div>
 
 <!-- ══ EDITOR ══ -->
@@ -607,6 +617,10 @@
 <script src="js/editor.js"></script>
 <script src="js/toolbar.js"></script>
 <script src="js/firestore-sync.js"></script> 
+
+<!-- 3. Pro Editor Panel (module) -->
+<script type="module" src="js/pro-editor.js"></script>
+
 
 <!-- 5. PWA Service Worker -->
 <script>
