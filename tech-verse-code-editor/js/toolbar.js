@@ -31,6 +31,25 @@
     bindColorPicker();
     bindColorItemClick();
     updateColorDisplay(currentColor);
+    createPeekButton(); // ← নতুন peek বাটন তৈরি
+  }
+
+  // ── Peek বাটন তৈরি ──
+  function createPeekButton() {
+    const btn = document.createElement('div');
+    btn.id = 'ftbPeekBtn';
+    btn.title = 'Show Toolbar';
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>`;
+    btn.onclick = function() {
+      tbCollapsed = false;
+      document.getElementById('floatToolbar').classList.remove('collapsed');
+      btn.classList.remove('visible');
+    };
+    document.body.appendChild(btn);
   }
 
   // ── Preset dots তৈরি ──
@@ -74,11 +93,8 @@
 
   // ── Color display আপডেট ──
   function updateColorDisplay(hex) {
-    // Preview box
     const box = document.getElementById('colorPreviewBox');
     if (box) box.style.background = hex;
-
-    // Value input (format অনুযায়ী)
     const input = document.getElementById('colorValueInput');
     if (input) input.value = formatColor(hex, currentFormat);
   }
@@ -106,7 +122,7 @@
       }
       return `hsl(${Math.round(h*360)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
     }
-    return hex; // HEX default
+    return hex;
   }
 
   // ── Format tab switch ──
@@ -128,7 +144,6 @@
     document.getElementById('colorPopup').classList.remove('show');
   };
 
-  // Popup বাইরে click এ বন্ধ
   document.addEventListener('click', e => {
     if (!e.target.closest('#colorPopup') && !e.target.closest('#ftbColorWrap')) {
       closeColorPopup();
@@ -146,8 +161,6 @@
   // ── Editor এ color insert ──
   window.insertColorToEditor = function() {
     const val = document.getElementById('colorValueInput').value;
-
-    // editor (CodeMirror) এ insert
     if (typeof editor !== 'undefined' && editor) {
       const doc    = editor.getDoc();
       const cursor = doc.getCursor();
@@ -155,7 +168,6 @@
       editor.focus();
       if (typeof showToast === 'function') showToast(`Inserted: ${val}`, 'success', 'fa-palette');
     } else {
-      // fallback: clipboard
       navigator.clipboard.writeText(val).then(() => {
         if (typeof showToast === 'function') showToast('Copied to clipboard!', 'info', 'fa-copy');
       });
@@ -186,7 +198,7 @@
     if (typeof editor !== 'undefined' && editor) {
       const doc    = editor.getDoc();
       const cursor = doc.getCursor();
-      doc.replaceRange('    ', cursor); // 4 spaces
+      doc.replaceRange('    ', cursor);
       editor.focus();
     }
   };
@@ -203,6 +215,9 @@
   window.toggleFloatToolbar = function() {
     tbCollapsed = !tbCollapsed;
     document.getElementById('floatToolbar').classList.toggle('collapsed', tbCollapsed);
+    // peek বাটন দেখানো/লুকানো
+    const peek = document.getElementById('ftbPeekBtn');
+    if (peek) peek.classList.toggle('visible', tbCollapsed);
     if (tbCollapsed) closeColorPopup();
   };
 
