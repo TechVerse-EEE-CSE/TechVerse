@@ -9,7 +9,7 @@ import {
   deleteDoc, doc, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
-  getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject
+  getStorage
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import firebaseConfig from "../config/firebase-config.js";
@@ -31,6 +31,14 @@ onAuthStateChanged(auth, user => {
   const panel = document.getElementById('panel-proeditor');
   if (panel?.classList.contains('active')) renderProPanel();
 });
+
+// ══════════════════════════════════════
+//  closeModal — FIX: was missing globally
+// ══════════════════════════════════════
+window.closeModal = function(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+};
 
 // ══════════════════════════════════════
 //  ICON CONFIG (FA only — no emoji)
@@ -109,7 +117,7 @@ window.renderProPanel = async function () {
           <div class="pro-section-count">${pdfs.length}</div>
         </div>
         <div class="pro-pdf-list" id="proPdfList">
-          ${pdfs.length ? pdfs.map(pdfCard).join('') : emptyState('কোনো PDF আপলোড হয়নি')}
+          ${pdfs.length ? pdfs.map(pdfCard).join('') : emptyState('কোনো PDF যোগ হয়নি')}
         </div>
       </div>
 
@@ -183,11 +191,8 @@ function postCard(p) {
 }
 
 function pdfCard(p) {
-  const sizeStr = p.sizeKB >= 1024
-    ? (p.sizeKB / 1024).toFixed(1) + ' MB'
-    : (p.sizeKB || '?') + ' KB';
   const delBtn = isAdmin
-    ? `<button class="pro-del-btn" title="মুছুন" onclick="proDeletePdf(event,'${p.id}','${p.storagePath}')">
+    ? `<button class="pro-del-btn" title="মুছুন" onclick="proDeleteItem(event,'pro_pdfs','${p.id}')">
          <i class="fa-solid fa-trash-can"></i>
        </button>`
     : '';
@@ -199,7 +204,7 @@ function pdfCard(p) {
       <div class="pro-pdf-info">
         <div class="pro-pdf-name" title="${escHtml(p.name)}">${escHtml(p.name)}</div>
         <div class="pro-pdf-meta">
-          <i class="fa-solid fa-weight-hanging"></i> ${sizeStr}
+          <i class="fa-solid fa-link"></i> PDF Link
         </div>
       </div>
       <a class="pro-pdf-open" href="${p.url}" target="_blank" title="খুলুন">
@@ -334,27 +339,19 @@ function ensureAdminModals() {
         </div>
       </div>
 
-      <!-- PDF FORM -->
+      <!-- PDF FORM — FIX: URL input instead of file upload -->
       <div id="proFormPdf" style="display:none">
         <div class="pro-modal-title">
-          <i class="fa-solid fa-file-arrow-up"></i> PDF আপলোড করুন
+          <i class="fa-solid fa-file-pdf"></i> PDF Link যোগ করুন
         </div>
-        <label class="pro-field-label">PDF File (সর্বোচ্চ 10 MB)</label>
-        <label class="pro-file-drop" id="proPdfDropZone">
-          <input type="file" id="proPdfFile" accept=".pdf" style="display:none" onchange="proUpdateFileName(this)">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          <span id="proPdfFileName">ফাইল বেছে নিন বা এখানে ড্রপ করুন</span>
-        </label>
-        <div class="pro-progress-wrap" id="proUploadProgress" style="display:none">
-          <div class="pro-progress-bar">
-            <div class="pro-progress-fill" id="proProgressFill"></div>
-          </div>
-          <div class="pro-progress-text" id="proProgressText">0%</div>
-        </div>
+        <label class="pro-field-label">PDF নাম</label>
+        <input class="pro-input" type="text" id="proPdfName" placeholder="যেমন: Chapter 1 Notes">
+        <label class="pro-field-label">PDF URL</label>
+        <input class="pro-input" type="url" id="proPdfUrl" placeholder="https://...">
         <div class="pro-modal-footer">
           <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">বাতিল</button>
-          <button class="pro-btn-primary" onclick="proUploadPdf()">
-            <i class="fa-solid fa-upload"></i> Upload
+          <button class="pro-btn-primary" onclick="proSavePdf()">
+            <i class="fa-solid fa-plus"></i> যোগ করুন
           </button>
         </div>
       </div>
@@ -379,37 +376,7 @@ function ensureAdminModals() {
     </div>
   </div>`;
   document.body.appendChild(el.firstElementChild);
-
-  // File drop zone click-to-browse
-  document.getElementById('proPdfDropZone')?.addEventListener('click', () => {
-    document.getElementById('proPdfFile').click();
-  });
-
-  // Drag and drop
-  const dz = document.getElementById('proPdfDropZone');
-  if (dz) {
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-    dz.addEventListener('drop', e => {
-      e.preventDefault();
-      dz.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file && file.type === 'application/pdf') {
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        const input = document.getElementById('proPdfFile');
-        input.files = dt.files;
-        proUpdateFileName(input);
-      }
-    });
-  }
 }
-
-// ── filename display after pick ──
-window.proUpdateFileName = function(input) {
-  const span = document.getElementById('proPdfFileName');
-  if (span && input.files[0]) span.textContent = input.files[0].name;
-};
 
 // ── outside click closes modal ──
 window.proModalOutsideClick = function(e) {
@@ -461,48 +428,24 @@ window.proSavePost = async function() {
   }
 };
 
-window.proUploadPdf = async function() {
-  const file = document.getElementById('proPdfFile').files[0];
-  if (!file) return showToast('PDF সিলেক্ট করুন', 'error', 'fa-circle-exclamation');
-  if (file.type !== 'application/pdf') return showToast('শুধুমাত্র PDF ফাইল আপলোড করুন', 'error', 'fa-circle-exclamation');
-  if (file.size > 10 * 1024 * 1024) return showToast('PDF সর্বোচ্চ 10 MB হতে পারবে', 'error', 'fa-circle-exclamation');
+// FIX: PDF save via URL (no file upload)
+window.proSavePdf = async function() {
+  const name = document.getElementById('proPdfName').value.trim();
+  const url  = document.getElementById('proPdfUrl').value.trim();
+  if (!name || !url) return showToast('নাম ও URL দিন', 'error', 'fa-circle-exclamation');
+  if (!isValidUrl(url)) return showToast('সঠিক URL দিন', 'error', 'fa-circle-exclamation');
 
-  const progressWrap = document.getElementById('proUploadProgress');
-  const fill = document.getElementById('proProgressFill');
-  const text = document.getElementById('proProgressText');
-  progressWrap.style.display = 'block';
-
-  const path = `pro_pdfs/${Date.now()}_${file.name}`;
-  const task = uploadBytesResumable(ref(storage, path), file);
-
-  task.on('state_changed',
-    snap => {
-      const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-      fill.style.width  = pct + '%';
-      text.textContent  = pct + '%';
-    },
-    err => {
-      showToast('Upload ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
-      progressWrap.style.display = 'none';
-    },
-    async () => {
-      try {
-        const url = await getDownloadURL(task.snapshot.ref);
-        await addDoc(collection(db, 'pro_pdfs'), {
-          name: file.name, url,
-          storagePath: path,
-          sizeKB: Math.round(file.size / 1024),
-          createdAt: serverTimestamp(),
-        });
-        closeModal('proAdminModal');
-        showToast('PDF আপলোড সম্পন্ন', 'success', 'fa-circle-check');
-        renderProPanel();
-      } catch(e) {
-        showToast('সেভ ব্যর্থ: ' + e.message, 'error', 'fa-circle-exclamation');
-        progressWrap.style.display = 'none';
-      }
-    }
-  );
+  try {
+    await addDoc(collection(db, 'pro_pdfs'), {
+      name, url,
+      createdAt: serverTimestamp(),
+    });
+    closeModal('proAdminModal');
+    showToast('PDF যোগ হয়েছে', 'success', 'fa-circle-check');
+    renderProPanel();
+  } catch(e) {
+    showToast('ব্যর্থ হয়েছে: ' + e.message, 'error', 'fa-circle-exclamation');
+  }
 };
 
 window.proSaveVideo = async function() {
@@ -530,19 +473,6 @@ window.proDeleteItem = async function(e, colName, id) {
   try {
     await deleteDoc(doc(db, colName, id));
     showToast('মুছে ফেলা হয়েছে', 'info', 'fa-trash-can');
-    renderProPanel();
-  } catch(err) {
-    showToast('মুছতে ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
-  }
-};
-
-window.proDeletePdf = async function(e, id, storagePath) {
-  e.preventDefault(); e.stopPropagation();
-  if (!confirm('PDF মুছে ফেলবেন?')) return;
-  try { await deleteObject(ref(storage, storagePath)); } catch(_) {}
-  try {
-    await deleteDoc(doc(db, 'pro_pdfs', id));
-    showToast('PDF মুছে ফেলা হয়েছে', 'info', 'fa-trash-can');
     renderProPanel();
   } catch(err) {
     showToast('মুছতে ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
@@ -852,39 +782,6 @@ function injectProStyles() {
   border-color: #10c98f;
   background: rgba(16,201,143,0.1);
   color: #fff;
-}
-
-/* ─── File drop zone ─────────────────────────────────── */
-.pro-file-drop {
-  display: flex; flex-direction: column; align-items: center; gap: 9px;
-  padding: 28px 20px; margin-top: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 2px dashed rgba(255,255,255,0.12);
-  border-radius: 10px; cursor: pointer; color: rgba(255,255,255,0.4);
-  font-size: 13px; text-align: center;
-  transition: border-color .18s, background .18s;
-}
-.pro-file-drop i { font-size: 28px; }
-.pro-file-drop:hover,
-.pro-file-drop.drag-over {
-  border-color: #10c98f;
-  background: rgba(16,201,143,0.06);
-  color: rgba(255,255,255,0.7);
-}
-
-/* ─── Upload progress ────────────────────────────────── */
-.pro-progress-wrap { margin-top: 12px; }
-.pro-progress-bar  {
-  height: 6px; background: rgba(255,255,255,0.1);
-  border-radius: 99px; overflow: hidden;
-}
-.pro-progress-fill {
-  height: 100%; width: 0; background: #10c98f;
-  border-radius: 99px; transition: width .2s;
-}
-.pro-progress-text {
-  font-size: 12px; color: rgba(255,255,255,0.4);
-  text-align: right; margin-top: 4px;
 }
 
 /* ─── Modal footer ───────────────────────────────────── */
