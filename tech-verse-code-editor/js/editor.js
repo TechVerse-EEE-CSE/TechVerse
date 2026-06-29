@@ -642,6 +642,54 @@ window.exportProject = function () {
   showToast('Export হয়েছে!', 'success', 'fa-download');
 };
 
+// ── Download as ZIP ──
+window.downloadAsZip = async function () {
+  if (typeof JSZip === 'undefined') {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  }
+
+  showToast('ZIP তৈরি হচ্ছে…', 'info', 'fa-spinner');
+
+  fs[currentFile] = editor.getValue();
+
+  const zip = new JSZip();
+  Object.entries(fs).forEach(([path, content]) => {
+    zip.file(path, content || '');
+  });
+
+  const blob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 }
+  });
+
+  const projectName = Object.keys(fs).includes('index.html')
+    ? 'my-project'
+    : 'techverse-project';
+
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = projectName + '.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('ZIP ডাউনলোড হচ্ছে!', 'success', 'fa-file-zipper');
+};
+
+// ── Dynamic script loader ──
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s   = document.createElement('script');
+    s.src     = src;
+    s.onload  = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+
+
 window.clearStorage = function () {
   if (!confirm('সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।')) return;
   localStorage.removeItem(STORAGE_KEY);
