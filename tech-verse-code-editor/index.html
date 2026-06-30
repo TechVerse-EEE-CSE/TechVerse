@@ -280,12 +280,12 @@
       <div class="menu-list">
         <div class="menu-row" onclick="switchSideTab('explorer')">
           <i class="fa-solid fa-folder-open"></i>
-          <span>File Explorer</span>
+          <span>Project File</span>
           <i class="fa-solid fa-chevron-right chev"></i>
         </div>
         <div class="menu-row" onclick="switchSideTab('settings')">
           <i class="fa-solid fa-gear"></i>
-          <span> Settings</span>
+          <span>Editor Settings</span>
           <i class="fa-solid fa-chevron-right chev"></i>
         </div>
         <div class="menu-row" onclick="switchSideTab('shortcuts')">
@@ -295,7 +295,7 @@
         </div>
         <div class="menu-row" onclick="switchSideTab('proeditor');renderProPanel()">
           <i class="fa-solid fa-star"></i>
-          <span>Tech Verse info</span>
+          <span>Tech Verse Info</span>
           <i class="fa-solid fa-chevron-right chev"></i>
         </div>
       </div>
@@ -304,12 +304,12 @@
       <div class="menu-list">
         <div class="menu-row" onclick="closeSidebar();if(typeof openProjectListModal==='function')openProjectListModal();">
           <i class="fa-solid fa-diagram-project"></i>
-          <span>my project</span>
+          <span>My Project</span>
           <i class="fa-solid fa-chevron-right chev"></i>
         </div>
         <div class="menu-row" onclick="closeSidebar();if(typeof handleCreateNewProject==='function')handleCreateNewProject();">
           <i class="fa-solid fa-plus"></i>
-          <span>new project</span>
+          <span>New Project</span>
         </div>
         <div class="menu-row" onclick="closeSidebar();if(typeof openShareModal==='function')openShareModal();">
           <i class="fa-solid fa-user-group"></i>
@@ -318,7 +318,7 @@
         </div>
         <div class="menu-row" onclick="closeSidebar();if(typeof downloadAsZip==='function')downloadAsZip();">
           <i class="fa-solid fa-file-zipper"></i>
-          <span>Download project ZIP</span>
+          <span>Download Project ZIP</span>
         </div>
         <div class="menu-row" onclick="closeSidebar();if(typeof exportProject==='function')exportProject();">
           <i class="fa-solid fa-download"></i>
@@ -333,7 +333,7 @@
       <div class="menu-list">
         <div class="menu-row" onclick="closeSidebar();if(typeof openProfileModal==='function')openProfileModal();">
           <i class="fa-solid fa-user-gear"></i>
-          <span> Settings Profile</span>
+          <span>Profile Setting</span>
         </div>
 
 
@@ -341,15 +341,15 @@
 
         <div class="menu-row" onclick="window.open('https://play.google.com','_blank')">
           <i class="fa-solid fa-star"></i>
-          <span>Rate us</span>
+          <span>Rate Us</span>
         </div>
         <div class="menu-row" onclick="if(navigator.share){navigator.share({title:'Tech Verse IDE',url:location.href})}else{navigator.clipboard.writeText(location.href);showToast&&showToast('link copy ed!','success','fa-link')}">
           <i class="fa-solid fa-share-nodes"></i>
-          <span>Share</span>
+          <span>Share Site</span>
         </div>
         <div class="menu-row" onclick="location.href='mailto:imran.info.me@gmail.com'">
           <i class="fa-solid fa-envelope"></i>
-          <span>Contact us</span>
+          <span>Contact Us</span>
         </div>
         <div class="menu-row" onclick="switchSideTab('about')">
           <i class="fa-solid fa-shield-halved"></i>
@@ -365,7 +365,7 @@
 
       <div class="menu-row danger" onclick="closeSidebar();if(typeof doSignOut==='function')doSignOut();">
         <i class="fa-solid fa-right-from-bracket"></i>
-        <span>Sign out</span>
+        <span>Sign Out</span>
       </div>
 
       <div class="menu-footer">Tech Verse EEE & CSE</div>
