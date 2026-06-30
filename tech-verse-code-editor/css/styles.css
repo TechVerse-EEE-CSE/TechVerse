@@ -556,6 +556,18 @@ input[type=range]::-webkit-slider-thumb {
 .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
 .btn-primary:hover { opacity: 0.9; }
 .btn-cancel { background: var(--bg-surface-light); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.btn-danger:hover { opacity: 0.9; }
+
+/* ══ CUSTOM CONFIRM MODAL (replaces native browser confirm()) ══ */
+.confirm-modal-content { text-align: center; width: 320px; }
+.confirm-icon {
+  width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%;
+  background: rgba(239,68,68,0.12); color: #ef4444;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.confirm-modal-content h3 { justify-content: center; margin-bottom: 10px; }
+.confirm-message { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
 
 .profile-avatar-section {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
