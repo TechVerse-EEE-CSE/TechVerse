@@ -1,7 +1,7 @@
 // ══════════════════════════════════════
 //  FIRESTORE SYNC — js/firestore-sync.js
 //  শুধু Ctrl+S এ cloud save হবে
-//  Autosave সবসময় localStorage এ
+//  Autosave সবসময় IndexedDB তে (localStorage এর বদলে — বড় ডেটা/quota সমস্যা নেই)
 // ══════════════════════════════════════
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -100,16 +100,16 @@ async function cloudLoad(uid) {
     const cloudTime = cloudData.savedAt?.toMillis?.() || 0;
 
     // Local data কত পুরনো?
-    const localTime = parseInt(localStorage.getItem('tv_promax_cloudtime') || '0');
+    const localTime = parseInt(await IDBStore.get('cloudtime') || 0);
 
     if (cloudTime > localTime) {
       // Cloud এর data বেশি নতুন → cloud থেকে load করো
-      localStorage.setItem('tv_promax_v3', JSON.stringify(cloudFs));
-      localStorage.setItem('tv_promax_cloudtime', cloudTime.toString());
+      await IDBStore.set('fs', cloudFs);
+      await IDBStore.set('cloudtime', cloudTime);
 
       // editor যদি আগেই init হয়ে গিয়ে থাকে
       if (typeof reloadFsFromStorage === 'function') {
-        reloadFsFromStorage();
+        await reloadFsFromStorage();
       }
 
       if (typeof showToast === 'function')
