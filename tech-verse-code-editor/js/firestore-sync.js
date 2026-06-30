@@ -56,6 +56,7 @@ window.openProjectSync = function (projectId) {
       showToast(`${data.updatedByName || 'একজন কোলাবোরেটর'} নতুন আপডেট করেছে`, 'info', 'fa-users');
     }
     document.getElementById('reloadAvailableBadge')?.classList.remove('hidden');
+    document.getElementById('reloadDot')?.classList.remove('hidden');
     window._remoteFsAvailable = data.fs; // চাইলে ইউজার বাটনে ক্লিক করে লোড করবে
   });
 };
@@ -130,6 +131,7 @@ window.applyRemoteUpdate = async function () {
   if (!window._remoteFsAvailable) return;
   await IDBStore.set('fs', window._remoteFsAvailable);
   document.getElementById('reloadAvailableBadge')?.classList.add('hidden');
+  document.getElementById('reloadDot')?.classList.add('hidden');
   if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
   window._remoteFsAvailable = null;
 };
