@@ -748,6 +748,7 @@
 
 
 
+
 <!-- ══ PROFILE MODAL (Tabbed — High Quality) ══ -->
 <div class="modal" id="profileModal">
   <div class="modal-content">
@@ -761,9 +762,11 @@
         </button>
         <button class="profile-tab-btn" data-tab="password" onclick="switchProfileTab('password')">
           <i class="fa-solid fa-lock"></i> পাসওয়ার্ড
+          <span class="tab-badge" id="pwTabBadge" style="display:none;">!</span>
         </button>
         <button class="profile-tab-btn danger-tab" data-tab="account" onclick="switchProfileTab('account')">
           <i class="fa-solid fa-shield-halved"></i> অ্যাকাউন্ট
+          <span class="tab-badge danger" id="accTabBadge" style="display:none;">!</span>
         </button>
       </div>
     </div>
@@ -773,7 +776,12 @@
 
       <!-- Avatar + Meta -->
       <div class="profile-avatar-wrap">
-        <div class="profile-avatar-big" id="profileAvatarBig">?</div>
+        <div class="profile-avatar-big" id="profileAvatarBig">?
+          <div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="ছবি পরিবর্তন করুন">
+            <i class="fa-solid fa-camera"></i>
+          </div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(this)">
         <div class="profile-user-meta">
           <div class="profile-name-display" id="profileNameDisplay">—</div>
           <div class="profile-email-display" id="profileEmailDisplay">—</div>
@@ -781,6 +789,12 @@
             <i class="fa-solid fa-envelope"></i> Email Account
           </span>
         </div>
+      </div>
+
+      <!-- Avatar Upload Progress -->
+      <div id="avatarUploadStatus" class="avatar-upload-status" style="display:none;">
+        <div class="avatar-upload-bar"><div class="avatar-upload-fill" id="avatarUploadFill"></div></div>
+        <span id="avatarUploadText">আপলোড হচ্ছে…</span>
       </div>
 
       <!-- Display Name -->
@@ -796,7 +810,7 @@
           <input type="url" id="profilePhotoInput" class="pf-input" placeholder="https://example.com/photo.jpg">
           <i class="fa-solid fa-link pf-input-icon"></i>
         </div>
-        <div class="pf-hint">গ্রাভাটার বা যেকোনো পাবলিক ইমেজ URL ব্যবহার করুন।</div>
+        <div class="pf-hint">অথবা উপরে ক্যামেরা আইকনে ক্লিক করে ছবি আপলোড করুন।</div>
       </div>
 
       <!-- Email Verified -->
