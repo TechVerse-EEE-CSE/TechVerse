@@ -527,6 +527,18 @@
   </div>
 </div>
 
+<div class="modal" id="confirmModal">
+  <div class="modal-content confirm-modal-content">
+    <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 id="confirmTitle">নিশ্চিত করুন</h3>
+    <p id="confirmMessage" class="confirm-message"></p>
+    <div class="btn-group">
+      <button class="btn btn-cancel" onclick="closeModal('confirmModal')">বাতিল</button>
+      <button class="btn btn-danger" id="confirmOkBtn">মুছে ফেলুন</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="profileModal">
   <div class="modal-content" style="width:380px;max-width:95vw;">
     <h3><i class="fa-solid fa-user-gear"></i> Profile Settings</h3>
