@@ -9,7 +9,11 @@ const OFFLINE_URL =
    '/style.css';
    '/config.js';
    '/script.js';
-
+   '/index.html',
+  '/manifest.json',
+  '/favicon.png',
+  '/192x192.png',
+  '/512x512.png',
 
 /* ── INSTALL: pre-cache the offline page ── */
 self.addEventListener('install', (event) => {
