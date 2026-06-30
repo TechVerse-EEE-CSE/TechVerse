@@ -6,7 +6,10 @@
 //   - শেয়ার লিংক ছাড়া কেউ প্রজেক্টে ঢুকতে পারবে না
 //   - জয়েন করা একবারের event (2 write, repeat হয় না)
 //   - "আমার প্রজেক্ট" লিস্ট আনতে collection query না করে
-//     users/{uid} ডকে denormalized array রাখা হয়েছে (1 read)
+//     users/{uid} ডকে denormalized array রাখা হয়েছে (1 read), এবং সেই
+//     array IndexedDB-তে cache করা থাকে যাতে পরের লগইনে আবার read না লাগে
+//   - projects/{id} ডকে এখন আর fs (ভারী ডেটা) থাকে না — তাই এই লিস্টিং
+//     read গুলো সবসময় ছোট ও সস্তা থাকে, প্রজেক্ট যত বড়ই হোক না কেন
 //   - কোনো realtime keystroke sync নেই — সেভ এখনো manual/debounced
 // ══════════════════════════════════════
 
@@ -37,24 +40,33 @@ window.createProject = async function (name, fsData) {
   const user = auth.currentUser;
   if (!user) { showToast?.('লগইন করুন প্রথমে', 'error'); return null; }
 
-  const projectId = randId(12);
-  const projRef   = doc(db, 'projects', projectId);
-  const userRef   = doc(db, 'users', user.uid);
+  const projectId  = randId(12);
+  const projRef    = doc(db, 'projects', projectId);
+  const contentRef = doc(db, 'projects', projectId, 'content', 'main');
+  const userRef    = doc(db, 'users', user.uid);
 
+  // ── META: হালকা ডক, fs নেই — listing/dashboard এর জন্য সস্তা ──
   await setDoc(projRef, {
     name,
     ownerUid: user.uid,
     ownerName: user.displayName || user.email || 'অজানা',
-    fs: fsData,
     collaboratorUids: [],          // ← কোলাবোরেটরদের uid এখানে যোগ হবে
     updatedAt: serverTimestamp(),
     updatedBy: user.uid,
   });
 
+  // ── ভারী fs ডেটা আলাদা subdocument-এ ──
+  await setDoc(contentRef, { fs: fsData || {} });
+
   // ── owner-এর users ডকে denormalized রেফারেন্স যোগ (cheap "my projects" list) ──
   await setDoc(userRef, {
     ownedProjectIds: arrayUnion(projectId),
   }, { merge: true });
+
+  // ── local cache আপডেট, পরের লগইনে users/{uid} read এড়াতে ──
+  const cacheKey = `ownedProjectIds_${user.uid}`;
+  const cached = (await IDBStore.get(cacheKey).catch(() => undefined)) || [];
+  await IDBStore.set(cacheKey, [...new Set([...cached, projectId])]);
 
   return projectId;
 };
