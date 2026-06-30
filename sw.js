@@ -3,8 +3,10 @@
    Place this file at your website ROOT (e.g. /sw.js)
 ════════════════════════════════════════════════════════ */
 
-const CACHE_NAME  = 'offline-shell-v1';
-const OFFLINE_URL = 
+const CACHE_VERSION = 'tv-cache-v1';
+
+// ── নিজের অ্যাপের ফাইল (app shell) ──
+const APP_SHELL = [
    '/offline.html';
    '/style.css';
    '/config.js';
