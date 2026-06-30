@@ -14,8 +14,9 @@ const DEFAULT_FS = {
 };
 
 // ── State ──
-let fs              = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(DEFAULT_FS));
-let cfg             = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+// fs/cfg এখানে শুধু placeholder — আসল ডেটা IndexedDB থেকে initEditorIfNeeded()-এ async লোড হয়
+let fs               = JSON.parse(JSON.stringify(DEFAULT_FS));
+let cfg              = {};
 const defaults      = {
   theme: 'material-ocean', font: 'Fira Code', fontSize: 15, lineHeight: 1.7,
   lineNumbers: true, wordWrap: true, autoClose: true, autoSave: true,
@@ -56,9 +57,23 @@ const SHORTCUTS = [
 ];
 
 // ── Init ──
-window.initEditorIfNeeded = function () {
+window.initEditorIfNeeded = async function () {
   if (editorInitialized) return;
   editorInitialized = true;
+
+  // ── পুরনো ইউজারদের localStorage ডেটা একবারই IndexedDB তে মাইগ্রেট করো ──
+  await IDBStore.migrateFromLocalStorage({
+    [STORAGE_KEY]:            'fs',
+    [SETTINGS_KEY]:           'settings',
+    'tv_promax_localtime':    'localtime',
+    'tv_promax_cloudtime':    'cloudtime',
+  });
+
+  // ── IndexedDB থেকে আসল ডেটা লোড করো ──
+  const storedFs  = await IDBStore.get('fs');
+  const storedCfg = await IDBStore.get('settings');
+  fs  = storedFs  || JSON.parse(JSON.stringify(DEFAULT_FS));
+  cfg = Object.assign({}, defaults, storedCfg || {});
 
   editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
     mode:             'xml',
@@ -139,11 +154,11 @@ window.openFile = function (path) {
 };
 
 // ── Save ──
-window.saveData = function (manual = false) {
+window.saveData = async function (manual = false) {
   fs[currentFile] = editor.getValue();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(fs));
+  await IDBStore.set('fs', fs);
   // local save time রাখো (cloud load এর সাথে তুলনার জন্য)
-  localStorage.setItem('tv_promax_localtime', Date.now().toString());
+  await IDBStore.set('localtime', Date.now());
 
   document.getElementById('autosaveDot').classList.remove('active');
   const badge = document.getElementById('modifiedBadge');
@@ -160,11 +175,11 @@ window.saveData = function (manual = false) {
 };
 
 // ── Cloud load হলে fs reload ──
-window.reloadFsFromStorage = function () {
-  const stored = localStorage.getItem(STORAGE_KEY);
+window.reloadFsFromStorage = async function () {
+  const stored = await IDBStore.get('fs');
   if (!stored) return;
   try {
-    fs = JSON.parse(stored);
+    fs = stored;
     editor.setValue(fs[currentFile] || '');
     renderTabs();
     renderFileTree();
@@ -626,7 +641,7 @@ function applySettingsUI() {
   changeLineHeight(Math.round(cfg.lineHeight*10));
 }
 
-function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); }
+async function saveSettings() { await IDBStore.set('settings', cfg); }
 
 function buildShortcutList() {
   document.getElementById('shortcutList').innerHTML = SHORTCUTS.map(s =>
@@ -695,9 +710,13 @@ function loadScript(src) {
 window.clearStorage = function () {
   showConfirm(
     'সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
-    () => {
+    async () => {
+      await IDBStore.clear();
+      // পুরনো কোনো localStorage অবশিষ্ট থাকলে সেটাও সাফ করো
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(SETTINGS_KEY);
+      localStorage.removeItem('tv_promax_localtime');
+      localStorage.removeItem('tv_promax_cloudtime');
       location.reload();
     },
     { title: 'সব মুছে ফেলবেন?' }
