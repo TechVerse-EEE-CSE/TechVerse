@@ -24,6 +24,14 @@
           <input id="shareLinkInput" type="text" readonly placeholder="লিংক তৈরি হচ্ছে...">
           <button id="copyShareLinkBtn"><i class="fa-solid fa-copy"></i></button>
         </div>
+        <div class="share-social-row">
+          <button class="share-social-btn sb-whatsapp" data-share="whatsapp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+          <button class="share-social-btn sb-telegram" data-share="telegram" title="Telegram"><i class="fa-brands fa-telegram"></i></button>
+          <button class="share-social-btn sb-messenger" data-share="messenger" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
+          <button class="share-social-btn sb-facebook" data-share="facebook" title="Facebook"><i class="fa-brands fa-facebook"></i></button>
+          <button class="share-social-btn sb-instagram" data-share="instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></button>
+          <button class="share-social-btn sb-more" data-share="more" title="আরও / সিস্টেম শেয়ার"><i class="fa-solid fa-share-nodes"></i></button>
+        </div>
         <div id="collaboratorList" class="collaborator-list"></div>
         <button class="modal-close-btn" onclick="document.getElementById('shareModal').classList.add('hidden')">বন্ধ করুন</button>
       </div>`;
@@ -34,6 +42,80 @@
       navigator.clipboard.writeText(input.value);
       showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
     };
+
+    bindSocialShareButtons(div);
+  }
+
+  // ── সোশ্যাল শেয়ার বাটনগুলোতে ক্লিক হ্যান্ডলার বাইন্ড করা ──
+  function bindSocialShareButtons(root) {
+    root.querySelectorAll('.share-social-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const link = document.getElementById('shareLinkInput').value;
+        if (!link) { showToast?.('লিংক এখনো তৈরি হয়নি, একটু অপেক্ষা করুন', 'error'); return; }
+
+        const projectName = (window.currentProjectName || 'আমার প্রজেক্ট');
+        const shareText = `${projectName} — এই প্রজেক্টে আমার সাথে কোড এডিট করুন:`;
+        const encodedLink = encodeURIComponent(link);
+        const encodedText = encodeURIComponent(shareText);
+        const platform = btn.dataset.share;
+
+        openShareTarget(platform, link, encodedLink, encodedText);
+      });
+    });
+  }
+
+  // ── প্ল্যাটফর্ম অনুযায়ী শেয়ার লিংক ওপেন করা ──
+  function openShareTarget(platform, rawLink, encodedLink, encodedText) {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    switch (platform) {
+      case 'whatsapp': {
+        const url = isMobile
+          ? `whatsapp://send?text=${encodedText}%20${encodedLink}`
+          : `https://web.whatsapp.com/send?text=${encodedText}%20${encodedLink}`;
+        window.open(url, '_blank');
+        break;
+      }
+      case 'telegram': {
+        window.open(`https://t.me/share/url?url=${encodedLink}&text=${encodedText}`, '_blank');
+        break;
+      }
+      case 'facebook': {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`, '_blank', 'width=600,height=500');
+        break;
+      }
+      case 'messenger': {
+        if (isMobile) {
+          // মোবাইলে Messenger অ্যাপ ডিপ-লিংক, না থাকলে ফেসবুকে পাঠানো হবে
+          window.location.href = `fb-messenger://share?link=${encodedLink}`;
+          setTimeout(() => {
+            navigator.clipboard?.writeText(rawLink);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`, '_blank');
+          }, 800);
+        } else {
+          navigator.clipboard?.writeText(rawLink);
+          showToast?.('লিংক কপি হয়েছে, Messenger-এ পেস্ট করুন', 'info', 'fa-facebook-messenger');
+          window.open('https://www.messenger.com/', '_blank');
+        }
+        break;
+      }
+      case 'instagram': {
+        // ইনস্টাগ্রাম সরাসরি লিংক শেয়ার সাপোর্ট করে না, তাই লিংক কপি করে অ্যাপ খুলে দেওয়া হয়
+        navigator.clipboard?.writeText(rawLink);
+        showToast?.('লিংক কপি হয়েছে, Instagram DM/Story-তে পেস্ট করুন', 'info', 'fa-instagram');
+        window.open(isMobile ? 'instagram://direct/inbox' : 'https://www.instagram.com/', '_blank');
+        break;
+      }
+      case 'more': {
+        if (navigator.share) {
+          navigator.share({ title: 'প্রজেক্ট শেয়ার', text: decodeURIComponent(encodedText), url: rawLink }).catch(() => {});
+        } else {
+          navigator.clipboard?.writeText(rawLink);
+          showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
+        }
+        break;
+      }
+    }
   }
 
   // ── "আমার প্রজেক্ট" লিস্ট মোডাল ──
