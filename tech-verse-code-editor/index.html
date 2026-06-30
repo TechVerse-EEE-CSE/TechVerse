@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="css/share.css">
 <link rel="stylesheet" href="css/privacy-policy.css">
 <link rel="stylesheet" href="css/profile.css">
-<link rel="stylesheet" href="css/team.css">
+
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -359,7 +359,8 @@
         </div>
 
 
-        <div class="menu-row" onclick="switchSideTab('appinfo');window.initTeamSectionIfNeeded&&window.initTeamSectionIfNeeded()">
+        <div class="menu-row" 
+        onclick="switchSideTab('appinfo')">
 
           <i class="fa-solid fa-circle-info"></i>
           <span>About</span>
@@ -550,6 +551,7 @@
 
 
 
+
 <!-- ABOUT / APP INFO -->
 <div class="sidebar-panel" id="panel-appinfo">
   <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">About</span></div>
@@ -560,69 +562,9 @@
       <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">tech verse· Version 5.0.1</div>
       <div style="font-size:11.5px;color:var(--text-dim);margin-top:10px;">Browser-based code editor by Tech Verse</div>
     </div>
-
-    <div class="settings-section team-section">
-      <div class="settings-section-title"><i class="fa-solid fa-people-group"></i> our team</div>
-      <button id="btnAddTeamMember" class="btn btn-cancel team-add-btn hidden" onclick="window.openTeamForm()">
-        <i class="fa-solid fa-user-plus"></i> added new member 
-      </button>
-      <div id="teamGrid" class="team-grid">
-        <p class="muted team-loading">sourcing data</p>
-      </div>
-    </div>
   </div>
 </div>
 </div>
-
-<!-- TEAM MEMBER FORM MODAL (এডমিন-ওনলি) -->
-<div class="modal-overlay hidden" id="teamFormModal">
-  <div class="modal-box">
-    <h3><i class="fa-solid fa-user-pen"></i> <span id="teamFormTitle">new member added</span></h3>
-    <input type="hidden" id="teamMemberId">
-
-    <div class="team-form-row">
-      <label>photo</label>
-      <div class="team-photo-pick">
-        <div class="team-photo-preview" id="teamPhotoPreview"><i class="fa-solid fa-user"></i></div>
-        <input type="file" id="teamPhotoFile" accept="image/*" onchange="window.previewTeamPhoto(event)">
-      </div>
-    </div>
-
-    <div class="team-form-row">
-      <label>name</label>
-      <input type="text" id="teamName" placeholder="worker name">
-    </div>
-
-    <div class="team-form-row">
-      <label>Surname</label>
-      <input type="text" id="teamRole" placeholder="যেমনঃ Founder & Lead Developer">
-    </div>
-
-    <div class="team-form-row">
-      <label>What kind of work do you do?</label>
-      <textarea id="teamBio" rows="3" placeholder="details"></textarea>
-    </div>
-
-    <div class="team-form-row">
-      <label><i class="fa-brands fa-facebook"></i> Facebook</label>
-      <input type="text" id="teamFacebook" placeholder="https://facebook.com/...">
-    </div>
-    <div class="team-form-row">
-      <label><i class="fa-brands fa-github"></i> GitHub</label>
-      <input type="text" id="teamGithub" placeholder="https://github.com/...">
-    </div>
-    <div class="team-form-row">
-      <label><i class="fa-brands fa-instagram"></i> Instagram</label>
-      <input type="text" id="teamInstagram" placeholder="https://instagram.com/...">
-    </div>
-
-    <div class="team-form-actions">
-      <button class="btn btn-cancel" onclick="document.getElementById('teamFormModal').classList.add('hidden')">close</button>
-      <button class="btn" id="teamSaveBtn" onclick="window.saveTeamMember()"><i class="fa-solid fa-check"></i> save</button>
-    </div>
-  </div>
-</div>
-
 
 
 
@@ -1244,7 +1186,7 @@
 <script type="module" src="js/project-manager.js"></script>
 <script type="module" src="js/firestore-sync.js"></script>
 <script type="module" src="js/profile.js"></script>
-<script type="module" src="js/team.js"></script>
+
 
 <script src="js/share-ui.js"></script>
 <script type="module" src="js/pro-editor.js"></script>
