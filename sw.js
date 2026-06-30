@@ -3,19 +3,9 @@
    Place this file at your website ROOT (e.g. /sw.js)
 ════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'tv-cache-v1';
-
-// ── নিজের অ্যাপের ফাইল (app shell) ──
-const APP_SHELL = [
-   '/offline.html';
-   '/style.css';
-   '/config.js';
-   '/script.js';
-   '/index.html',
-  '/manifest.json',
-  '/favicon.png',
-  '/192x192.png',
-  '/512x512.png',
+const CACHE_NAME = 'offline-shell-v1';
+const OFFLINE_URL = '/offline.html';
+   
 
 /* ── INSTALL: pre-cache the offline page ── */
 self.addEventListener('install', (event) => {
