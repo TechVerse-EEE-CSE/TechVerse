@@ -21,6 +21,7 @@
 <!-- মেইন  CSS ফাইল -->
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/toolbar.css">
+<link rel="stylesheet" href="css/share.css">
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -202,20 +203,29 @@
       <i class="fa-solid fa-wifi" style="opacity:0.6;"></i>offline
     </div>
   </div>
-  <div class="nav-actions">
-    <button class="icon-btn" onclick="toggleSearch()" title="Find (Ctrl+F)"><i class="fa-solid fa-magnifying-glass"></i></button>
-    <button class="icon-btn" id="saveBtn" onclick="saveData(true)" title="Save (Ctrl+S)">
-      <i class="fa-regular fa-floppy-disk"></i>
-      <span class="autosave-dot" id="autosaveDot"></span>
-    </button>
-    <button class="icon-btn" onclick="viewSource()" title="View Source"><i class="fa-solid fa-code"></i></button>
-    <button class="icon-btn run-btn" onclick="runCode()" title="Run (Ctrl+Enter)"><i class="fa-solid fa-play"></i></button>
-    <button class="icon-btn" onclick="openCreateModal()" title="New File"><i class="fa-solid fa-file-circle-plus"></i></button>
-    <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserDropdown()">
-      <div class="user-avatar" id="navAvatar">?</div>
-      <span class="user-name" id="navName">User</span>
-    </div>
+
+
+
+<div class="nav-actions">
+  <button class="icon-btn" onclick="toggleSearch()" title="Find (Ctrl+F)"><i class="fa-solid fa-magnifying-glass"></i></button>
+  <button class="icon-btn" id="saveBtn" onclick="saveData(true)" title="Save (Ctrl+S)">
+    <i class="fa-regular fa-floppy-disk"></i>
+    <span class="autosave-dot" id="autosaveDot"></span>
+  </button>
+  <button class="icon-btn" onclick="viewSource()" title="View Source"><i class="fa-solid fa-code"></i></button>
+  <button class="icon-btn run-btn" onclick="runCode()" title="Run (Ctrl+Enter)"><i class="fa-solid fa-play"></i></button>
+  <button class="icon-btn" onclick="openCreateModal()" title="New File"><i class="fa-solid fa-file-circle-plus"></i></button>
+  <button class="icon-btn" id="btnMyProjects" onclick="openProjectListModal()" title="আমার প্রজেক্ট"><i class="fa-solid fa-folder-open"></i></button>
+  <button class="icon-btn" id="btnShareProject" onclick="openShareModal()" title="শেয়ার করুন"><i class="fa-solid fa-user-group"></i></button>
+  <span id="cloudSyncBadge" style="opacity:.3;margin:0 4px;"></span>
+  <span id="reloadAvailableBadge" class="hidden" onclick="applyRemoteUpdate()" style="font-size:11px;color:#5b8dee;cursor:pointer;white-space:nowrap;">
+    নতুন আপডেট আছে
+  </span>
+  <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserDropdown()">
+    <div class="user-avatar" id="navAvatar">?</div>
+    <span class="user-name" id="navName">User</span>
   </div>
+</div>
 </div>
 
 <!-- ══ TAB BAR ══ -->
@@ -742,9 +752,13 @@
 <script src="js/editor.js"></script>
 <script src="js/toolbar.js"></script>
 
+
 <!-- 5. Firebase Modules -->
+<script type="module" src="js/project-manager.js"></script>
 <script type="module" src="js/firestore-sync.js"></script>
+<script src="js/share-ui.js"></script>
 <script type="module" src="js/pro-editor.js"></script>
+
 
 
 <!-- 5. PWA Service Worker -->
