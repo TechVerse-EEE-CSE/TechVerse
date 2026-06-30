@@ -266,26 +266,105 @@
   <span class="search-info" id="searchInfo"></span>
 </div>
 
-<!-- ══ SIDEBAR ══ -->
+<!-- ══ SIDEBAR / DRAWER MENU ══ -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <div class="logo-badge">TV</div>
-    <div>
-      <div class="logo-text">Code Editor</div>
-      <div class="logo-sub">Tech Verse IDE</div>
-    </div>
-  </div>
-  <div class="sidebar-tabs">
-    <div class="sidebar-tab active" onclick="switchSideTab('explorer',this)"><i class="fa-solid fa-folder-open"></i>Files</div>
-    <div class="sidebar-tab" onclick="switchSideTab('settings',this)"><i class="fa-solid fa-gear"></i>Settings</div>
-    <div class="sidebar-tab" onclick="switchSideTab('shortcuts',this)"><i class="fa-solid fa-keyboard"></i>Keys</div>
 
-<div class="sidebar-tab" onclick="switchSideTab('proeditor',this);renderProPanel()"><i class="fa-solid fa-star"></i>info</div>
+  <!-- Profile-style drawer header (pattern bg + avatar) -->
+  <div class="drawer-header">
+    <div class="drawer-avatar" id="menuAvatar"><i class="fa-solid fa-terminal"></i></div>
+    <div class="drawer-title">Tech Verse IDE</div>
+    <div class="drawer-name" id="menuName">Guest User</div>
+    <div class="drawer-email" id="menuEmail">Sign in to sync your work</div>
+  </div>
+
+  <!-- ROOT MENU LIST -->
+  <div class="sidebar-panel active" id="panel-menu">
+    <div class="menu-scroll">
+
+      <div class="menu-section-title">Workspace</div>
+      <div class="menu-list">
+        <div class="menu-row" onclick="switchSideTab('explorer')">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>File Explorer</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="switchSideTab('settings')">
+          <i class="fa-solid fa-gear"></i>
+          <span>Editor Settings</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="switchSideTab('shortcuts')">
+          <i class="fa-solid fa-keyboard"></i>
+          <span>Keyboard Shortcuts</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="switchSideTab('proeditor');renderProPanel()">
+          <i class="fa-solid fa-star"></i>
+          <span>Pro Editor Info</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+      </div>
+
+      <div class="menu-section-title">Project</div>
+      <div class="menu-list">
+        <div class="menu-row" onclick="closeSidebar();if(typeof openProjectListModal==='function')openProjectListModal();">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>আমার প্রজেক্ট</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="closeSidebar();if(typeof openShareModal==='function')openShareModal();">
+          <i class="fa-solid fa-user-group"></i>
+          <span>শেয়ার করুন</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="closeSidebar();if(typeof downloadAsZip==='function')downloadAsZip();">
+          <i class="fa-solid fa-file-zipper"></i>
+          <span>Download as ZIP</span>
+        </div>
+        <div class="menu-row" onclick="closeSidebar();if(typeof exportProject==='function')exportProject();">
+          <i class="fa-solid fa-download"></i>
+          <span>Export Project (JSON)</span>
+        </div>
+      </div>
+
+      <div class="menu-section-title">Extras</div>
+      <div class="menu-list">
+        <div class="menu-row" onclick="closeSidebar();if(typeof openProfileModal==='function')openProfileModal();">
+          <i class="fa-solid fa-user-gear"></i>
+          <span>Profile Settings</span>
+        </div>
+        <div class="menu-row" onclick="window.open('https://play.google.com','_blank')">
+          <i class="fa-solid fa-star"></i>
+          <span>Rate us</span>
+        </div>
+        <div class="menu-row" onclick="if(navigator.share){navigator.share({title:'Tech Verse IDE',url:location.href})}else{navigator.clipboard.writeText(location.href);showToast&&showToast('লিংক কপি হয়েছে!','success','fa-link')}">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Share</span>
+        </div>
+        <div class="menu-row" onclick="location.href='mailto:imran.info.me@gmail.com'">
+          <i class="fa-solid fa-envelope"></i>
+          <span>Contact us</span>
+        </div>
+        <div class="menu-row" onclick="switchSideTab('about')">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Privacy Policy</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+      </div>
+
+      <div class="menu-row danger" onclick="closeSidebar();if(typeof doSignOut==='function')doSignOut();">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Sign out</span>
+      </div>
+
+      <div class="menu-footer">Tech Verse IDE — TrebEdit Pro Max</div>
+    </div>
   </div>
 
   <!-- FILE EXPLORER -->
-  <div class="sidebar-panel active" id="panel-explorer">
+  <div class="sidebar-panel" id="panel-explorer">
+    <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">File Explorer</span></div>
     <div class="explorer-toolbar">
       <button onclick="openCreateModal('file')"><i class="fa-solid fa-file-plus"></i> File</button>
       <button onclick="openCreateModal('folder')"><i class="fa-solid fa-folder-plus"></i> Folder</button>
@@ -296,6 +375,7 @@
 
   <!-- SETTINGS -->
   <div class="sidebar-panel" id="panel-settings">
+    <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">Editor Settings</span></div>
     <div class="settings-panel">
       <div class="settings-section">
         <div class="settings-section-title"><i class="fa-solid fa-palette"></i> Theme</div>
@@ -373,6 +453,7 @@
 
   <!-- SHORTCUTS -->
   <div class="sidebar-panel" id="panel-shortcuts">
+    <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">Keyboard Shortcuts</span></div>
     <div class="settings-section">
       <div class="settings-section-title"><i class="fa-solid fa-keyboard"></i> Keyboard Shortcuts</div>
       <div class="shortcut-list" id="shortcutList"></div>
@@ -382,11 +463,27 @@
 
 <!-- PRO EDITOR -->
 <div class="sidebar-panel" id="panel-proeditor">
+  <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">Pro Editor Info</span></div>
   <div class="settings-panel" id="proEditorContent">
     <div class="pro-loading"><i class="fa-solid fa-star"></i> Pro Editor লোড হচ্ছে…</div>
   </div>
 </div>
+
+<!-- ABOUT / PRIVACY -->
+<div class="sidebar-panel" id="panel-about">
+  <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">Privacy Policy</span></div>
+  <div class="settings-panel">
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="fa-solid fa-shield-halved"></i> Privacy</div>
+      <p style="font-size:12.5px;line-height:1.8;color:var(--text-muted);">
+        আপনার কোড ও প্রজেক্ট ডেটা আপনার অ্যাকাউন্টের সাথে নিরাপদে সংরক্ষিত থাকে এবং তৃতীয় পক্ষের সাথে শেয়ার করা হয় না।
+        কোনো প্রশ্ন থাকলে Contact us অপশন থেকে যোগাযোগ করুন।
+      </p>
+    </div>
+  </div>
 </div>
+</div>
+
 
 <!-- ══ EDITOR ══ -->
 <div class="editor-container" id="editorContainer">
