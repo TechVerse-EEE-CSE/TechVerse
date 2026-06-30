@@ -101,4 +101,28 @@
     window.openProjectSync(projectId);
     showToast?.('প্রজেক্ট ওপেন হয়েছে', 'success', 'fa-folder-open');
   };
+  // ── নতুন প্রজেক্ট তৈরি (ব্ল্যাঙ্ক স্টার্টার ফাইল সহ) ──
+  window.handleCreateNewProject = async function () {
+    const name = prompt('প্রজেক্টের নাম দিন:', 'নতুন প্রজেক্ট');
+    if (!name) return;
+
+    const starterFs = {
+      'index.html': '<!DOCTYPE html>\n<html>\n<head>\n  <title>' + name + '</title>\n</head>\n<body>\n  \n</body>\n</html>'
+    };
+
+    showToast?.('প্রজেক্ট তৈরি হচ্ছে...', 'info', 'fa-spinner');
+    const projectId = await window.createProject(name, starterFs);
+    if (!projectId) return;
+
+    // ── আগের প্রজেক্টের sync বন্ধ করে নতুনটাতে সুইচ করো ──
+    window.closeProjectSync?.();
+    window.currentProjectId = projectId;
+
+    await IDBStore.set('fs', starterFs);
+    if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
+
+    window.openProjectSync(projectId);
+    showToast?.('নতুন প্রজেক্ট তৈরি হয়েছে ✅', 'success', 'fa-folder-plus');
+  };
+
 })();
