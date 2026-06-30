@@ -442,9 +442,13 @@ window.copySource = function () {
 
 // ── Sidebar ──
 window.toggleSidebar = function () {
-  document.getElementById('sidebar').classList.toggle('active');
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('active');
   document.getElementById('sidebarOverlay').classList.toggle('active');
-  if (document.getElementById('sidebar').classList.contains('active')) renderFileTree();
+  if (sb.classList.contains('active')) {
+    switchSideTab('menu');
+    renderFileTree();
+  }
 };
 
 window.closeSidebar = function () {
@@ -452,11 +456,10 @@ window.closeSidebar = function () {
   document.getElementById('sidebarOverlay').classList.remove('active');
 };
 
-window.switchSideTab = function (panel, el) {
-  document.querySelectorAll('.sidebar-tab').forEach(t  => t.classList.remove('active'));
+window.switchSideTab = function (panel) {
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('panel-'+panel).classList.add('active');
+  const target = document.getElementById('panel-' + panel);
+  if (target) target.classList.add('active');
 };
 
 // ── Search ──
