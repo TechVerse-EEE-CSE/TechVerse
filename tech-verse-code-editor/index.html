@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="css/toolbar.css">
 <link rel="stylesheet" href="css/share.css">
 <link rel="stylesheet" href="css/privacy-policy.css">
+<link rel="stylesheet" href="css/profile.css">
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -266,7 +267,7 @@
   <!-- Profile-style drawer header (pattern bg + avatar) -->
   <div class="drawer-header">
     <div class="drawer-avatar" id="menuAvatar"><i class="fa-solid fa-terminal"></i></div>
-    <div class="drawer-title">Tech Verse IDE</div>
+    <div class="drawer-title">Tech Verse EEE & CSE </div>
     <div class="drawer-name" id="menuName">Guest User</div>
     <div class="drawer-email" id="menuEmail">Sign in to sync your work</div>
   </div>
@@ -325,12 +326,241 @@
         </div>
       </div>
 
-      <div class="menu-section-title">Extras</div>
-      <div class="menu-list">
-        <div class="menu-row" onclick="closeSidebar();if(typeof openProfileModal==='function')openProfileModal();">
-          <i class="fa-solid fa-user-gear"></i>
-          <span> Settings Profile</span>
+
+
+
+
+      <!-- ══ PROFILE MODAL (Tabbed — High Quality) ══ -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+
+    <!-- Header + Tabs -->
+    <div class="profile-modal-header">
+      <h3><i class="fa-solid fa-user-gear"></i> Profile Settings</h3>
+      <div class="profile-tabs">
+        <button class="profile-tab-btn active" data-tab="info" onclick="switchProfileTab('info')">
+          <i class="fa-solid fa-user"></i> প্রোফাইল
+        </button>
+        <button class="profile-tab-btn" data-tab="password" onclick="switchProfileTab('password')">
+          <i class="fa-solid fa-lock"></i> পাসওয়ার্ড
+        </button>
+        <button class="profile-tab-btn danger-tab" data-tab="account" onclick="switchProfileTab('account')">
+          <i class="fa-solid fa-shield-halved"></i> অ্যাকাউন্ট
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 1: Profile Info ══ -->
+    <div class="profile-tab-body active" id="profileTab_info">
+
+      <!-- Avatar + Meta -->
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-big" id="profileAvatarBig">?</div>
+        <div class="profile-user-meta">
+          <div class="profile-name-display" id="profileNameDisplay">—</div>
+          <div class="profile-email-display" id="profileEmailDisplay">—</div>
+          <span class="profile-provider-badge" id="profileProviderBadge">
+            <i class="fa-solid fa-envelope"></i> Email Account
+          </span>
         </div>
+      </div>
+
+      <!-- Display Name -->
+      <div class="pf-field">
+        <div class="pf-label"><i class="fa-solid fa-user-pen"></i> ডিসপ্লে নাম</div>
+        <input type="text" id="profileNameInput" class="pf-input" placeholder="আপনার নাম লিখুন">
+      </div>
+
+      <!-- Photo URL -->
+      <div class="pf-field">
+        <div class="pf-label"><i class="fa-solid fa-image"></i> ফটো URL <span style="color:var(--text-dim);font-weight:400;">(ঐচ্ছিক)</span></div>
+        <div class="pf-input-icon-wrap">
+          <input type="url" id="profilePhotoInput" class="pf-input" placeholder="https://example.com/photo.jpg">
+          <i class="fa-solid fa-link pf-input-icon"></i>
+        </div>
+        <div class="pf-hint">গ্রাভাটার বা যেকোনো পাবলিক ইমেজ URL ব্যবহার করুন।</div>
+      </div>
+
+      <!-- Email Verified -->
+      <div class="pf-field" id="emailVerifySection">
+        <div class="pf-label"><i class="fa-solid fa-envelope-circle-check"></i> ইমেইল স্ট্যাটাস</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span id="profileEmailVerified" style="font-size:12px;font-weight:600;">—</span>
+          <button onclick="sendVerificationEmail()" style="font-size:11px;background:none;border:1px solid var(--border-light);border-radius:6px;color:var(--text-muted);padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+            <i class="fa-solid fa-paper-plane"></i> Verify Email
+          </button>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div id="profileInfoMsg" class="profile-msg"></div>
+
+      <!-- Footer -->
+      <div class="profile-footer">
+        <button class="btn-profile-cancel" onclick="closeModal('profileModal')">বাতিল</button>
+        <button class="btn-profile-save" id="profileInfoSaveBtn" onclick="saveProfileInfo()">
+          <i class="fa-solid fa-floppy-disk"></i> সেভ করুন
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 2: Password ══ -->
+    <div class="profile-tab-body" id="profileTab_password">
+
+      <!-- Google Notice -->
+      <div class="google-pw-notice" id="pwGoogleNotice" style="display:none;">
+        <i class="fa-brands fa-google"></i>
+        <div class="google-pw-notice-text">
+          <strong>Google Account ব্যবহার করছেন</strong>
+          আপনি Google দিয়ে সাইন ইন করেছেন। পাসওয়ার্ড পরিবর্তন করতে
+          <a href="https://myaccount.google.com/security" target="_blank" style="color:var(--primary);">Google Account Settings</a> ব্যবহার করুন।
+        </div>
+      </div>
+
+      <!-- PW Change Section -->
+      <div id="pwChangeSection">
+
+        <!-- Current Password -->
+        <div class="pf-field">
+          <div class="pf-label"><i class="fa-solid fa-key"></i> বর্তমান পাসওয়ার্ড</div>
+          <div class="pf-input-icon-wrap">
+            <input type="password" id="profileCurrentPw" class="pf-input" placeholder="••••••••">
+            <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileCurrentPw', this)"></i>
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="pf-field">
+          <div class="pf-label"><i class="fa-solid fa-lock"></i> নতুন পাসওয়ার্ড</div>
+          <div class="pf-input-icon-wrap">
+            <input type="password" id="profileNewPw" class="pf-input" placeholder="কমপক্ষে ৮ অক্ষর" oninput="checkPasswordStrength(this.value)">
+            <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileNewPw', this)"></i>
+          </div>
+          <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+          <div class="pw-strength-text" id="pwStrengthText"></div>
+        </div>
+
+        <!-- Requirements -->
+        <div class="pw-requirements">
+          <div class="pw-req-title">পাসওয়ার্ড শর্তাবলী</div>
+          <div class="pw-req-item" id="reqLength"><i class="fa-regular fa-circle"></i> কমপক্ষে ৮ অক্ষর</div>
+          <div class="pw-req-item" id="reqUpper"><i class="fa-regular fa-circle"></i> একটি বড় হাতের অক্ষর (A-Z)</div>
+          <div class="pw-req-item" id="reqNumber"><i class="fa-regular fa-circle"></i> একটি সংখ্যা (0-9)</div>
+          <div class="pw-req-item" id="reqSpecial"><i class="fa-regular fa-circle"></i> একটি বিশেষ চিহ্ন (!@#$...)</div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="pf-field">
+          <div class="pf-label"><i class="fa-solid fa-shield-check"></i> পাসওয়ার্ড নিশ্চিত করুন</div>
+          <div class="pf-input-icon-wrap">
+            <input type="password" id="profileConfirmPw" class="pf-input" placeholder="পুনরায় নতুন পাসওয়ার্ড লিখুন">
+            <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileConfirmPw', this)"></i>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div id="profilePwMsg" class="profile-msg"></div>
+
+        <!-- Footer -->
+        <div class="profile-footer">
+          <button class="btn-profile-cancel" onclick="closeModal('profileModal')">বাতিল</button>
+          <button class="btn-profile-save" id="profilePwSaveBtn" onclick="changePassword()">
+            <i class="fa-solid fa-lock"></i> পাসওয়ার্ড পরিবর্তন
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 3: Account ══ -->
+    <div class="profile-tab-body" id="profileTab_account">
+
+      <!-- Account Info -->
+      <div class="account-info-card">
+        <div class="account-info-row">
+          <span class="account-info-row-label"><i class="fa-solid fa-envelope"></i> ইমেইল</span>
+          <span class="account-info-row-value" id="accInfoEmail">—</span>
+        </div>
+        <div class="account-info-row">
+          <span class="account-info-row-label"><i class="fa-solid fa-circle-nodes"></i> প্রোভাইডার</span>
+          <span class="account-info-row-value" id="accInfoProvider">—</span>
+        </div>
+        <div class="account-info-row">
+          <span class="account-info-row-label"><i class="fa-solid fa-fingerprint"></i> User ID</span>
+          <span class="account-info-row-value" id="accInfoUid" style="font-family:monospace;font-size:11px;">—</span>
+        </div>
+        <div class="account-info-row">
+          <span class="account-info-row-label"><i class="fa-solid fa-calendar-plus"></i> যোগদান</span>
+          <span class="account-info-row-value" id="accInfoCreated">—</span>
+        </div>
+        <div class="account-info-row">
+          <span class="account-info-row-label"><i class="fa-solid fa-clock-rotate-left"></i> শেষ লগইন</span>
+          <span class="account-info-row-value" id="accInfoLastLogin">—</span>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div id="profileAccMsg" class="profile-msg"></div>
+
+      <!-- Danger Zone -->
+      <div class="danger-zone">
+        <div class="danger-zone-title">
+          <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+        </div>
+        <div class="danger-action">
+          <div class="danger-action-info">
+            <h4>Cloud ডেটা মুছুন</h4>
+            <p>Firestore থেকে সমস্ত প্রজেক্ট মুছে যাবে। Local ডেটা থাকবে।</p>
+          </div>
+          <button class="btn-danger-outline" onclick="openDeleteConfirm('data')">
+            <i class="fa-solid fa-cloud-slash"></i> মুছুন
+          </button>
+        </div>
+        <div class="danger-action">
+          <div class="danger-action-info">
+            <h4>অ্যাকাউন্ট ডিলিট</h4>
+            <p>অ্যাকাউন্ট ও সমস্ত ডেটা চিরতরে মুছে যাবে।</p>
+          </div>
+          <button class="btn-danger-outline" onclick="openDeleteConfirm('account')">
+            <i class="fa-solid fa-user-slash"></i> ডিলিট
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM MODAL ══ -->
+<div class="modal" id="deleteConfirmModal">
+  <div class="modal-content">
+    <div class="delete-confirm-icon">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <div class="delete-type-badge" id="deleteTypeBadge">ডেটা ডিলিট</div>
+    <h3 id="deleteConfirmTitle">নিশ্চিত করুন</h3>
+    <div class="delete-confirm-desc" id="deleteConfirmDesc">এই কাজ পূর্বাবস্থায় ফেরানো সম্ভব নয়।</div>
+
+    <div class="delete-confirm-input-wrap" id="deleteConfirmInputWrap">
+      <div class="pf-label">নিচের ঘরে <strong style="color:var(--danger)">DELETE</strong> লিখুন</div>
+      <input type="text" id="deleteConfirmInput" class="pf-input" placeholder="DELETE">
+    </div>
+
+    <div id="deleteConfirmMsg" class="profile-msg"></div>
+
+    <div class="btn-group" style="margin-top:4px;">
+      <button class="btn btn-cancel" onclick="closeModal('deleteConfirmModal')">বাতিল</button>
+      <button class="btn" id="executeDeleteBtn" onclick="executeDelete()"
+        style="background:var(--danger);color:#fff;border:none;gap:7px;display:flex;align-items:center;">
+        <i class="fa-solid fa-trash"></i> নিশ্চিত করুন
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
         <div class="menu-row" onclick="window.open('https://play.google.com','_blank')">
           <i class="fa-solid fa-star"></i>
           <span>Rate us</span>
@@ -941,6 +1171,8 @@
 <!-- 5. Firebase Modules -->
 <script type="module" src="js/project-manager.js"></script>
 <script type="module" src="js/firestore-sync.js"></script>
+<script type="module" src="js/profile.js"></script>
+
 <script src="js/share-ui.js"></script>
 <script type="module" src="js/pro-editor.js"></script>
 
