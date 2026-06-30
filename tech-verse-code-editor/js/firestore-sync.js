@@ -27,7 +27,33 @@ let _activeProjectId  = null;
 let _unsubscribe       = null;   // ← চলমান onSnapshot listener
 let _lastKnownUpdateMs = 0;      // remote echo এড়াতে (নিজের সেভ-এর জন্য toast না দেখানো)
 
-onAuthStateChanged(auth, (user) => { _currentUser = user; });
+onAuthStateChanged(auth, async (user) => {
+  _currentUser = user;
+  if (!user) return;
+
+  // ── users/{uid} ডক চেক করো — আগে থেকে কোনো প্রজেক্ট আছে কিনা ──
+  const userRef  = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+  const owned    = userSnap.exists() ? (userSnap.data().ownedProjectIds || []) : [];
+
+  if (owned.length > 0) {
+    // ── আগের প্রজেক্ট আছে → সেটাই খুলে দাও ──
+    window.currentProjectId = owned[0];
+    window.openProjectSync(owned[0]);
+    const fs = await window.cloudLoadProject(owned[0]);
+    if (fs) {
+      await IDBStore.set('fs', fs);
+      if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
+    }
+  } else {
+    // ── প্রথমবার লগইন → এখনকার লোকাল ফাইল দিয়ে নতুন প্রজেক্ট বানাও ──
+    const localFs = await IDBStore.get('fs');
+    const projectId = await window.createProject('My Project', localFs || {});
+    window.currentProjectId = projectId;
+    window.openProjectSync(projectId);
+    showToast?.('নতুন প্রজেক্ট তৈরি হয়েছে', 'success', 'fa-folder-plus');
+  }
+});
 
 // ══════════════════════════════════════
 //  প্রজেক্ট ওপেন করা — listener attach
