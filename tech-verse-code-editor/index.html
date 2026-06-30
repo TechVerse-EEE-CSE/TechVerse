@@ -471,40 +471,69 @@
 </div>
 
 <!-- ABOUT / PRIVACY -->
+
 <div class="sidebar-panel" id="panel-about">
   <div class="subpanel-bar"><i class="fa-solid fa-arrow-left" onclick="switchSideTab('menu')"></i><span class="title">Privacy Policy</span></div>
-  <div class="settings-panel">
-    <div class="settings-section">
-      <div class="settings-section-title"><i class="fa-solid fa-shield-halved"></i> ডেটা সুরক্ষা</div>
-      <p class="privacy-text">
-        আপনার কোড ও প্রজেক্ট ডেটা আপনার অ্যাকাউন্টের সাথে নিরাপদে সংরক্ষিত থাকে এবং তৃতীয় পক্ষের সাথে শেয়ার করা হয় না।
-      </p>
-      <p class="privacy-text">
-        তবে সাইট আপডেটের অংশ হিসেবে কিছু ফিচার ভবিষ্যতে নতুন যুক্ত করা হতে পারে অথবা মুছে ফেলা হতে পারে।
-      </p>
+  <div class="settings-panel privacy-panel">
+
+    <div class="privacy-updated"><i class="fa-regular fa-clock"></i> last update: 30 jun 2026</div>
+
+    <div class="privacy-card">
+      <div class="privacy-icon" style="background:rgba(91,141,238,0.15);color:var(--primary);"><i class="fa-solid fa-database"></i></div>
+      <div class="privacy-card-body">
+        <div class="privacy-card-title">কী কী ডেটা সংরক্ষণ করি</div>
+        <p class="privacy-text">আপনার ইমেইল, নাম, প্রোফাইল ছবি এবং আপনার তৈরি করা কোড/প্রজেক্ট ফাইল আমাদের সার্ভারে সংরক্ষিত থাকে — শুধুমাত্র আপনার অ্যাকাউন্টের সাথে যুক্ত হিসেবে।</p>
+      </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-section-title"><i class="fa-solid fa-language"></i> Data Protection</div>
-      <p class="privacy-text">
-        Your code and project data are securely stored with your account and are not shared with third parties.
-      </p>
-      <p class="privacy-text">
-        However, as part of ongoing site updates, certain features may be added or removed in the future.
-      </p>
+    <div class="privacy-card">
+      <div class="privacy-icon" style="background:rgba(16,201,143,0.15);color:var(--success);"><i class="fa-solid fa-lock"></i></div>
+      <div class="privacy-card-body">
+        <div class="privacy-card-title">ডেটা সুরক্ষা</div>
+        <p class="privacy-text">আপনার ডেটা তৃতীয় পক্ষের কাছে বিক্রি বা শেয়ার করা হয় না। শুধুমাত্র (Google)-এর নিরাপদ সার্ভারে এনক্রিপ্টেড অবস্থায় রাখা হয়।</p>
+      </div>
+    </div>
+
+    <div class="privacy-card">
+      <div class="privacy-icon" style="background:rgba(124,92,191,0.15);color:var(--accent);"><i class="fa-solid fa-cookie-bite"></i></div>
+      <div class="privacy-card-body">
+        <div class="privacy-card-title">লোকাল স্টোরেজ ও কুকিজ</div>
+        <p class="privacy-text">অফলাইনে কাজ চালিয়ে যাওয়ার জন্য ব্রাউজারের লোকাল স্টোরেজে সাময়িক ডেটা রাখা হয়, যা শুধু আপনার ডিভাইসেই থাকে।</p>
+      </div>
+    </div>
+
+    <div class="privacy-card">
+      <div class="privacy-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);"><i class="fa-solid fa-user-shield"></i></div>
+      <div class="privacy-card-body">
+        <div class="privacy-card-title">আপনার অধিকার</div>
+        <p class="privacy-text">যেকোনো সময় আপনি Settings থেকে আপনার সব ডেটা এক্সপোর্ট বা সম্পূর্ণ ডিলিট করতে পারবেন (Clear All Data)।</p>
+      </div>
+    </div>
+
+    <div class="privacy-card">
+      <div class="privacy-icon" style="background:rgba(239,68,68,0.15);color:var(--danger);"><i class="fa-solid fa-rotate"></i></div>
+      <div class="privacy-card-body">
+        <div class="privacy-card-title">পলিসি পরিবর্তন</div>
+        <p class="privacy-text">সাইট আপডেটের অংশ হিসেবে ফিচার পরিবর্তন হতে পারে, এবং এই পলিসিও সময়ে সময়ে পরিবর্তিত হতে পারে।</p>
+      </div>
+    </div>
+
+    <div class="settings-section" style="border-top:1px solid var(--border);margin-top:4px;">
+      <div class="settings-section-title"><i class="fa-solid fa-globe"></i> English Summary</div>
+      <p class="privacy-text">We store your account info (email, name, photo) and your project files via database. Data is never sold or shared with third parties. You can export or permanently delete your data anytime from Settings. This policy may change as the app evolves.</p>
     </div>
 
     <div class="settings-section">
       <div class="settings-section-title"><i class="fa-solid fa-envelope"></i> যোগাযোগ</div>
-      <p class="privacy-text" style="margin-bottom:10px;">
-        প্রাইভেসি নিয়ে কোনো প্রশ্ন থাকলে আমাদের সাথে যোগাযোগ করুন।
-      </p>
+      <p class="privacy-text" style="margin-bottom:10px;">কোনো প্রশ্ন থাকলে যোগাযোগ করুন।</p>
       <button class="btn btn-cancel" style="width:100%;" onclick="location.href='mailto:imran.info.me@gmail.com'">
         <i class="fa-solid fa-envelope"></i> Contact us
       </button>
     </div>
+
   </div>
 </div>
+
 
 <!-- ABOUT / APP INFO -->
 <div class="sidebar-panel" id="panel-appinfo">
