@@ -42,16 +42,23 @@ function enterEditor(user) {
   document.getElementById('navName').textContent = displayName;
   document.getElementById('ddName').textContent  = displayName;
   document.getElementById('ddEmail').textContent = user.email;
+  const menuNameEl  = document.getElementById('menuName');
+  const menuEmailEl = document.getElementById('menuEmail');
+  if (menuNameEl)  menuNameEl.textContent  = displayName;
+  if (menuEmailEl) menuEmailEl.textContent = user.email;
 
-  const navAv = document.getElementById('navAvatar');
-  const ddAv  = document.getElementById('ddAvatar');
+  const navAv  = document.getElementById('navAvatar');
+  const ddAv   = document.getElementById('ddAvatar');
+  const menuAv = document.getElementById('menuAvatar');
 
   if (user.photoURL) {
     navAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
     ddAv.innerHTML  = `<img src="${user.photoURL}" alt="">`;
+    if (menuAv) menuAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
   } else {
     navAv.textContent = initials;
     ddAv.textContent  = initials;
+    if (menuAv) menuAv.textContent = initials;
   }
 
   document.getElementById('userPill').style.display = 'flex';
@@ -179,13 +186,15 @@ window.saveProfile = async function () {
     document.getElementById('navName').textContent             = newName;
     document.getElementById('ddName').textContent              = newName;
     document.getElementById('profileNameDisplay').textContent  = newName;
+    const menuNameEl = document.getElementById('menuName');
+    if (menuNameEl) menuNameEl.textContent = newName;
 
     if (newPhoto) {
-      ['navAvatar','ddAvatar','profileAvatarBig'].forEach(id =>
-        document.getElementById(id).innerHTML = `<img src="${newPhoto}" alt="">`);
+      ['navAvatar','ddAvatar','profileAvatarBig','menuAvatar'].forEach(id =>
+        document.getElementById(id) && (document.getElementById(id).innerHTML = `<img src="${newPhoto}" alt="">`));
     } else {
-      ['navAvatar','ddAvatar','profileAvatarBig'].forEach(id =>
-        document.getElementById(id).textContent = initials);
+      ['navAvatar','ddAvatar','profileAvatarBig','menuAvatar'].forEach(id =>
+        document.getElementById(id) && (document.getElementById(id).textContent = initials));
     }
 
     showProfileMsg('success', 'প্রোফাইল আপডেট হয়েছে!');
