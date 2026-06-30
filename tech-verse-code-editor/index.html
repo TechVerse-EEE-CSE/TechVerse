@@ -215,12 +215,31 @@
   <button class="icon-btn" onclick="viewSource()" title="View Source"><i class="fa-solid fa-code"></i></button>
   <button class="icon-btn run-btn" onclick="runCode()" title="Run (Ctrl+Enter)"><i class="fa-solid fa-play"></i></button>
   <button class="icon-btn" onclick="openCreateModal()" title="New File"><i class="fa-solid fa-file-circle-plus"></i></button>
-  <button class="icon-btn" id="btnMyProjects" onclick="openProjectListModal()" title="আমার প্রজেক্ট"><i class="fa-solid fa-folder-open"></i></button>
-  <button class="icon-btn" id="btnShareProject" onclick="openShareModal()" title="শেয়ার করুন"><i class="fa-solid fa-user-group"></i></button>
-  <span id="cloudSyncBadge" style="opacity:.3;margin:0 4px;"></span>
-  <span id="reloadAvailableBadge" class="hidden" onclick="applyRemoteUpdate()" style="font-size:11px;color:#5b8dee;cursor:pointer;white-space:nowrap;">
-    নতুন আপডেট আছে
-  </span>
+
+  <!-- ── Project মেনু (My Projects + Share + Sync status একসাথে) ── -->
+  <div class="project-menu-wrap" id="projectMenuWrap">
+    <button class="icon-btn" id="btnProjectMenu" onclick="toggleProjectMenu(event)" title="প্রজেক্ট">
+      <i class="fa-solid fa-diagram-project"></i>
+      <span id="reloadDot" class="hidden"></span>
+    </button>
+    <div class="project-menu-dropdown hidden" id="projectMenuDropdown">
+      <div class="pm-item" id="btnMyProjects" onclick="openProjectListModal();closeProjectMenu();">
+        <i class="fa-solid fa-folder-open"></i> আমার প্রজেক্ট
+      </div>
+      <div class="pm-item" id="btnShareProject" onclick="openShareModal();closeProjectMenu();">
+        <i class="fa-solid fa-user-group"></i> শেয়ার করুন
+      </div>
+      <div class="pm-sep"></div>
+      <div class="pm-status-row">
+        <span id="cloudSyncBadge" style="opacity:.5;"></span>
+        <span class="pm-status-text">Cloud sync status</span>
+      </div>
+      <div class="pm-item hidden" id="reloadAvailableBadge" onclick="applyRemoteUpdate();closeProjectMenu();">
+        <i class="fa-solid fa-rotate" style="color:#5b8dee"></i> নতুন আপডেট আছে — লোড করুন
+      </div>
+    </div>
+  </div>
+
   <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserDropdown()">
     <div class="user-avatar" id="navAvatar">?</div>
     <span class="user-name" id="navName">User</span>
@@ -779,6 +798,23 @@
   window.addEventListener('online',  updateOfflineBadge);
   window.addEventListener('offline', updateOfflineBadge);
   updateOfflineBadge();
+
+  // ── Project মেনু ড্রপডাউন টগল ──
+  function toggleProjectMenu(e) {
+    e?.stopPropagation();
+    document.getElementById('projectMenuDropdown')?.classList.toggle('hidden');
+  }
+  function closeProjectMenu() {
+    document.getElementById('projectMenuDropdown')?.classList.add('hidden');
+  }
+  window.toggleProjectMenu = toggleProjectMenu;
+  window.closeProjectMenu  = closeProjectMenu;
+
+  // ── বাইরে ক্লিক করলে মেনু বন্ধ ──
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('projectMenuWrap');
+    if (wrap && !wrap.contains(e.target)) closeProjectMenu();
+  });
 </script>
 
 </body>
