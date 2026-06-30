@@ -1,0 +1,50 @@
+/* ══════════════════════════════════════
+   SHARE / PROJECT MODAL — css/share.css
+   ══════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-overlay.hidden { display: none; }
+
+.modal-box {
+  background: #161921; color: #e9ecef;
+  border-radius: 14px; padding: 22px;
+  width: min(420px, 92vw); max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.modal-box h3 { margin: 0 0 6px; font-size: 17px; display:flex; gap:8px; align-items:center; }
+.modal-box .muted { color: #8b92a5; font-size: 13px; margin-bottom: 14px; }
+
+.share-link-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.share-link-row input {
+  flex: 1; background: #0d0f14; border: 1px solid #2d3436;
+  border-radius: 8px; padding: 8px 10px; color: #e9ecef; font-size: 12px;
+}
+.share-link-row button {
+  background: #5b8dee; border: none; border-radius: 8px;
+  padding: 8px 12px; color: #fff; cursor: pointer;
+}
+
+.collaborator-list { margin-bottom: 14px; }
+
+.project-list-body { max-height: 50vh; overflow-y: auto; margin-bottom: 14px; }
+.project-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  background: #1e2230; margin-bottom: 6px;
+}
+.project-row:hover { background: #252a3a; }
+.project-row-name { flex: 1; }
+.badge-count {
+  font-size: 11px; background: #2d3436; padding: 2px 8px; border-radius: 10px;
+}
+
+.modal-close-btn {
+  width: 100%; padding: 10px; border-radius: 8px; border: none;
+  background: #2d3436; color: #e9ecef; cursor: pointer;
+}
+
+#reloadAvailableBadge.hidden { display: none; }
