@@ -48,3 +48,37 @@
 }
 
 #reloadAvailableBadge.hidden { display: none; }
+
+/* ── Project Menu Dropdown (navbar) ── */
+.project-menu-wrap { position: relative; }
+#btnProjectMenu { position: relative; }
+#reloadDot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #5b8dee;
+}
+#reloadDot.hidden { display: none; }
+
+.project-menu-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 230px; background: #161921; color: #e9ecef;
+  border: 1px solid #2d3436; border-radius: 12px;
+  padding: 6px; z-index: 999;
+  box-shadow: 0 14px 40px rgba(0,0,0,.45);
+}
+.project-menu-dropdown.hidden { display: none; }
+
+.pm-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; white-space: nowrap;
+}
+.pm-item:hover { background: #1e2230; }
+.pm-item.hidden { display: none; }
+
+.pm-sep { height: 1px; background: #2d3436; margin: 6px 2px; }
+
+.pm-status-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; font-size: 11px; color: #8b92a5;
+}
