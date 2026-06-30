@@ -4,7 +4,12 @@
 ════════════════════════════════════════════════════════ */
 
 const CACHE_NAME  = 'offline-shell-v1';
-const OFFLINE_URL = '/offline.html';
+const OFFLINE_URL = 
+   '/offline.html';
+   '/style.css';
+   '/config.js';
+   '/script.js';
+
 
 /* ── INSTALL: pre-cache the offline page ── */
 self.addEventListener('install', (event) => {
