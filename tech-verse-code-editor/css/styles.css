@@ -361,30 +361,65 @@ body {
   transition: left 0.3s cubic-bezier(0.4,0,0.2,1); border-right: 1px solid var(--border);
 }
 .sidebar.active { left: 0; }
-.sidebar-header {
-  padding: 16px 18px;
-  background: linear-gradient(135deg, var(--bg-surface-light), var(--bg-surface));
-  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
+
+/* ── Drawer profile header (pattern bg + avatar), inspired by reference design ── */
+.drawer-header {
+  position: relative; overflow: hidden;
+  padding: 30px 20px 22px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 18px),
+    linear-gradient(135deg, #11141d, #060708);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.logo-badge {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  width: 36px; height: 36px; border-radius: 10px;
+.drawer-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #fff; color: #11141d;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 900; font-size: 13px; color: white;
-  box-shadow: 0 4px 12px rgba(91,141,238,0.4);
+  font-size: 22px; font-weight: 700; overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
 }
-.logo-text { font-size: 15px; font-weight: 700; }
-.logo-sub  { font-size: 10px; color: var(--text-muted); }
-.sidebar-tabs { display: flex; background: var(--bg-main); border-bottom: 1px solid var(--border); }
-.sidebar-tab {
-  flex: 1; padding: 10px 5px; text-align: center;
-  font-size: 11px; color: var(--text-muted); cursor: pointer;
-  transition: var(--transition); border-bottom: 2px solid transparent;
-}
-.sidebar-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.sidebar-tab i { display: block; font-size: 14px; margin-bottom: 3px; }
+.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.drawer-title { font-size: 18px; font-weight: 700; color: #fff; margin-top: 14px; }
+.drawer-name  { font-size: 12.5px; font-weight: 600; color: var(--text-main); margin-top: 6px; }
+.drawer-email { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
 .sidebar-panel { display: none; flex: 1; overflow-y: auto; }
 .sidebar-panel.active { display: flex; flex-direction: column; }
+
+/* ── Root drawer menu list ── */
+.menu-scroll { flex: 1; overflow-y: auto; padding-bottom: 14px; }
+.menu-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--text-dim);
+  padding: 16px 18px 6px;
+}
+.menu-list { background: var(--bg-main); }
+.menu-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 18px; font-size: 13.5px; color: var(--text-main);
+  cursor: pointer; transition: var(--transition); border-bottom: 1px solid var(--border);
+}
+.menu-list .menu-row:last-child { border-bottom: none; }
+.menu-row:hover { background: var(--bg-surface-hover); }
+.menu-row i:first-child { width: 18px; text-align: center; font-size: 15px; color: var(--primary); flex-shrink: 0; }
+.menu-row span { flex: 1; }
+.menu-row .chev { color: var(--text-dim); font-size: 11px; }
+.menu-row.danger { margin-top: 10px; border-top: 1px solid var(--border); border-radius: 0; }
+.menu-row.danger i:first-child { color: var(--danger); }
+.menu-row.danger span { color: var(--danger); }
+.menu-footer { text-align: center; font-size: 10.5px; color: var(--text-dim); padding: 18px 10px 6px; }
+
+/* ── Sub-panel header bar with back button ── */
+.subpanel-bar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; background: var(--bg-surface-light);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.subpanel-bar i { cursor: pointer; font-size: 14px; color: var(--text-muted); transition: var(--transition); }
+.subpanel-bar i:hover { color: var(--primary); }
+.subpanel-bar .title { font-size: 14.5px; font-weight: 700; color: var(--text-main); }
 
 .explorer-toolbar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .explorer-toolbar button {
