@@ -470,7 +470,7 @@ window.toggleSearch = function () {
   searchOpen = !searchOpen;
   document.getElementById('searchBar').classList.toggle('active', searchOpen);
   if (searchOpen) setTimeout(() => document.getElementById('searchInput').focus(), 100);
-  else { searchCursor = null; document.getElementById('searchInfo').textContent = ''; }
+  else { searchCursor = null; lastSearchQuery = null; document.getElementById('searchInfo').textContent = ''; }
 };
 
 window.toggleReplace = function () {
@@ -479,30 +479,45 @@ window.toggleReplace = function () {
   document.getElementById('replaceDoBtn').style.display = replaceOpen ? '' : 'none';
 };
 
+let lastSearchQuery = null;
+
 window.searchFind = function () {
   const q = document.getElementById('searchInput').value;
   if (!q) return;
-  searchCursor = editor.getSearchCursor(q, searchCursor ? searchCursor.pos : null);
+
+  // If the query changed (or there's no active cursor yet), start a fresh
+  // search from the current caret position instead of reusing a stale,
+  // mismatched cursor object — that was the cause of "always not found".
+  if (q !== lastSearchQuery || !searchCursor) {
+    searchCursor = editor.getSearchCursor(q, editor.getCursor(), { caseFold: true });
+    lastSearchQuery = q;
+  }
+
   if (!searchCursor.findNext()) {
-    searchCursor = editor.getSearchCursor(q);
-    searchCursor.findNext();
+    // Wrap around to the beginning of the document and try again.
+    searchCursor = editor.getSearchCursor(q, CodeMirror.Pos(0, 0), { caseFold: true });
+    lastSearchQuery = q;
+    if (!searchCursor.findNext()) {
+      document.getElementById('searchInfo').textContent = 'পাওয়া যায়নি';
+      return;
+    }
   }
-  if (searchCursor.from()) {
-    editor.setSelection(searchCursor.from(), searchCursor.to());
-    editor.scrollIntoView(searchCursor.from(), 80);
-    document.getElementById('searchInfo').textContent = 'পাওয়া গেছে';
-  } else {
-    document.getElementById('searchInfo').textContent = 'পাওয়া যায়নি';
-  }
+
+  editor.setSelection(searchCursor.from(), searchCursor.to());
+  editor.scrollIntoView(searchCursor.from(), 80);
+  editor.focus();
+  document.getElementById('searchInfo').textContent = 'পাওয়া গেছে';
 };
 
 window.doReplace = function () {
   const q = document.getElementById('searchInput').value;
   const r = document.getElementById('replaceInput').value;
   if (!q) return;
-  const c = editor.getSearchCursor(q);
+  const c = editor.getSearchCursor(q, CodeMirror.Pos(0, 0), { caseFold: true });
   let count = 0;
   while (c.findNext()) { c.replace(r); count++; }
+  searchCursor = null;
+  lastSearchQuery = null;
   showToast(`${count} টি বদলানো হয়েছে`, 'success', 'fa-arrows-rotate');
 };
 
