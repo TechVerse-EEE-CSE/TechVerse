@@ -39,7 +39,8 @@ function enterEditor(user) {
   const displayName = user.displayName || user.email.split('@')[0];
   const initials    = displayName.slice(0, 2).toUpperCase();
 
-  document.getElementById('navName').textContent = displayName;
+  const navNameEl = document.getElementById('navName');
+  if (navNameEl) navNameEl.textContent = displayName;
   document.getElementById('ddName').textContent  = displayName;
   document.getElementById('ddEmail').textContent = user.email;
   const menuNameEl  = document.getElementById('menuName');
@@ -52,16 +53,17 @@ function enterEditor(user) {
   const menuAv = document.getElementById('menuAvatar');
 
   if (user.photoURL) {
-    navAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
+    if (navAv) navAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
     ddAv.innerHTML  = `<img src="${user.photoURL}" alt="">`;
     if (menuAv) menuAv.innerHTML = `<img src="${user.photoURL}" alt="">`;
   } else {
-    navAv.textContent = initials;
+    if (navAv) navAv.textContent = initials;
     ddAv.textContent  = initials;
     if (menuAv) menuAv.textContent = initials;
   }
 
-  document.getElementById('userPill').style.display = 'flex';
+  const userPillEl = document.getElementById('userPill');
+  if (userPillEl) userPillEl.style.display = 'flex';
 
   // Editor init (editor.js এ defined)
   if (typeof initEditorIfNeeded === 'function') initEditorIfNeeded();
@@ -74,7 +76,8 @@ function enterEditor(user) {
 // ── Show Auth ──
 function showAuthScreen() {
   document.getElementById('authScreen').style.display = 'flex';
-  document.getElementById('userPill').style.display   = 'none';
+  const up = document.getElementById('userPill');
+  if (up) up.style.display = 'none';
 }
 
 // ── Login ──
@@ -85,7 +88,7 @@ window.doLogin = async function () {
   setLoading('loginBtn', true);
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-    showAuthMsg('loginMsg', 'success', 'লগইন সফল! Editor লোড হচ্ছে…');
+    showAuthMsg('loginMsg', 'success', 'লগইন সফল! ডেটা লোড হচ্ছে…');
   } catch (e) {
     setLoading('loginBtn', false);
     showAuthMsg('loginMsg', 'error', friendlyError(e.code));
@@ -110,7 +113,7 @@ window.doRegister = async function () {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
-    showAuthMsg('registerMsg', 'success', 'অ্যাকাউন্ট তৈরি হয়েছে! স্বাগতম 🎉');
+    showAuthMsg('registerMsg', 'success', 'অ্যাকাউন্ট তৈরি হয়েছে!');
   } catch (e) {
     setLoading('registerBtn', false);
     showAuthMsg('registerMsg', 'error', friendlyError(e.code));
@@ -183,7 +186,8 @@ window.saveProfile = async function () {
     await updateFn(user, { displayName: newName, photoURL: newPhoto || null });
 
     const initials = newName.slice(0, 2).toUpperCase();
-    document.getElementById('navName').textContent             = newName;
+    const navNameEl2 = document.getElementById('navName');
+    if (navNameEl2) navNameEl2.textContent = newName;
     document.getElementById('ddName').textContent              = newName;
     document.getElementById('profileNameDisplay').textContent  = newName;
     const menuNameEl = document.getElementById('menuName');
