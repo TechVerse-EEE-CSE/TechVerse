@@ -268,18 +268,19 @@ window.collapseAll = function () {
 };
 
 window.deleteFile = function (path) {
-  if (!confirm(`"${path}" মুছবেন?`)) return;
-  delete fs[path];
-  openTabs = openTabs.filter(t => t !== path);
-  if (currentFile === path) {
-    currentFile = openTabs[0] || 'index.html';
-    if (!fs[currentFile]) fs[currentFile] = DEFAULT_FS['index.html'] || '';
-    editor.setValue(fs[currentFile]);
-  }
-  saveData();
-  renderTabs();
-  renderFileTree();
-  showToast(`মুছে ফেলা হয়েছে: ${path.split('/').pop()}`, 'info', 'fa-trash');
+  showConfirm(`"${path}" মুছবেন?`, () => {
+    delete fs[path];
+    openTabs = openTabs.filter(t => t !== path);
+    if (currentFile === path) {
+      currentFile = openTabs[0] || 'index.html';
+      if (!fs[currentFile]) fs[currentFile] = DEFAULT_FS['index.html'] || '';
+      editor.setValue(fs[currentFile]);
+    }
+    saveData();
+    renderTabs();
+    renderFileTree();
+    showToast(`মুছে ফেলা হয়েছে: ${path.split('/').pop()}`, 'info', 'fa-trash');
+  });
 };
 
 // ── Tabs ──
@@ -692,10 +693,15 @@ function loadScript(src) {
 // ক্লিয়ার ডেটা 
 
 window.clearStorage = function () {
-  if (!confirm('সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(SETTINGS_KEY);
-  location.reload();
+  showConfirm(
+    'সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    () => {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(SETTINGS_KEY);
+      location.reload();
+    },
+    { title: 'সব মুছে ফেলবেন?' }
+  );
 };
 
 
@@ -705,13 +711,29 @@ window.clearStorage = function () {
 window.openModal  = id => document.getElementById(id).classList.add('active');
 window.closeModal = id => document.getElementById(id).classList.remove('active');
 
+// ── Custom Confirm (replaces native confirm() so the browser/localhost
+//    permission-style popup never shows — uses our own styled modal) ──
+window.showConfirm = function (message, onConfirm, opts = {}) {
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmTitle').textContent   = opts.title || 'নিশ্চিত করুন';
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = opts.okText || 'মুছে ফেলুন';
+  const newBtn = okBtn.cloneNode(true); // strip old listeners
+  okBtn.parentNode.replaceChild(newBtn, okBtn);
+  newBtn.addEventListener('click', () => {
+    closeModal('confirmModal');
+    onConfirm();
+  });
+  openModal('confirmModal');
+};
+
 document.querySelectorAll('.modal').forEach(m => {
   m.addEventListener('click', e => { if (e.target===m) closeModal(m.id); });
 });
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['createModal','renameModal','profileModal'].forEach(id => {
+    ['createModal','renameModal','profileModal','confirmModal'].forEach(id => {
       if (document.getElementById(id)?.classList.contains('active')) closeModal(id);
     });
     if (document.getElementById('sourceOverlay')?.classList.contains('show')) closeSource();
