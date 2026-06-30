@@ -109,6 +109,12 @@ function _populateInfoTab(user) {
   if (nameInput)  nameInput.value  = user.displayName || '';
   if (photoInput) photoInput.value = user.photoURL    || '';
 
+  // Tab badges
+  const pwBadge  = document.getElementById('pwTabBadge');
+  const accBadge = document.getElementById('accTabBadge');
+  if (pwBadge)  pwBadge.style.display  = !user.emailVerified ? 'inline-flex' : 'none';
+  if (accBadge) accBadge.style.display = 'none';
+
   // Verified status
   const verifiedEl = document.getElementById('profileEmailVerified');
   if (verifiedEl) {
@@ -536,6 +542,45 @@ function _setProfileBtnLoading(btnId, loading) {
     if (btn.dataset.original) btn.innerHTML = btn.dataset.original;
   }
 }
+
+// ── Avatar File Upload ──
+window.handleAvatarUpload = function (input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    if (typeof showToast === 'function')
+      showToast('ছবি ২MB এর বেশি হওয়া যাবে না।', 'error', 'fa-triangle-exclamation');
+    return;
+  }
+
+  const statusEl = document.getElementById('avatarUploadStatus');
+  const fillEl   = document.getElementById('avatarUploadFill');
+  const textEl   = document.getElementById('avatarUploadText');
+
+  if (statusEl) statusEl.style.display = 'flex';
+  if (fillEl)   fillEl.style.width = '30%';
+  if (textEl)   textEl.textContent = 'পড়া হচ্ছে…';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (fillEl) fillEl.style.width = '70%';
+    const base64 = e.target.result;
+
+    // Preview
+    const av = document.getElementById('profileAvatarBig');
+    if (av) av.innerHTML = `<img src="${base64}" alt=""><div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="ছবি পরিবর্তন করুন"><i class="fa-solid fa-camera"></i></div>`;
+
+    // Photo URL input এ বসাও
+    const photoInput = document.getElementById('profilePhotoInput');
+    if (photoInput) photoInput.value = base64;
+
+    if (fillEl) fillEl.style.width = '100%';
+    if (textEl) textEl.textContent = 'প্রস্তুত! সেভ করুন।';
+    setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 2000);
+  };
+  reader.readAsDataURL(file);
+};
 
 // ── Expose to window ──
 window._profileModule = {
