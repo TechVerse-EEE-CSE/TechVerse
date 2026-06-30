@@ -33,11 +33,12 @@ onAuthStateChanged(auth, user => {
 });
 
 // ══════════════════════════════════════
-//  closeModal — FIX: was missing globally
+//  closeModal — unified: handles both 'active' (createModal/renameModal/
+//  profileModal) and 'show' (proAdminModal) so neither system breaks
 // ══════════════════════════════════════
 window.closeModal = function(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('show');
+  if (el) el.classList.remove('active', 'show');
 };
 
 // ══════════════════════════════════════
@@ -469,14 +470,15 @@ window.proSaveVideo = async function() {
 // ══════════════════════════════════════
 window.proDeleteItem = async function(e, colName, id) {
   e.preventDefault(); e.stopPropagation();
-  if (!confirm('আইটেমটি মুছে ফেলবেন?')) return;
-  try {
-    await deleteDoc(doc(db, colName, id));
-    showToast('মুছে ফেলা হয়েছে', 'info', 'fa-trash-can');
-    renderProPanel();
-  } catch(err) {
-    showToast('মুছতে ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
-  }
+  showConfirm('আইটেমটি মুছে ফেলবেন?', async () => {
+    try {
+      await deleteDoc(doc(db, colName, id));
+      showToast('মুছে ফেলা হয়েছে', 'info', 'fa-trash-can');
+      renderProPanel();
+    } catch(err) {
+      showToast('মুছতে ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
+    }
+  });
 };
 
 // ══════════════════════════════════════
