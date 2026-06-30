@@ -1,223 +1,145 @@
-// ══════════════════════════════════════
-//  TEAM / ABOUT SECTION — js/team.js
-//  Firestore থেকে টিম মেম্বার লোড করে About সেকশনে দেখায়।
-//  নির্দিষ্ট এডমিন ইমেইল দিয়ে লগইন করলে Add/Edit/Delete ফর্ম শো করে।
-// ══════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
+   TEAM MEMBERS — এখানেই সব ডেটা এডিট করবে
+   প্রতিটা মেম্বারের জন্য একটা অবজেক্ট যোগ করো নিচের অ্যারেতে।
 
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, doc, addDoc, setDoc, deleteDoc,
-  onSnapshot, query, orderBy, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import firebaseConfig from "../config/firebase-config.js";
+   ফিল্ড গাইড:
+   - name        : নাম
+   - role        : পজিশন/রোল (যেমন "Founder & Lead Developer")
+   - photo       : ছবির সরাসরি লিংক (URL)। ফাঁকা রাখলে আইকন দেখাবে।
+   - responsibilities : দায়িত্বের লিস্ট (যত খুশি লাইন)
+   - socials     : { platform: "url" } — platform নাম দেখে আইকন বসবে
+                    সাপোর্টেড platform: facebook, github, linkedin,
+                    instagram, twitter/x, youtube, whatsapp, telegram,
+                    website, email
+   ══════════════════════════════════════════════════════════════ */
 
-// ── এডমিন ইমেইল লিস্ট — শুধু এই ইমেইল দিয়ে লগইন করলে Add/Edit/Delete দেখা যাবে ──
-const ADMIN_EMAILS = ['imran.info.me@gmail.com'];
+const TEAM_MEMBERS = [
+  {
+    name: "Imran Hossain",
+    role: "Founder & Lead Developer",
+    photo: "",
+    responsibilities: [
+      "অ্যাপের সম্পূর্ণ আর্কিটেকচার ও কোডবেস ডিজাইন",
+      "ব্যাকএন্ড ও ডাটাবেস ম্যানেজমেন্ট",
+      "প্রজেক্ট রোডম্যাপ পরিচালনা"
+    ],
+    socials: {
+      facebook: "",
+      github: "",
+      linkedin: "",
+      email: "mailto:imran.info.me@gmail.com"
+    }
+  }
+  // ── নতুন মেম্বার যোগ করতে নিচে কমা দিয়ে আরেকটা অবজেক্ট বসাও ──
+  // {
+  //   name: "নাম এখানে",
+  //   role: "রোল এখানে",
+  //   photo: "https://....jpg",
+  //   responsibilities: ["দায়িত্ব ১", "দায়িত্ব ২"],
+  //   socials: { facebook: "https://facebook.com/username", github: "https://github.com/username" }
+  // },
+];
 
-// ── Firebase init (অন্য মডিউলের সাথে একই app instance শেয়ার করে) ──
-const app     = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db      = getFirestore(app);
-const storage = getStorage(app);
-const auth    = getAuth(app);
+/* ══════════════════════════════════════════════════════════════
+   নিচের কোড — রেন্ডারিং লজিক (এখানে কিছু এডিট করার দরকার নেই)
+   ══════════════════════════════════════════════════════════════ */
 
-let _isAdmin       = false;
-let _teamUnsub      = null;
-let _initialized    = false;
-let _selectedPhotoFile = null;
-let _teamCache      = [];
-
-// ── বিভিন্ন রকমের ডিফল্ট অ্যাভাটার স্টাইল (DiceBear) — ছবি না থাকলে এর একটা ব্যবহার হয় ──
-const AVATAR_STYLES = ['avataaars', 'bottts', 'pixel-art', 'adventurer', 'fun-emoji', 'identicon', 'lorelei'];
-
-function pickAvatarStyle(seed) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  return AVATAR_STYLES[hash % AVATAR_STYLES.length];
-}
-
-function defaultAvatarUrl(name) {
-  const style = pickAvatarStyle(name || 'member');
-  return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(name || 'member')}`;
-}
-
-// ── এডমিন কিনা চেক করা ──
-onAuthStateChanged(auth, (user) => {
-  _isAdmin = !!(user && user.email && ADMIN_EMAILS.includes(user.email));
-  const addBtn = document.getElementById('btnAddTeamMember');
-  if (addBtn) addBtn.classList.toggle('hidden', !_isAdmin);
-  if (_initialized) renderTeam(_teamCache);
-});
-
-// ── About প্যানেল প্রথমবার খোলার সময় লোড শুরু করা (lazy init) ──
-window.initTeamSectionIfNeeded = function () {
-  if (_initialized) return;
-  _initialized = true;
-  const teamQuery = query(collection(db, 'team'), orderBy('order', 'asc'));
-  _teamUnsub = onSnapshot(teamQuery, (snap) => {
-    _teamCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderTeam(_teamCache);
-  }, (err) => {
-    console.error('Team load error:', err);
-    const grid = document.getElementById('teamGrid');
-    if (grid) grid.innerHTML = `<p class="muted">টিম তথ্য লোড করা যায়নি।</p>`;
-  });
+const TEAM_SOCIAL_ICONS = {
+  facebook: "fa-brands fa-facebook-f",
+  github: "fa-brands fa-github",
+  linkedin: "fa-brands fa-linkedin-in",
+  instagram: "fa-brands fa-instagram",
+  twitter: "fa-brands fa-x-twitter",
+  x: "fa-brands fa-x-twitter",
+  youtube: "fa-brands fa-youtube",
+  whatsapp: "fa-brands fa-whatsapp",
+  telegram: "fa-brands fa-telegram",
+  website: "fa-solid fa-globe",
+  email: "fa-solid fa-envelope"
 };
 
-// ── টিম গ্রিড রেন্ডার করা ──
-function renderTeam(members) {
-  const grid = document.getElementById('teamGrid');
+function teamEscapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function renderTeamGrid() {
+  const grid = document.getElementById("teamGrid");
   if (!grid) return;
 
-  if (!members.length) {
-    grid.innerHTML = `<p class="muted">এখনো কোনো টিম মেম্বার যুক্ত করা হয়নি।</p>`;
+  if (!TEAM_MEMBERS.length) {
+    grid.innerHTML = `<div class="team-grid-empty"><i class="fa-solid fa-user-group" style="font-size:18px;margin-bottom:6px;display:block;"></i>এখনো কোনো টিম মেম্বার যোগ করা হয়নি</div>`;
     return;
   }
 
-  grid.innerHTML = members.map(m => {
-    const photo = m.photoURL || defaultAvatarUrl(m.name);
-    const socials = [
-      m.facebook  ? `<a href="${escAttr(m.facebook)}"  target="_blank" rel="noopener" class="team-social fb"><i class="fa-brands fa-facebook"></i></a>`  : '',
-      m.github    ? `<a href="${escAttr(m.github)}"    target="_blank" rel="noopener" class="team-social gh"><i class="fa-brands fa-github"></i></a>`    : '',
-      m.instagram ? `<a href="${escAttr(m.instagram)}" target="_blank" rel="noopener" class="team-social ig"><i class="fa-brands fa-instagram"></i></a>` : '',
-    ].join('');
-
-    const adminControls = _isAdmin ? `
-      <div class="team-card-admin">
-        <button onclick="window.openTeamForm('${m.id}')" title="এডিট"><i class="fa-solid fa-pen"></i></button>
-        <button onclick="window.deleteTeamMember('${m.id}')" title="ডিলিট" class="danger"><i class="fa-solid fa-trash"></i></button>
-      </div>` : '';
+  grid.innerHTML = TEAM_MEMBERS.map((m, i) => {
+    const photoHtml = m.photo
+      ? `<img class="team-card-photo" src="${teamEscapeHtml(m.photo)}" alt="${teamEscapeHtml(m.name)}" onerror="this.onerror=null;this.src='';this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'team-card-photo\\' style=\\'display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-muted);\\'><i class=\\'fa-solid fa-user\\'></i></div>')">`
+      : `<div class="team-card-photo" style="display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-muted);"><i class="fa-solid fa-user"></i></div>`;
 
     return `
-      <div class="team-card">
-        ${adminControls}
-        <img class="team-card-photo" src="${escAttr(photo)}" alt="${escAttr(m.name || '')}" loading="lazy">
-        <div class="team-card-name">${escHtml(m.name || '')}</div>
-        <div class="team-card-role">${escHtml(m.role || '')}</div>
-        ${m.bio ? `<p class="team-card-bio">${escHtml(m.bio)}</p>` : ''}
-        ${socials ? `<div class="team-card-socials">${socials}</div>` : ''}
+      <div class="team-card" onclick="openTeamModal(${i})">
+        <div class="team-card-photo-wrap">${photoHtml}</div>
+        <div class="team-card-name">${teamEscapeHtml(m.name)}</div>
+        <div class="team-card-role">${teamEscapeHtml(m.role)}</div>
       </div>`;
-  }).join('');
+  }).join("");
 }
 
-// ── XSS-সেফ এসকেপিং হেল্পার ──
-function escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-function escAttr(str) {
-  return String(str).replace(/"/g, '&quot;');
-}
+window.openTeamModal = function (index) {
+  const m = TEAM_MEMBERS[index];
+  if (!m) return;
 
-// ══════════════════════════════════════
-//  এডমিন ফর্ম — Add / Edit
-// ══════════════════════════════════════
+  const modal = document.getElementById("teamModal");
+  const photoEl = document.getElementById("teamModalPhoto");
+  const nameEl = document.getElementById("teamModalName");
+  const roleEl = document.getElementById("teamModalRole");
+  const respEl = document.getElementById("teamModalResp");
+  const socialsEl = document.getElementById("teamModalSocials");
 
-window.openTeamForm = function (memberId) {
-  if (!_isAdmin) return;
-  _selectedPhotoFile = null;
-
-  const modal = document.getElementById('teamFormModal');
-  document.getElementById('teamMemberId').value = memberId || '';
-  document.getElementById('teamFormTitle').textContent = memberId ? 'মেম্বার এডিট করুন' : 'নতুন মেম্বার যুক্ত করুন';
-
-  const preview = document.getElementById('teamPhotoPreview');
-
-  if (memberId) {
-    const m = _teamCache.find(x => x.id === memberId);
-    document.getElementById('teamName').value      = m?.name || '';
-    document.getElementById('teamRole').value      = m?.role || '';
-    document.getElementById('teamBio').value       = m?.bio || '';
-    document.getElementById('teamFacebook').value  = m?.facebook || '';
-    document.getElementById('teamGithub').value    = m?.github || '';
-    document.getElementById('teamInstagram').value = m?.instagram || '';
-    preview.innerHTML = `<img src="${escAttr(m?.photoURL || defaultAvatarUrl(m?.name))}" alt="">`;
-  } else {
-    ['teamName','teamRole','teamBio','teamFacebook','teamGithub','teamInstagram'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    preview.innerHTML = `<i class="fa-solid fa-user"></i>`;
-  }
-
-  document.getElementById('teamPhotoFile').value = '';
-  modal.classList.remove('hidden');
-};
-
-window.previewTeamPhoto = function (e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  _selectedPhotoFile = file;
-  const reader = new FileReader();
-  reader.onload = () => {
-    document.getElementById('teamPhotoPreview').innerHTML = `<img src="${reader.result}" alt="">`;
-  };
-  reader.readAsDataURL(file);
-};
-
-window.saveTeamMember = async function () {
-  if (!_isAdmin) return;
-
-  const id   = document.getElementById('teamMemberId').value;
-  const name = document.getElementById('teamName').value.trim();
-  if (!name) { showToast?.('নাম দিন', 'error'); return; }
-
-  const saveBtn = document.getElementById('teamSaveBtn');
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> সেভ হচ্ছে...`;
-
-  try {
-    let photoURL = id ? (_teamCache.find(x => x.id === id)?.photoURL || '') : '';
-
-    if (_selectedPhotoFile) {
-      const path = `team-photos/${Date.now()}-${_selectedPhotoFile.name}`;
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, _selectedPhotoFile);
-      photoURL = await getDownloadURL(storageRef);
-    }
-
-    const data = {
-      name,
-      role:      document.getElementById('teamRole').value.trim(),
-      bio:       document.getElementById('teamBio').value.trim(),
-      facebook:  document.getElementById('teamFacebook').value.trim(),
-      github:    document.getElementById('teamGithub').value.trim(),
-      instagram: document.getElementById('teamInstagram').value.trim(),
-      photoURL,
-      order: id ? (_teamCache.find(x => x.id === id)?.order ?? Date.now()) : Date.now(),
-      updatedAt: serverTimestamp(),
+  if (m.photo) {
+    photoEl.src = m.photo;
+    photoEl.style.display = "block";
+    photoEl.onerror = function () {
+      this.style.display = "none";
+      photoEl.insertAdjacentHTML("afterend", `<div class="team-modal-photo" style="display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--text-muted);"><i class="fa-solid fa-user"></i></div>`);
     };
-
-    if (id) {
-      await setDoc(doc(db, 'team', id), data, { merge: true });
-      showToast?.('মেম্বার আপডেট হয়েছে', 'success', 'fa-user-pen');
-    } else {
-      data.createdAt = serverTimestamp();
-      await addDoc(collection(db, 'team'), data);
-      showToast?.('নতুন মেম্বার যুক্ত হয়েছে', 'success', 'fa-user-plus');
-    }
-
-    document.getElementById('teamFormModal').classList.add('hidden');
-  } catch (err) {
-    console.error(err);
-    showToast?.('সেভ করা যায়নি, আবার চেষ্টা করুন', 'error');
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> সেভ করুন`;
+  } else {
+    photoEl.style.display = "none";
+    photoEl.insertAdjacentHTML("afterend", `<div class="team-modal-photo" style="display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--text-muted);"><i class="fa-solid fa-user"></i></div>`);
   }
+
+  nameEl.textContent = m.name || "";
+  roleEl.textContent = m.role || "";
+
+  const resp = m.responsibilities || [];
+  respEl.innerHTML = resp.length
+    ? resp.map(r => `<li>${teamEscapeHtml(r)}</li>`).join("")
+    : `<li style="opacity:0.6;">দায়িত্ব উল্লেখ করা হয়নি</li>`;
+
+  const socials = m.socials || {};
+  const socialKeys = Object.keys(socials).filter(k => socials[k]);
+  socialsEl.innerHTML = socialKeys.length
+    ? socialKeys.map(platform => `
+        <a class="team-social-btn" data-platform="${platform}" href="${teamEscapeHtml(socials[platform])}" target="_blank" rel="noopener noreferrer" title="${platform}">
+          <i class="${TEAM_SOCIAL_ICONS[platform] || 'fa-solid fa-link'}"></i>
+        </a>`).join("")
+    : "";
+
+  modal.classList.add("active");
 };
 
-window.deleteTeamMember = async function (memberId) {
-  if (!_isAdmin) return;
-  if (!confirm('এই মেম্বারকে ডিলিট করতে চান?')) return;
-  try {
-    await deleteDoc(doc(db, 'team', memberId));
-    showToast?.('মেম্বার ডিলিট হয়েছে', 'info', 'fa-trash');
-  } catch (err) {
-    console.error(err);
-    showToast?.('ডিলিট করা যায়নি', 'error');
-  }
+window.closeTeamModal = function () {
+  const modal = document.getElementById("teamModal");
+  modal.classList.remove("active");
+  const photoEl = document.getElementById("teamModalPhoto");
+  let sib = photoEl.nextElementSibling;
+  if (sib && sib !== photoEl) sib.remove();
+  photoEl.style.display = "block";
 };
+
+document.addEventListener("DOMContentLoaded", renderTeamGrid);
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  renderTeamGrid();
+}
