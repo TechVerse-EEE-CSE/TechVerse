@@ -165,51 +165,20 @@ window.copyEmail = function () {
   document.getElementById('userDropdown').classList.remove('show');
 };
 
-// ── Save Profile ──
-window.saveProfile = async function () {
-  const user = window._firebaseAuth?.currentUser;
-  const updateFn = window._updateProfile;
-  if (!user || !updateFn) return;
-
-  const newName  = document.getElementById('profileNameInput').value.trim();
-  const newPhoto = document.getElementById('profilePhotoInput').value.trim();
-
-  if (!newName) {
-    showProfileMsg('error', 'নাম খালি রাখা যাবে না।');
-    return;
+// ── Open Profile Modal (delegates to profile.js) ──
+window.openProfileModal = function () {
+  if (window._profileReady) {
+    window._profileModule.openProfileModal();
+  } else {
+    const iv = setInterval(() => {
+      if (window._profileReady) { clearInterval(iv); window._profileModule.openProfileModal(); }
+    }, 100);
   }
+};
 
-  document.getElementById('profileSaveBtn').disabled = true;
-  document.getElementById('profileSaveLabel').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে…';
-
-  try {
-    await updateFn(user, { displayName: newName, photoURL: newPhoto || null });
-
-    const initials = newName.slice(0, 2).toUpperCase();
-    const navNameEl2 = document.getElementById('navName');
-    if (navNameEl2) navNameEl2.textContent = newName;
-    document.getElementById('ddName').textContent              = newName;
-    document.getElementById('profileNameDisplay').textContent  = newName;
-    const menuNameEl = document.getElementById('menuName');
-    if (menuNameEl) menuNameEl.textContent = newName;
-
-    if (newPhoto) {
-      ['navAvatar','ddAvatar','profileAvatarBig','menuAvatar'].forEach(id =>
-        document.getElementById(id) && (document.getElementById(id).innerHTML = `<img src="${newPhoto}" alt="">`));
-    } else {
-      ['navAvatar','ddAvatar','profileAvatarBig','menuAvatar'].forEach(id =>
-        document.getElementById(id) && (document.getElementById(id).textContent = initials));
-    }
-
-    showProfileMsg('success', 'প্রোফাইল আপডেট হয়েছে!');
-    if (typeof showToast === 'function') showToast('প্রোফাইল সেভ হয়েছে!', 'success', 'fa-user-check');
-    setTimeout(() => { if (typeof closeModal === 'function') closeModal('profileModal'); }, 1200);
-  } catch (e) {
-    showProfileMsg('error', e.message);
-  } finally {
-    document.getElementById('profileSaveBtn').disabled = false;
-    document.getElementById('profileSaveLabel').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> সেভ';
-  }
+// ── Legacy saveProfile (compat shim) ──
+window.saveProfile = function () {
+  if (window._profileReady) window._profileModule.saveProfileInfo();
 };
 
 // ── Helpers ──
@@ -240,13 +209,6 @@ function showAuthMsg(id, type, msg) {
   const el = document.getElementById(id);
   const icon = type === 'error' ? 'fa-circle-exclamation'
              : type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
-  el.className = `auth-msg ${type} show`;
-  el.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
-}
-
-function showProfileMsg(type, msg) {
-  const el = document.getElementById('profileMsg');
-  const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
   el.className = `auth-msg ${type} show`;
   el.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
 }
