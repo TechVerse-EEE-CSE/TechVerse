@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/solarized.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/night.min.css">
 
-<!-- মেইন  CSS ফাইল -->
+<!-- Main CSS file -->
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/toolbar.css">
 <link rel="stylesheet" href="css/share.css">
@@ -60,10 +60,10 @@
       <div class="auth-subtitle">Sign in to your Tech Verse account.</div>
       <div id="loginMsg" class="auth-msg"></div>
       <div class="auth-field">
-        <label>Email অথবা Username</label>
+        <label>Email</label>
         <div class="auth-input-wrap">
-          <i class="fa-solid fa-user field-icon"></i>
-          <input class="auth-input" type="text" id="loginEmail" placeholder="you@example.com অথবা username" autocomplete="username">
+          <i class="fa-solid fa-envelope field-icon"></i>
+          <input class="auth-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
         </div>
       </div>
       <div class="auth-field">
@@ -103,14 +103,6 @@
         </div>
       </div>
       <div class="auth-field">
-        <label>Username</label>
-        <div class="auth-input-wrap">
-          <i class="fa-solid fa-at field-icon"></i>
-          <input class="auth-input" type="text" id="registerUsername" placeholder="username (৩-২০ অক্ষর)" autocomplete="username">
-        </div>
-        <div class="uname-check" id="registerUsernameMsg"></div>
-      </div>
-      <div class="auth-field">
         <label>Developer Email</label>
         <div class="auth-input-wrap">
           <i class="fa-solid fa-envelope field-icon"></i>
@@ -139,7 +131,7 @@
       </div>
       <label class="auth-terms">
         <input type="checkbox" id="termsCheck">
-        I agree<a href="#" style="color:var(--primary);margin:0 2px;">Terms of Service</a> এবং <a href="#" style="color:var(--primary);margin:0 2px;">Privacy Policy</a> agree
+        I agree to the <a href="#" style="color:var(--primary);margin:0 2px;">Terms of Service</a> and <a href="#" style="color:var(--primary);margin:0 2px;">Privacy Policy</a>
       </label>
       <button class="auth-btn auth-btn-primary" id="registerBtn" onclick="doRegister()">
         <div class="btn-spinner"></div>
@@ -186,50 +178,11 @@
   </div>
 </div>
 
-<!-- ══ USERNAME GATE (পুরাতন ইউজার — বাধ্যতামূলক ইউজারনেম সেট) ══ -->
-<div id="usernameGateScreen" style="display:none;">
-  <div class="auth-glow-1"></div>
-  <div class="auth-glow-2"></div>
-  <div class="auth-card">
-    <div class="auth-logo-row">
-      <div class="auth-logo-badge">TV</div>
-      <div>
-        <div class="auth-logo-text">Set your Username</div>
-        <div class="auth-logo-sub" id="gateUserEmail">—</div>
-      </div>
-    </div>
-
-    <div class="auth-title">একটা Username দিন</div>
-    <div class="auth-subtitle">চালিয়ে যাওয়ার আগে আপনার অ্যাকাউন্টের জন্য একটা ইউনিক ইউজারনেম সেট করুন। এটা ছাড়া আপনি কিছুই এডিট বা করতে পারবেন না।</div>
-
-    <div id="gateMsg" class="auth-msg"></div>
-
-    <div class="auth-field">
-      <label>Username</label>
-      <div class="auth-input-wrap">
-        <i class="fa-solid fa-at field-icon"></i>
-        <input class="auth-input" type="text" id="gateUsername" placeholder="username (৩-২০ অক্ষর)" autocomplete="username">
-      </div>
-      <div class="uname-check" id="gateUsernameMsg"></div>
-    </div>
-
-    <button class="auth-btn auth-btn-primary" id="gateSaveBtn" onclick="doSetUsernameFromGate()">
-      <div class="btn-spinner"></div>
-      <span class="btn-label"><i class="fa-solid fa-floppy-disk"></i> সেভ করুন ও চালিয়ে যান</span>
-    </button>
-
-    <div class="auth-switch" style="margin-top:14px;">
-      ভুল অ্যাকাউন্টে ঢুকেছেন? <a href="#" onclick="doSignOut();return false;">সাইন আউট করুন</a>
-    </div>
-  </div>
-</div>
-
 <!-- ══ USER DROPDOWN ══ -->
 <div class="user-dropdown" id="userDropdown">
   <div class="user-dd-header">
     <div class="user-dd-avatar" id="ddAvatar">?</div>
     <div class="user-dd-name" id="ddName">—</div>
-    <div class="user-dd-username" id="ddUsername" style="display:none;"></div>
     <div class="user-dd-email" id="ddEmail">—</div>
   </div>
   <div class="user-dd-item" onclick="openProfileModal()"><i class="fa-solid fa-user-gear"></i> Profile Settings</div>
@@ -266,7 +219,7 @@
   <button class="icon-btn run-btn" onclick="runCode()" title="Run (Ctrl+Enter)"><i class="fa-solid fa-play"></i></button>
   <button class="icon-btn" onclick="openCreateModal()" title="New File"><i class="fa-solid fa-file-circle-plus"></i></button>
 
-  <!-- ── Project মেনু (My Projects + New Project + Sync status) ── -->
+  <!-- ── Project menu (My Projects + New Project + Sync status) ── -->
   <div class="project-menu-wrap" id="projectMenuWrap">
     <button class="icon-btn" id="btnProjectMenu" onclick="toggleProjectMenu(event)" title="project">
       <i class="fa-solid fa-diagram-project"></i>
@@ -317,7 +270,6 @@
     <div class="drawer-avatar" id="menuAvatar"><i class="fa-solid fa-terminal"></i></div>
     <div class="drawer-title">Tech Verse EEE & CSE </div>
     <div class="drawer-name" id="menuName">Guest User</div>
-    <div class="drawer-username" id="menuUsername" style="display:none;"></div>
     <div class="drawer-email" id="menuEmail">Sign in to sync your work</div>
   </div>
 
@@ -543,40 +495,40 @@
     <div class="privacy-card">
       <div class="privacy-icon" style="background:rgba(91,141,238,0.15);color:var(--primary);"><i class="fa-solid fa-database"></i></div>
       <div class="privacy-card-body">
-        <div class="privacy-card-title">কী কী ডেটা সংরক্ষণ করি</div>
-        <p class="privacy-text">আপনার ইমেইল, নাম, প্রোফাইল ছবি এবং আপনার তৈরি করা কোড/প্রজেক্ট ফাইল আমাদের সার্ভারে সংরক্ষিত থাকে — শুধুমাত্র আপনার অ্যাকাউন্টের সাথে যুক্ত হিসেবে।</p>
+        <div class="privacy-card-title">What Data We Store</div>
+        <p class="privacy-text">Your email, name, profile picture, and the code/project files you create are stored on our servers — solely tied to your account.</p>
       </div>
     </div>
 
     <div class="privacy-card">
       <div class="privacy-icon" style="background:rgba(16,201,143,0.15);color:var(--success);"><i class="fa-solid fa-lock"></i></div>
       <div class="privacy-card-body">
-        <div class="privacy-card-title">ডেটা সুরক্ষা</div>
-        <p class="privacy-text">আপনার ডেটা তৃতীয় পক্ষের কাছে বিক্রি বা শেয়ার করা হয় না। শুধুমাত্র (Google)-এর নিরাপদ সার্ভারে এনক্রিপ্টেড অবস্থায় রাখা হয়।</p>
+        <div class="privacy-card-title">Data Security</div>
+        <p class="privacy-text">Your data is never sold or shared with third parties. It is kept encrypted only on (Google)'s secure servers.</p>
       </div>
     </div>
 
     <div class="privacy-card">
       <div class="privacy-icon" style="background:rgba(124,92,191,0.15);color:var(--accent);"><i class="fa-solid fa-cookie-bite"></i></div>
       <div class="privacy-card-body">
-        <div class="privacy-card-title">লোকাল স্টোরেজ ও কুকিজ</div>
-        <p class="privacy-text">অফলাইনে কাজ চালিয়ে যাওয়ার জন্য ব্রাউজারের লোকাল স্টোরেজে সাময়িক ডেটা রাখা হয়, যা শুধু আপনার ডিভাইসেই থাকে।</p>
+        <div class="privacy-card-title">Local Storage & Cookies</div>
+        <p class="privacy-text">Temporary data is kept in your browser's local storage so you can keep working offline; it stays only on your device.</p>
       </div>
     </div>
 
     <div class="privacy-card">
       <div class="privacy-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);"><i class="fa-solid fa-user-shield"></i></div>
       <div class="privacy-card-body">
-        <div class="privacy-card-title">আপনার অধিকার</div>
-        <p class="privacy-text">যেকোনো সময় আপনি Settings থেকে আপনার সব ডেটা এক্সপোর্ট বা সম্পূর্ণ ডিলিট করতে পারবেন (Clear All Data)।</p>
+        <div class="privacy-card-title">Your Rights</div>
+        <p class="privacy-text">At any time, you can export or completely delete all your data from Settings (Clear All Data).</p>
       </div>
     </div>
 
     <div class="privacy-card">
       <div class="privacy-icon" style="background:rgba(239,68,68,0.15);color:var(--danger);"><i class="fa-solid fa-rotate"></i></div>
       <div class="privacy-card-body">
-        <div class="privacy-card-title">পলিসি পরিবর্তন</div>
-        <p class="privacy-text">সাইট আপডেটের অংশ হিসেবে ফিচার পরিবর্তন হতে পারে, এবং এই পলিসিও সময়ে সময়ে পরিবর্তিত হতে পারে।</p>
+        <div class="privacy-card-title">Policy Changes</div>
+        <p class="privacy-text">Features may change as part of site updates, and this policy may also change from time to time.</p>
       </div>
     </div>
 
@@ -586,8 +538,8 @@
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title"><i class="fa-solid fa-envelope"></i> যোগাযোগ</div>
-      <p class="privacy-text" style="margin-bottom:10px;">কোনো প্রশ্ন থাকলে যোগাযোগ করুন।</p>
+      <div class="settings-section-title"><i class="fa-solid fa-envelope"></i> Contact</div>
+      <p class="privacy-text" style="margin-bottom:10px;">If you have any questions, please get in touch.</p>
       <button class="btn btn-cancel" style="width:100%;" onclick="location.href='mailto:imran.info.me@gmail.com'">
         <i class="fa-solid fa-envelope"></i> Contact us
       </button>
@@ -823,14 +775,14 @@
       <h3><i class="fa-solid fa-user-gear"></i> Profile Settings</h3>
       <div class="profile-tabs">
         <button class="profile-tab-btn active" data-tab="info" onclick="switchProfileTab('info')">
-          <i class="fa-solid fa-user"></i> প্রোফাইল
+          <i class="fa-solid fa-user"></i> Profile
         </button>
         <button class="profile-tab-btn" data-tab="password" onclick="switchProfileTab('password')">
-          <i class="fa-solid fa-lock"></i> পাসওয়ার্ড
+          <i class="fa-solid fa-lock"></i> Password
           <span class="tab-badge" id="pwTabBadge" style="display:none;">!</span>
         </button>
         <button class="profile-tab-btn danger-tab" data-tab="account" onclick="switchProfileTab('account')">
-          <i class="fa-solid fa-shield-halved"></i> অ্যাকাউন্ট
+          <i class="fa-solid fa-shield-halved"></i> Account
           <span class="tab-badge danger" id="accTabBadge" style="display:none;">!</span>
         </button>
       </div>
@@ -842,7 +794,7 @@
       <!-- Avatar + Meta -->
       <div class="profile-avatar-wrap">
         <div class="profile-avatar-big" id="profileAvatarBig">?
-          <div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="ছবি পরিবর্তন করুন">
+          <div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="Change photo">
             <i class="fa-solid fa-camera"></i>
           </div>
         </div>
@@ -859,36 +811,28 @@
       <!-- Avatar Upload Progress -->
       <div id="avatarUploadStatus" class="avatar-upload-status" style="display:none;">
         <div class="avatar-upload-bar"><div class="avatar-upload-fill" id="avatarUploadFill"></div></div>
-        <span id="avatarUploadText">আপলোড হচ্ছে…</span>
+        <span id="avatarUploadText">Uploading…</span>
       </div>
 
       <!-- Display Name -->
       <div class="pf-field">
-        <div class="pf-label"><i class="fa-solid fa-user-pen"></i> ডিসপ্লে নাম</div>
-        <input type="text" id="profileNameInput" class="pf-input" placeholder="আপনার নাম লিখুন">
-      </div>
-
-      <!-- Username -->
-      <div class="pf-field">
-        <div class="pf-label"><i class="fa-solid fa-at"></i> ইউজারনেম</div>
-        <input type="text" id="profileUsernameInput" class="pf-input" placeholder="username (৩-২০ অক্ষর)">
-        <div class="uname-check" id="profileUsernameMsg"></div>
-        <div class="pf-hint">ইমেইলের বদলে এই ইউজারনেম দিয়েও লগইন করা যাবে।</div>
+        <div class="pf-label"><i class="fa-solid fa-user-pen"></i> Display Name</div>
+        <input type="text" id="profileNameInput" class="pf-input" placeholder="Enter your name">
       </div>
 
       <!-- Photo URL -->
       <div class="pf-field">
-        <div class="pf-label"><i class="fa-solid fa-image"></i> ফটো URL <span style="color:var(--text-dim);font-weight:400;">(ঐচ্ছিক)</span></div>
+        <div class="pf-label"><i class="fa-solid fa-image"></i> Photo URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></div>
         <div class="pf-input-icon-wrap">
           <input type="url" id="profilePhotoInput" class="pf-input" placeholder="https://example.com/photo.jpg">
           <i class="fa-solid fa-link pf-input-icon"></i>
         </div>
-        <div class="pf-hint">অথবা উপরে ক্যামেরা আইকনে ক্লিক করে ছবি আপলোড করুন।</div>
+        <div class="pf-hint">Or click the camera icon above to upload a photo.</div>
       </div>
 
       <!-- Email Verified -->
       <div class="pf-field" id="emailVerifySection">
-        <div class="pf-label"><i class="fa-solid fa-envelope-circle-check"></i> ইমেইল স্ট্যাটাস</div>
+        <div class="pf-label"><i class="fa-solid fa-envelope-circle-check"></i> Email Status</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
           <span id="profileEmailVerified" style="font-size:12px;font-weight:600;">—</span>
           <button onclick="sendVerificationEmail()" style="font-size:11px;background:none;border:1px solid var(--border-light);border-radius:6px;color:var(--text-muted);padding:4px 10px;cursor:pointer;font-family:'Inter',sans-serif;transition:var(--transition);" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
@@ -902,9 +846,9 @@
 
       <!-- Footer -->
       <div class="profile-footer">
-        <button class="btn-profile-cancel" onclick="closeModal('profileModal')">বাতিল</button>
+        <button class="btn-profile-cancel" onclick="closeModal('profileModal')">Cancel</button>
         <button class="btn-profile-save" id="profileInfoSaveBtn" onclick="saveProfileInfo()">
-          <i class="fa-solid fa-floppy-disk"></i> সেভ করুন
+          <i class="fa-solid fa-floppy-disk"></i> Save
         </button>
       </div>
     </div>
@@ -916,9 +860,9 @@
       <div class="google-pw-notice" id="pwGoogleNotice" style="display:none;">
         <i class="fa-brands fa-google"></i>
         <div class="google-pw-notice-text">
-          <strong>Google Account ব্যবহার করছেন</strong>
-          আপনি Google দিয়ে সাইন ইন করেছেন। পাসওয়ার্ড পরিবর্তন করতে
-          <a href="https://myaccount.google.com/security" target="_blank" style="color:var(--primary);">Google Account Settings</a> ব্যবহার করুন।
+          <strong>You are using a Google Account</strong>
+          You signed in with Google. To change your password, use
+          <a href="https://myaccount.google.com/security" target="_blank" style="color:var(--primary);">Google Account Settings</a>.
         </div>
       </div>
 
@@ -927,7 +871,7 @@
 
         <!-- Current Password -->
         <div class="pf-field">
-          <div class="pf-label"><i class="fa-solid fa-key"></i> বর্তমান পাসওয়ার্ড</div>
+          <div class="pf-label"><i class="fa-solid fa-key"></i> Current Password</div>
           <div class="pf-input-icon-wrap">
             <input type="password" id="profileCurrentPw" class="pf-input" placeholder="••••••••">
             <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileCurrentPw', this)"></i>
@@ -936,9 +880,9 @@
 
         <!-- New Password -->
         <div class="pf-field">
-          <div class="pf-label"><i class="fa-solid fa-lock"></i> নতুন পাসওয়ার্ড</div>
+          <div class="pf-label"><i class="fa-solid fa-lock"></i> New Password</div>
           <div class="pf-input-icon-wrap">
-            <input type="password" id="profileNewPw" class="pf-input" placeholder="কমপক্ষে ৮ অক্ষর" oninput="checkPasswordStrength(this.value)">
+            <input type="password" id="profileNewPw" class="pf-input" placeholder="At least 8 characters" oninput="checkPasswordStrength(this.value)">
             <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileNewPw', this)"></i>
           </div>
           <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
@@ -947,18 +891,18 @@
 
         <!-- Requirements -->
         <div class="pw-requirements">
-          <div class="pw-req-title">পাসওয়ার্ড শর্তাবলী</div>
-          <div class="pw-req-item" id="reqLength"><i class="fa-regular fa-circle"></i> কমপক্ষে ৮ অক্ষর</div>
-          <div class="pw-req-item" id="reqUpper"><i class="fa-regular fa-circle"></i> একটি বড় হাতের অক্ষর (A-Z)</div>
-          <div class="pw-req-item" id="reqNumber"><i class="fa-regular fa-circle"></i> একটি সংখ্যা (0-9)</div>
-          <div class="pw-req-item" id="reqSpecial"><i class="fa-regular fa-circle"></i> একটি বিশেষ চিহ্ন (!@#$...)</div>
+          <div class="pw-req-title">Password Requirements</div>
+          <div class="pw-req-item" id="reqLength"><i class="fa-regular fa-circle"></i> At least 8 characters</div>
+          <div class="pw-req-item" id="reqUpper"><i class="fa-regular fa-circle"></i> One uppercase letter (A-Z)</div>
+          <div class="pw-req-item" id="reqNumber"><i class="fa-regular fa-circle"></i> One number (0-9)</div>
+          <div class="pw-req-item" id="reqSpecial"><i class="fa-regular fa-circle"></i> One special character (!@#$...)</div>
         </div>
 
         <!-- Confirm Password -->
         <div class="pf-field">
-          <div class="pf-label"><i class="fa-solid fa-shield-check"></i> পাসওয়ার্ড নিশ্চিত করুন</div>
+          <div class="pf-label"><i class="fa-solid fa-shield-check"></i> Confirm Password</div>
           <div class="pf-input-icon-wrap">
-            <input type="password" id="profileConfirmPw" class="pf-input" placeholder="পুনরায় নতুন পাসওয়ার্ড লিখুন">
+            <input type="password" id="profileConfirmPw" class="pf-input" placeholder="Re-enter the new password">
             <i class="fa-regular fa-eye-slash pf-input-icon" onclick="togglePwVisibility('profileConfirmPw', this)"></i>
           </div>
         </div>
@@ -968,9 +912,9 @@
 
         <!-- Footer -->
         <div class="profile-footer">
-          <button class="btn-profile-cancel" onclick="closeModal('profileModal')">বাতিল</button>
+          <button class="btn-profile-cancel" onclick="closeModal('profileModal')">Cancel</button>
           <button class="btn-profile-save" id="profilePwSaveBtn" onclick="changePassword()">
-            <i class="fa-solid fa-lock"></i> পাসওয়ার্ড পরিবর্তন
+            <i class="fa-solid fa-lock"></i> Change Password
           </button>
         </div>
       </div>
@@ -982,11 +926,11 @@
       <!-- Account Info -->
       <div class="account-info-card">
         <div class="account-info-row">
-          <span class="account-info-row-label"><i class="fa-solid fa-envelope"></i> ইমেইল</span>
+          <span class="account-info-row-label"><i class="fa-solid fa-envelope"></i> Email</span>
           <span class="account-info-row-value" id="accInfoEmail">—</span>
         </div>
         <div class="account-info-row">
-          <span class="account-info-row-label"><i class="fa-solid fa-circle-nodes"></i> প্রোভাইডার</span>
+          <span class="account-info-row-label"><i class="fa-solid fa-circle-nodes"></i> Provider</span>
           <span class="account-info-row-value" id="accInfoProvider">—</span>
         </div>
         <div class="account-info-row">
@@ -994,11 +938,11 @@
           <span class="account-info-row-value" id="accInfoUid" style="font-family:monospace;font-size:11px;">—</span>
         </div>
         <div class="account-info-row">
-          <span class="account-info-row-label"><i class="fa-solid fa-calendar-plus"></i> যোগদান</span>
+          <span class="account-info-row-label"><i class="fa-solid fa-calendar-plus"></i> Joined</span>
           <span class="account-info-row-value" id="accInfoCreated">—</span>
         </div>
         <div class="account-info-row">
-          <span class="account-info-row-label"><i class="fa-solid fa-clock-rotate-left"></i> শেষ লগইন</span>
+          <span class="account-info-row-label"><i class="fa-solid fa-clock-rotate-left"></i> Last Login</span>
           <span class="account-info-row-value" id="accInfoLastLogin">—</span>
         </div>
       </div>
@@ -1013,20 +957,20 @@
         </div>
         <div class="danger-action">
           <div class="danger-action-info">
-            <h4>Cloud ডেটা মুছুন</h4>
-            <p>Firestore থেকে সমস্ত প্রজেক্ট মুছে যাবে। Local ডেটা থাকবে।</p>
+            <h4>Delete Cloud Data</h4>
+            <p>All projects will be deleted from Firestore. Local data will remain.</p>
           </div>
           <button class="btn-danger-outline" onclick="openDeleteConfirm('data')">
-            <i class="fa-solid fa-cloud-slash"></i> মুছুন
+            <i class="fa-solid fa-cloud-slash"></i> Delete
           </button>
         </div>
         <div class="danger-action">
           <div class="danger-action-info">
-            <h4>অ্যাকাউন্ট ডিলিট</h4>
-            <p>অ্যাকাউন্ট ও সমস্ত ডেটা চিরতরে মুছে যাবে।</p>
+            <h4>Delete Account</h4>
+            <p>Your account and all data will be permanently deleted.</p>
           </div>
           <button class="btn-danger-outline" onclick="openDeleteConfirm('account')">
-            <i class="fa-solid fa-user-slash"></i> ডিলিট
+            <i class="fa-solid fa-user-slash"></i> Delete
           </button>
         </div>
       </div>
@@ -1041,22 +985,22 @@
     <div class="delete-confirm-icon">
       <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
-    <div class="delete-type-badge" id="deleteTypeBadge">ডেটা ডিলিট</div>
-    <h3 id="deleteConfirmTitle">নিশ্চিত করুন</h3>
-    <div class="delete-confirm-desc" id="deleteConfirmDesc">এই কাজ পূর্বাবস্থায় ফেরানো সম্ভব নয়।</div>
+    <div class="delete-type-badge" id="deleteTypeBadge">Data Delete</div>
+    <h3 id="deleteConfirmTitle">Please Confirm</h3>
+    <div class="delete-confirm-desc" id="deleteConfirmDesc">This action cannot be undone.</div>
 
     <div class="delete-confirm-input-wrap" id="deleteConfirmInputWrap">
-      <div class="pf-label">নিচের ঘরে <strong style="color:var(--danger)">DELETE</strong> লিখুন</div>
+      <div class="pf-label">Type <strong style="color:var(--danger)">DELETE</strong> in the box below</div>
       <input type="text" id="deleteConfirmInput" class="pf-input" placeholder="DELETE">
     </div>
 
     <div id="deleteConfirmMsg" class="profile-msg"></div>
 
     <div class="btn-group" style="margin-top:4px;">
-      <button class="btn btn-cancel" onclick="closeModal('deleteConfirmModal')">বাতিল</button>
+      <button class="btn btn-cancel" onclick="closeModal('deleteConfirmModal')">Cancel</button>
       <button class="btn" id="executeDeleteBtn" onclick="executeDelete()"
         style="background:var(--danger);color:#fff;border:none;gap:7px;display:flex;align-items:center;">
-        <i class="fa-solid fa-trash"></i> নিশ্চিত করুন
+        <i class="fa-solid fa-trash"></i> Confirm
       </button>
     </div>
   </div>
@@ -1104,8 +1048,8 @@
 
 
 <!-- ══════════════════════════════════════
-     FLOATING TOOLBAR — js/toolbar.js এর HTML অংশ
-     index.html এ </body> এর আগে যোগ করুন
+     FLOATING TOOLBAR — the HTML portion of js/toolbar.js
+     Add this before </body> in index.html
 ══════════════════════════════════════ -->
 
 <!-- FLOATING TOOLBAR -->
@@ -1170,7 +1114,7 @@
 
   <div class="ftb-sep"></div>
 
-  <!-- Toggle বাটন -->
+  <!-- Toggle button -->
   <div class="ftb-toggle" id="ftbToggle" onclick="toggleFloatToolbar()" title="Hide/Show">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 18 15 12 9 6"/>
@@ -1185,7 +1129,7 @@
     <button onclick="closeColorPopup()"><i class="fa-solid fa-xmark"></i></button>
   </div>
 
-  <!-- বড় color picker -->
+  <!-- Large color picker -->
   <div class="color-popup-main">
     <input type="color" id="colorPickerBig" value="#5b8dee">
     <div class="color-preview-box" id="colorPreviewBox" style="background:#5b8dee"></div>
@@ -1205,7 +1149,7 @@
     </button>
   </div>
 
-  <!-- Insert বাটন -->
+  <!-- Insert button -->
   <button class="color-insert-btn" onclick="insertColorToEditor()">
     <i class="fa-solid fa-code"></i>Insert
   </button>
@@ -1219,7 +1163,7 @@
 
 
 <!-- ══════════════════════════════════════
-     SCRIPTS — সঠিক ক্রমে লোড হবে
+     SCRIPTS — will load in the correct order
 ══════════════════════════════════════ -->
 
 <!-- 1. Firebase Auth (module) -->
@@ -1249,7 +1193,6 @@
 <script type="module" src="js/project-manager.js"></script>
 <script type="module" src="js/firestore-sync.js"></script>
 <script type="module" src="js/profile.js"></script>
-<script type="module" src="js/username.js"></script>
 
 
 
@@ -1267,7 +1210,7 @@
     });
   }
 
-  // ── অফলাইন/অনলাইন স্ট্যাটাস ব্যাজ ──
+  // ── Offline/online status badge ──
   function updateOfflineBadge() {
     const el = document.getElementById('offlineBadge');
     if (!el) return;
@@ -1277,7 +1220,7 @@
   window.addEventListener('offline', updateOfflineBadge);
   updateOfflineBadge();
 
-  // ── Project মেনু ড্রপডাউন টগল ──
+  // ── Project menu dropdown toggle ──
   function toggleProjectMenu(e) {
     e?.stopPropagation();
     document.getElementById('projectMenuDropdown')?.classList.toggle('hidden');
@@ -1288,7 +1231,7 @@
   window.toggleProjectMenu = toggleProjectMenu;
   window.closeProjectMenu  = closeProjectMenu;
 
-  // ── বাইরে ক্লিক করলে মেনু বন্ধ ──
+  // ── Close menu when clicking outside ──
   document.addEventListener('click', (e) => {
     const wrap = document.getElementById('projectMenuWrap');
     if (wrap && !wrap.contains(e.target)) closeProjectMenu();
