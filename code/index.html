@@ -60,10 +60,10 @@
       <div class="auth-subtitle">Sign in to your Tech Verse account.</div>
       <div id="loginMsg" class="auth-msg"></div>
       <div class="auth-field">
-        <label>Email</label>
+        <label>Email অথবা Username</label>
         <div class="auth-input-wrap">
-          <i class="fa-solid fa-envelope field-icon"></i>
-          <input class="auth-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          <i class="fa-solid fa-user field-icon"></i>
+          <input class="auth-input" type="text" id="loginEmail" placeholder="you@example.com অথবা username" autocomplete="username">
         </div>
       </div>
       <div class="auth-field">
@@ -101,6 +101,14 @@
           <i class="fa-solid fa-user field-icon"></i>
           <input class="auth-input" type="text" id="registerName" placeholder="name" autocomplete="name">
         </div>
+      </div>
+      <div class="auth-field">
+        <label>Username</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-at field-icon"></i>
+          <input class="auth-input" type="text" id="registerUsername" placeholder="username (৩-২০ অক্ষর)" autocomplete="username">
+        </div>
+        <div class="uname-check" id="registerUsernameMsg"></div>
       </div>
       <div class="auth-field">
         <label>Developer Email</label>
@@ -178,11 +186,50 @@
   </div>
 </div>
 
+<!-- ══ USERNAME GATE (পুরাতন ইউজার — বাধ্যতামূলক ইউজারনেম সেট) ══ -->
+<div id="usernameGateScreen" style="display:none;">
+  <div class="auth-glow-1"></div>
+  <div class="auth-glow-2"></div>
+  <div class="auth-card">
+    <div class="auth-logo-row">
+      <div class="auth-logo-badge">TV</div>
+      <div>
+        <div class="auth-logo-text">Set your Username</div>
+        <div class="auth-logo-sub" id="gateUserEmail">—</div>
+      </div>
+    </div>
+
+    <div class="auth-title">একটা Username দিন</div>
+    <div class="auth-subtitle">চালিয়ে যাওয়ার আগে আপনার অ্যাকাউন্টের জন্য একটা ইউনিক ইউজারনেম সেট করুন। এটা ছাড়া আপনি কিছুই এডিট বা করতে পারবেন না।</div>
+
+    <div id="gateMsg" class="auth-msg"></div>
+
+    <div class="auth-field">
+      <label>Username</label>
+      <div class="auth-input-wrap">
+        <i class="fa-solid fa-at field-icon"></i>
+        <input class="auth-input" type="text" id="gateUsername" placeholder="username (৩-২০ অক্ষর)" autocomplete="username">
+      </div>
+      <div class="uname-check" id="gateUsernameMsg"></div>
+    </div>
+
+    <button class="auth-btn auth-btn-primary" id="gateSaveBtn" onclick="doSetUsernameFromGate()">
+      <div class="btn-spinner"></div>
+      <span class="btn-label"><i class="fa-solid fa-floppy-disk"></i> সেভ করুন ও চালিয়ে যান</span>
+    </button>
+
+    <div class="auth-switch" style="margin-top:14px;">
+      ভুল অ্যাকাউন্টে ঢুকেছেন? <a href="#" onclick="doSignOut();return false;">সাইন আউট করুন</a>
+    </div>
+  </div>
+</div>
+
 <!-- ══ USER DROPDOWN ══ -->
 <div class="user-dropdown" id="userDropdown">
   <div class="user-dd-header">
     <div class="user-dd-avatar" id="ddAvatar">?</div>
     <div class="user-dd-name" id="ddName">—</div>
+    <div class="user-dd-username" id="ddUsername" style="display:none;"></div>
     <div class="user-dd-email" id="ddEmail">—</div>
   </div>
   <div class="user-dd-item" onclick="openProfileModal()"><i class="fa-solid fa-user-gear"></i> Profile Settings</div>
@@ -270,6 +317,7 @@
     <div class="drawer-avatar" id="menuAvatar"><i class="fa-solid fa-terminal"></i></div>
     <div class="drawer-title">Tech Verse EEE & CSE </div>
     <div class="drawer-name" id="menuName">Guest User</div>
+    <div class="drawer-username" id="menuUsername" style="display:none;"></div>
     <div class="drawer-email" id="menuEmail">Sign in to sync your work</div>
   </div>
 
@@ -818,6 +866,14 @@
       <div class="pf-field">
         <div class="pf-label"><i class="fa-solid fa-user-pen"></i> ডিসপ্লে নাম</div>
         <input type="text" id="profileNameInput" class="pf-input" placeholder="আপনার নাম লিখুন">
+      </div>
+
+      <!-- Username -->
+      <div class="pf-field">
+        <div class="pf-label"><i class="fa-solid fa-at"></i> ইউজারনেম</div>
+        <input type="text" id="profileUsernameInput" class="pf-input" placeholder="username (৩-২০ অক্ষর)">
+        <div class="uname-check" id="profileUsernameMsg"></div>
+        <div class="pf-hint">ইমেইলের বদলে এই ইউজারনেম দিয়েও লগইন করা যাবে।</div>
       </div>
 
       <!-- Photo URL -->
