@@ -5,10 +5,10 @@
 //   ✅ Email verification status
 //   ✅ Password change (email users only)
 //   ✅ Password strength checker
-//   ✅ Firestore সমস্ত ডেটা ডিলিট
+//   ✅ Delete all Firestore data
 //   ✅ Account info (creation date, provider, etc.)
 //   ✅ Account delete
-//  js/profile.js — window global হিসেবে কাজ করে
+//  js/profile.js — works as a window global
 // ══════════════════════════════════════════════════════
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -34,7 +34,6 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import firebaseConfig from "../config/firebase-config.js";
-import { usernameError, isUsernameTaken, getUserUsername, changeUsername } from "./username.js";
 
 // ── Init ──
 const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -59,7 +58,6 @@ window.openProfileModal = function () {
 
   // Populate info tab
   _populateInfoTab(user);
-  _populateUsernameField(user);
   _populatePasswordTab(user);
   _populateAccountTab(user);
 
@@ -128,17 +126,6 @@ function _populateInfoTab(user) {
       verifiedEl.style.color = 'var(--warning)';
     }
   }
-}
-
-// ── Populate Username Field ──
-async function _populateUsernameField(user) {
-  const input = document.getElementById('profileUsernameInput');
-  const msg   = document.getElementById('profileUsernameMsg');
-  if (msg) { msg.className = 'uname-check'; msg.textContent = ''; }
-  const username = window._currentUsername || await getUserUsername(user.uid);
-  window._currentUsername      = username || window._currentUsername;
-  window._currentUsernameLower = username ? username.toLowerCase() : window._currentUsernameLower;
-  if (input) { input.value = username || ''; input.dataset.original = username || ''; }
 }
 
 // ── Populate Password Tab ──
@@ -214,37 +201,16 @@ window.saveProfileInfo = async function () {
   const user = auth.currentUser;
   if (!user) return;
 
-  const newName     = document.getElementById('profileNameInput')?.value.trim();
-  const newPhoto    = document.getElementById('profilePhotoInput')?.value.trim();
-  const unameInput  = document.getElementById('profileUsernameInput');
-  const newUsername = unameInput?.value.trim();
-  const oldUsername = unameInput?.dataset.original || '';
+  const newName  = document.getElementById('profileNameInput')?.value.trim();
+  const newPhoto = document.getElementById('profilePhotoInput')?.value.trim();
 
   if (!newName) {
-    return _showProfileMsg('profileInfoMsg', 'error', 'নাম খালি রাখা যাবে না।');
-  }
-
-  const unameErr = usernameError(newUsername);
-  if (unameErr) {
-    return _showProfileMsg('profileInfoMsg', 'error', unameErr);
+    return _showProfileMsg('profileInfoMsg', 'error', 'Name cannot be left empty.');
   }
 
   _setProfileBtnLoading('profileInfoSaveBtn', true);
 
   try {
-    // ── ইউজারনেম পরিবর্তন হলে আগে সেটা সেভ করো ──
-    if (newUsername.toLowerCase() !== oldUsername.toLowerCase()) {
-      const taken = await isUsernameTaken(newUsername.toLowerCase(), user.uid);
-      if (taken) {
-        _setProfileBtnLoading('profileInfoSaveBtn', false);
-        return _showProfileMsg('profileInfoMsg', 'error', 'এই ইউজারনেম আগে থেকেই নেওয়া হয়েছে।');
-      }
-      await changeUsername(user.uid, newUsername, user.email, oldUsername.toLowerCase());
-      window._currentUsername      = newUsername;
-      window._currentUsernameLower = newUsername.toLowerCase();
-      if (unameInput) unameInput.dataset.original = newUsername;
-    }
-
     await updateProfile(user, {
       displayName: newName,
       photoURL: newPhoto || null,
@@ -253,14 +219,10 @@ window.saveProfileInfo = async function () {
     // Update all UI elements
     _updateAllAvatarsAndNames(user, newName, newPhoto);
     _populateInfoTab(user);
-    const ddUnameEl   = document.getElementById('ddUsername');
-    const menuUnameEl = document.getElementById('menuUsername');
-    if (ddUnameEl)   ddUnameEl.textContent   = '@' + window._currentUsername;
-    if (menuUnameEl) menuUnameEl.textContent = '@' + window._currentUsername;
 
-    _showProfileMsg('profileInfoMsg', 'success', 'প্রোফাইল আপডেট হয়েছে!');
+    _showProfileMsg('profileInfoMsg', 'success', 'Profile updated!');
     if (typeof showToast === 'function')
-      showToast('প্রোফাইল সেভ হয়েছে!', 'success', 'fa-user-check');
+      showToast('Profile saved!', 'success', 'fa-user-check');
 
   } catch (e) {
     _showProfileMsg('profileInfoMsg', 'error', e.message);
@@ -303,17 +265,17 @@ window.changePassword = async function () {
   const newPw     = document.getElementById('profileNewPw')?.value;
   const confirmPw = document.getElementById('profileConfirmPw')?.value;
 
-  if (!currentPw) return _showProfileMsg('profilePwMsg', 'error', 'বর্তমান পাসওয়ার্ড দিন।');
+  if (!currentPw) return _showProfileMsg('profilePwMsg', 'error', 'Please enter your current password.');
   if (!newPw || newPw.length < 8)
-    return _showProfileMsg('profilePwMsg', 'error', 'নতুন পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।');
+    return _showProfileMsg('profilePwMsg', 'error', 'New password must be at least 8 characters.');
   if (newPw !== confirmPw)
-    return _showProfileMsg('profilePwMsg', 'error', 'নতুন পাসওয়ার্ড দুটো মিলছে না।');
+    return _showProfileMsg('profilePwMsg', 'error', 'The new passwords do not match.');
   if (currentPw === newPw)
-    return _showProfileMsg('profilePwMsg', 'error', 'নতুন পাসওয়ার্ড আগেরটার মতো হলে চলবে না।');
+    return _showProfileMsg('profilePwMsg', 'error', 'The new password cannot be the same as the old one.');
 
   const strength = _getPasswordStrength(newPw);
   if (strength.score < 2)
-    return _showProfileMsg('profilePwMsg', 'error', 'পাসওয়ার্ড খুব দুর্বল। আরো শক্তিশালী পাসওয়ার্ড ব্যবহার করুন।');
+    return _showProfileMsg('profilePwMsg', 'error', 'Password is too weak. Please use a stronger password.');
 
   _setProfileBtnLoading('profilePwSaveBtn', true);
 
@@ -325,9 +287,9 @@ window.changePassword = async function () {
     // Update password
     await updatePassword(user, newPw);
 
-    _showProfileMsg('profilePwMsg', 'success', 'পাসওয়ার্ড পরিবর্তন হয়েছে! পরবর্তীবার নতুন পাসওয়ার্ড দিয়ে লগইন করুন।');
+    _showProfileMsg('profilePwMsg', 'success', 'Password changed! Use the new password to log in next time.');
     if (typeof showToast === 'function')
-      showToast('পাসওয়ার্ড পরিবর্তন হয়েছে!', 'success', 'fa-lock');
+      showToast('Password changed!', 'success', 'fa-lock');
 
     // Clear fields
     ['profileCurrentPw', 'profileNewPw', 'profileConfirmPw'].forEach(id => {
@@ -338,11 +300,11 @@ window.changePassword = async function () {
 
   } catch (e) {
     const map = {
-      'auth/wrong-password':          'বর্তমান পাসওয়ার্ড ভুল।',
-      'auth/too-many-requests':       'অনেকবার চেষ্টা করা হয়েছে। একটু অপেক্ষা করুন।',
-      'auth/requires-recent-login':   'নিরাপত্তার জন্য আবার লগইন করুন।',
-      'auth/weak-password':           'পাসওয়ার্ড খুব দুর্বল।',
-      'auth/invalid-credential':      'বর্তমান পাসওয়ার্ড ভুল।',
+      'auth/wrong-password':          'Current password is incorrect.',
+      'auth/too-many-requests':       'Too many attempts. Please wait a moment.',
+      'auth/requires-recent-login':   'Please log in again for security.',
+      'auth/weak-password':           'Password is too weak.',
+      'auth/invalid-credential':      'Current password is incorrect.',
     };
     _showProfileMsg('profilePwMsg', 'error', map[e.code] || e.message);
   } finally {
@@ -364,7 +326,7 @@ window.checkPasswordStrength = function (val) {
     text.textContent  = '';
   } else {
     fill.className   = `pw-strength-fill ${strength.label}`;
-    text.textContent = `শক্তি: ${_strengthLabelBn(strength.label)}`;
+    text.textContent = `Strength: ${_strengthLabelBn(strength.label)}`;
     text.style.color = strength.color;
   }
 
@@ -390,7 +352,7 @@ function _getPasswordStrength(pw) {
 }
 
 function _strengthLabelBn(label) {
-  return { weak: 'দুর্বল 😟', fair: 'মাঝারি 😐', good: 'ভালো 🙂', strong: 'শক্তিশালী 💪' }[label] || '';
+  return { weak: 'Weak 😟', fair: 'Fair 😐', good: 'Good 🙂', strong: 'Strong 💪' }[label] || '';
 }
 
 function _setPwReq(id, met) {
@@ -417,11 +379,11 @@ window.sendVerificationEmail = async function () {
   if (!user) return;
   try {
     await sendEmailVerification(user);
-    _showProfileMsg('profileInfoMsg', 'success', `Verification email পাঠানো হয়েছে ${user.email} তে।`);
+    _showProfileMsg('profileInfoMsg', 'success', `Verification email sent to ${user.email}.`);
     if (typeof showToast === 'function')
-      showToast('Verification email পাঠানো হয়েছে!', 'info', 'fa-envelope');
+      showToast('Verification email sent!', 'info', 'fa-envelope');
   } catch (e) {
-    _showProfileMsg('profileInfoMsg', 'error', 'Email পাঠানো যায়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+    _showProfileMsg('profileInfoMsg', 'error', 'Could not send email. Please try again later.');
   }
 };
 
@@ -439,17 +401,17 @@ window.openDeleteConfirm = function (type) {
   const inputEl = document.getElementById('deleteConfirmInput');
 
   if (type === 'data') {
-    if (typeEl)  typeEl.textContent    = 'সমস্ত Cloud ডেটা';
-    if (titleEl) titleEl.textContent   = 'সমস্ত ডেটা ডিলিট করবেন?';
-    if (descEl)  descEl.innerHTML      = 'Firestore থেকে আপনার <strong>সমস্ত প্রজেক্ট ও ফাইল</strong> চিরতরে মুছে যাবে। Local ডেটা থাকবে।';
+    if (typeEl)  typeEl.textContent    = 'All Cloud Data';
+    if (titleEl) titleEl.textContent   = 'Delete all data?';
+    if (descEl)  descEl.innerHTML      = 'Your <strong>entire projects and files</strong> will be permanently deleted from Firestore. Local data will remain.';
     if (inputWr) inputWr.style.display = 'block';
-    if (inputEl) inputEl.placeholder   = 'DELETE লিখুন নিশ্চিত করতে';
+    if (inputEl) inputEl.placeholder   = 'Type DELETE to confirm';
   } else {
-    if (typeEl)  typeEl.textContent    = 'অ্যাকাউন্ট ডিলিট';
-    if (titleEl) titleEl.textContent   = 'অ্যাকাউন্ট ডিলিট করবেন?';
-    if (descEl)  descEl.innerHTML      = 'আপনার <strong>অ্যাকাউন্ট ও সমস্ত ডেটা</strong> চিরতরে মুছে যাবে। এই কাজ পূর্বাবস্থায় ফেরানো <strong>সম্ভব নয়</strong>।';
+    if (typeEl)  typeEl.textContent    = 'Account Delete';
+    if (titleEl) titleEl.textContent   = 'Delete account?';
+    if (descEl)  descEl.innerHTML      = 'Your <strong>account and all data</strong> will be permanently deleted. This action <strong>cannot be undone</strong>.';
     if (inputWr) inputWr.style.display = 'block';
-    if (inputEl) inputEl.placeholder   = 'DELETE লিখুন নিশ্চিত করতে';
+    if (inputEl) inputEl.placeholder   = 'Type DELETE to confirm';
   }
 
   if (inputEl) inputEl.value = '';
@@ -461,7 +423,7 @@ window.openDeleteConfirm = function (type) {
 window.executeDelete = async function () {
   const input = document.getElementById('deleteConfirmInput')?.value.trim();
   if (input !== 'DELETE') {
-    return _showProfileMsg('deleteConfirmMsg', 'error', 'নিশ্চিত করতে DELETE (বড় হাতে) লিখুন।');
+    return _showProfileMsg('deleteConfirmMsg', 'error', 'Type DELETE (uppercase) to confirm.');
   }
 
   const user = auth.currentUser;
@@ -479,18 +441,18 @@ window.executeDelete = async function () {
         }
       }
       if (typeof showToast === 'function')
-        showToast('সমস্ত Cloud ডেটা মুছে গেছে', 'info', 'fa-trash');
+        showToast('All Cloud data deleted', 'info', 'fa-trash');
 
     } else if (_deleteTarget === 'account') {
       await _deleteAllFirestoreData(user);
       await deleteUser(user);
       // Auth state change will redirect to login
       if (typeof showToast === 'function')
-        showToast('অ্যাকাউন্ট ডিলিট হয়েছে', 'info', 'fa-user-slash');
+        showToast('Account deleted', 'info', 'fa-user-slash');
     }
   } catch (e) {
     const map = {
-      'auth/requires-recent-login': 'নিরাপত্তার জন্য আবার লগইন করুন, তারপর ডিলিট করুন।',
+      'auth/requires-recent-login': 'Please log in again for security, then delete.',
     };
     _showProfileMsg('deleteConfirmMsg', 'error', map[e.code] || e.message);
   } finally {
@@ -514,7 +476,7 @@ async function _deleteAllFirestoreData(user) {
   const userRef = doc(db, 'users', user.uid);
   batch.delete(userRef);
 
-  // 3. shared projects (collaborator এ আছে)
+  // 3. shared projects (present in collaborators)
   try {
     const sharedQuery = query(
       collection(db, 'projects'),
@@ -523,7 +485,7 @@ async function _deleteAllFirestoreData(user) {
     const sharedSnap = await getDocs(sharedQuery);
     sharedSnap.forEach(d => batch.delete(d.ref));
   } catch (_) {
-    // collaborators field না থাকলে skip
+    // skip if the collaborators field does not exist
   }
 
   await batch.commit();
@@ -588,7 +550,7 @@ window.handleAvatarUpload = function (input) {
 
   if (file.size > 2 * 1024 * 1024) {
     if (typeof showToast === 'function')
-      showToast('ছবি ২MB এর বেশি হওয়া যাবে না।', 'error', 'fa-triangle-exclamation');
+      showToast('Image cannot exceed 2MB.', 'error', 'fa-triangle-exclamation');
     return;
   }
 
@@ -598,7 +560,7 @@ window.handleAvatarUpload = function (input) {
 
   if (statusEl) statusEl.style.display = 'flex';
   if (fillEl)   fillEl.style.width = '30%';
-  if (textEl)   textEl.textContent = 'পড়া হচ্ছে…';
+  if (textEl)   textEl.textContent = 'Reading…';
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -607,14 +569,14 @@ window.handleAvatarUpload = function (input) {
 
     // Preview
     const av = document.getElementById('profileAvatarBig');
-    if (av) av.innerHTML = `<img src="${base64}" alt=""><div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="ছবি পরিবর্তন করুন"><i class="fa-solid fa-camera"></i></div>`;
+    if (av) av.innerHTML = `<img src="${base64}" alt=""><div class="avatar-upload-overlay" onclick="document.getElementById('avatarFileInput').click()" title="Change photo"><i class="fa-solid fa-camera"></i></div>`;
 
-    // Photo URL input এ বসাও
+    // Put it into the Photo URL input
     const photoInput = document.getElementById('profilePhotoInput');
     if (photoInput) photoInput.value = base64;
 
     if (fillEl) fillEl.style.width = '100%';
-    if (textEl) textEl.textContent = 'প্রস্তুত! সেভ করুন।';
+    if (textEl) textEl.textContent = 'Ready! Please save.';
     setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 2000);
   };
   reader.readAsDataURL(file);
