@@ -75,7 +75,7 @@ window.renderProPanel = async function () {
   container.innerHTML = `
     <div class="pro-loading">
       <i class="fa-solid fa-spinner fa-spin-pulse"></i>
-      <span>লোড হচ্ছে…</span>
+      <span>Loading…</span>
     </div>`;
 
   try {
@@ -96,7 +96,7 @@ window.renderProPanel = async function () {
           <div class="pro-section-count">${links.length}</div>
         </div>
         <div class="pro-links-grid" id="proLinksGrid">
-          ${links.length ? links.map(linkCard).join('') : emptyState('কোনো link যোগ হয়নি')}
+          ${links.length ? links.map(linkCard).join('') : emptyState('No links added yet')}
         </div>
       </div>
 
@@ -107,7 +107,7 @@ window.renderProPanel = async function () {
           <div class="pro-section-count">${posts.length}</div>
         </div>
         <div class="pro-posts-list" id="proPostsList">
-          ${posts.length ? posts.map(postCard).join('') : emptyState('কোনো post লেখা হয়নি')}
+          ${posts.length ? posts.map(postCard).join('') : emptyState('No posts written yet')}
         </div>
       </div>
 
@@ -118,7 +118,7 @@ window.renderProPanel = async function () {
           <div class="pro-section-count">${pdfs.length}</div>
         </div>
         <div class="pro-pdf-list" id="proPdfList">
-          ${pdfs.length ? pdfs.map(pdfCard).join('') : emptyState('কোনো PDF যোগ হয়নি')}
+          ${pdfs.length ? pdfs.map(pdfCard).join('') : emptyState('No PDFs added yet')}
         </div>
       </div>
 
@@ -129,7 +129,7 @@ window.renderProPanel = async function () {
           <div class="pro-section-count">${videos.length}</div>
         </div>
         <div class="pro-video-list" id="proVideoList">
-          ${videos.length ? videos.map(videoCard).join('') : emptyState('কোনো video যোগ হয়নি')}
+          ${videos.length ? videos.map(videoCard).join('') : emptyState('No videos added yet')}
         </div>
       </div>
     `;
@@ -141,7 +141,7 @@ window.renderProPanel = async function () {
     container.innerHTML = `
       <div class="pro-error">
         <i class="fa-solid fa-circle-exclamation"></i>
-        <span>লোড ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।</span>
+        <span>Failed to load. Please try again.</span>
       </div>`;
     console.error(e);
   }
@@ -153,7 +153,7 @@ window.renderProPanel = async function () {
 function linkCard(l) {
   const cfg   = LINK_ICONS[l.type] || LINK_ICONS.web;
   const delBtn = isAdmin
-    ? `<button class="pro-del-btn" title="মুছুন" onclick="proDeleteItem(event,'pro_links','${l.id}')">
+    ? `<button class="pro-del-btn" title="Delete" onclick="proDeleteItem(event,'pro_links','${l.id}')">
          <i class="fa-solid fa-xmark"></i>
        </button>`
     : '';
@@ -171,7 +171,7 @@ function linkCard(l) {
 
 function postCard(p) {
   const delBtn = isAdmin
-    ? `<button class="pro-del-btn" title="মুছুন" onclick="proDeleteItem(event,'pro_posts','${p.id}')">
+    ? `<button class="pro-del-btn" title="Delete" onclick="proDeleteItem(event,'pro_posts','${p.id}')">
          <i class="fa-solid fa-trash-can"></i>
        </button>`
     : '';
@@ -193,7 +193,7 @@ function postCard(p) {
 
 function pdfCard(p) {
   const delBtn = isAdmin
-    ? `<button class="pro-del-btn" title="মুছুন" onclick="proDeleteItem(event,'pro_pdfs','${p.id}')">
+    ? `<button class="pro-del-btn" title="Delete" onclick="proDeleteItem(event,'pro_pdfs','${p.id}')">
          <i class="fa-solid fa-trash-can"></i>
        </button>`
     : '';
@@ -208,7 +208,7 @@ function pdfCard(p) {
           <i class="fa-solid fa-link"></i> PDF Link
         </div>
       </div>
-      <a class="pro-pdf-open" href="${p.url}" target="_blank" title="খুলুন">
+      <a class="pro-pdf-open" href="${p.url}" target="_blank" title="Open">
         <i class="fa-solid fa-file-arrow-down"></i>
       </a>
       ${delBtn}
@@ -218,7 +218,7 @@ function pdfCard(p) {
 function videoCard(v) {
   const videoId = extractYouTubeId(v.url);
   const delBtn  = isAdmin
-    ? `<button class="pro-del-btn pro-del-video" title="মুছুন" onclick="proDeleteItem(event,'pro_videos','${v.id}')">
+    ? `<button class="pro-del-btn pro-del-video" title="Delete" onclick="proDeleteItem(event,'pro_videos','${v.id}')">
          <i class="fa-solid fa-trash-can"></i>
        </button>`
     : '';
@@ -298,10 +298,10 @@ function ensureAdminModals() {
       <!-- LINK FORM -->
       <div id="proFormLink">
         <div class="pro-modal-title">
-          <i class="fa-solid fa-link"></i> নতুন Link যোগ করুন
+          <i class="fa-solid fa-link"></i> Add New Link
         </div>
         <label class="pro-field-label">Label</label>
-        <input class="pro-input" type="text" id="proLinkLabel" placeholder="যেমন: আমাদের Facebook Page">
+        <input class="pro-input" type="text" id="proLinkLabel" placeholder="e.g. Our Facebook Page">
         <label class="pro-field-label">URL</label>
         <input class="pro-input" type="url" id="proLinkUrl" placeholder="https://...">
         <label class="pro-field-label">Type</label>
@@ -316,9 +316,9 @@ function ensureAdminModals() {
             </label>`).join('')}
         </div>
         <div class="pro-modal-footer">
-          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">বাতিল</button>
+          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">Cancel</button>
           <button class="pro-btn-primary" onclick="proSaveLink()">
-            <i class="fa-solid fa-plus"></i> যোগ করুন
+            <i class="fa-solid fa-plus"></i> Add
           </button>
         </div>
       </div>
@@ -326,14 +326,14 @@ function ensureAdminModals() {
       <!-- POST FORM -->
       <div id="proFormPost" style="display:none">
         <div class="pro-modal-title">
-          <i class="fa-solid fa-pen-to-square"></i> নতুন Post লিখুন
+          <i class="fa-solid fa-pen-to-square"></i> Write New Post
         </div>
         <label class="pro-field-label">Title</label>
-        <input class="pro-input" type="text" id="proPostTitle" placeholder="Post এর শিরোনাম">
+        <input class="pro-input" type="text" id="proPostTitle" placeholder="Post title">
         <label class="pro-field-label">Content</label>
-        <textarea class="pro-input pro-textarea" id="proPostBody" rows="6" placeholder="এখানে লিখুন…"></textarea>
+        <textarea class="pro-input pro-textarea" id="proPostBody" rows="6" placeholder="Write here…"></textarea>
         <div class="pro-modal-footer">
-          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">বাতিল</button>
+          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">Cancel</button>
           <button class="pro-btn-primary" onclick="proSavePost()">
             <i class="fa-solid fa-paper-plane"></i> Publish
           </button>
@@ -343,16 +343,16 @@ function ensureAdminModals() {
       <!-- PDF FORM — FIX: URL input instead of file upload -->
       <div id="proFormPdf" style="display:none">
         <div class="pro-modal-title">
-          <i class="fa-solid fa-file-pdf"></i> PDF Link যোগ করুন
+          <i class="fa-solid fa-file-pdf"></i> Add PDF Link
         </div>
-        <label class="pro-field-label">PDF নাম</label>
-        <input class="pro-input" type="text" id="proPdfName" placeholder="যেমন: Chapter 1 Notes">
+        <label class="pro-field-label">PDF Name</label>
+        <input class="pro-input" type="text" id="proPdfName" placeholder="e.g. Chapter 1 Notes">
         <label class="pro-field-label">PDF URL</label>
         <input class="pro-input" type="url" id="proPdfUrl" placeholder="https://...">
         <div class="pro-modal-footer">
-          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">বাতিল</button>
+          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">Cancel</button>
           <button class="pro-btn-primary" onclick="proSavePdf()">
-            <i class="fa-solid fa-plus"></i> যোগ করুন
+            <i class="fa-solid fa-plus"></i> Add
           </button>
         </div>
       </div>
@@ -360,16 +360,16 @@ function ensureAdminModals() {
       <!-- VIDEO FORM -->
       <div id="proFormVideo" style="display:none">
         <div class="pro-modal-title">
-          <i class="fa-brands fa-youtube"></i> YouTube Video যোগ করুন
+          <i class="fa-brands fa-youtube"></i> Add YouTube Video
         </div>
         <label class="pro-field-label">Title</label>
-        <input class="pro-input" type="text" id="proVideoTitle" placeholder="Video এর নাম">
+        <input class="pro-input" type="text" id="proVideoTitle" placeholder="Video title">
         <label class="pro-field-label">YouTube URL</label>
         <input class="pro-input" type="url" id="proVideoUrl" placeholder="https://youtube.com/watch?v=...">
         <div class="pro-modal-footer">
-          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">বাতিল</button>
+          <button class="pro-btn-cancel" onclick="closeModal('proAdminModal')">Cancel</button>
           <button class="pro-btn-primary" onclick="proSaveVideo()">
-            <i class="fa-solid fa-plus"></i> যোগ করুন
+            <i class="fa-solid fa-plus"></i> Add
           </button>
         </div>
       </div>
@@ -401,31 +401,31 @@ window.proSaveLink = async function() {
   const label = document.getElementById('proLinkLabel').value.trim();
   const url   = document.getElementById('proLinkUrl').value.trim();
   const type  = document.querySelector('input[name="proLinkType"]:checked')?.value || 'web';
-  if (!label || !url) return showToast('Label ও URL দিন', 'error', 'fa-circle-exclamation');
-  if (!isValidUrl(url)) return showToast('সঠিক URL দিন', 'error', 'fa-circle-exclamation');
+  if (!label || !url) return showToast('Please enter Label and URL', 'error', 'fa-circle-exclamation');
+  if (!isValidUrl(url)) return showToast('Please enter a valid URL', 'error', 'fa-circle-exclamation');
 
   try {
     await addDoc(collection(db, 'pro_links'), { label, url, type, createdAt: serverTimestamp() });
     closeModal('proAdminModal');
-    showToast('Link যোগ হয়েছে', 'success', 'fa-circle-check');
+    showToast('Link added', 'success', 'fa-circle-check');
     renderProPanel();
   } catch(e) {
-    showToast('ব্যর্থ হয়েছে: ' + e.message, 'error', 'fa-circle-exclamation');
+    showToast('Failed: ' + e.message, 'error', 'fa-circle-exclamation');
   }
 };
 
 window.proSavePost = async function() {
   const title = document.getElementById('proPostTitle').value.trim();
   const body  = document.getElementById('proPostBody').value.trim();
-  if (!title || !body) return showToast('Title ও Content দিন', 'error', 'fa-circle-exclamation');
+  if (!title || !body) return showToast('Please enter Title and Content', 'error', 'fa-circle-exclamation');
 
   try {
     await addDoc(collection(db, 'pro_posts'), { title, body, createdAt: serverTimestamp() });
     closeModal('proAdminModal');
-    showToast('Post publish হয়েছে', 'success', 'fa-circle-check');
+    showToast('Post published', 'success', 'fa-circle-check');
     renderProPanel();
   } catch(e) {
-    showToast('ব্যর্থ হয়েছে: ' + e.message, 'error', 'fa-circle-exclamation');
+    showToast('Failed: ' + e.message, 'error', 'fa-circle-exclamation');
   }
 };
 
@@ -433,8 +433,8 @@ window.proSavePost = async function() {
 window.proSavePdf = async function() {
   const name = document.getElementById('proPdfName').value.trim();
   const url  = document.getElementById('proPdfUrl').value.trim();
-  if (!name || !url) return showToast('নাম ও URL দিন', 'error', 'fa-circle-exclamation');
-  if (!isValidUrl(url)) return showToast('সঠিক URL দিন', 'error', 'fa-circle-exclamation');
+  if (!name || !url) return showToast('Please enter Name and URL', 'error', 'fa-circle-exclamation');
+  if (!isValidUrl(url)) return showToast('Please enter a valid URL', 'error', 'fa-circle-exclamation');
 
   try {
     await addDoc(collection(db, 'pro_pdfs'), {
@@ -442,26 +442,26 @@ window.proSavePdf = async function() {
       createdAt: serverTimestamp(),
     });
     closeModal('proAdminModal');
-    showToast('PDF যোগ হয়েছে', 'success', 'fa-circle-check');
+    showToast('PDF added', 'success', 'fa-circle-check');
     renderProPanel();
   } catch(e) {
-    showToast('ব্যর্থ হয়েছে: ' + e.message, 'error', 'fa-circle-exclamation');
+    showToast('Failed: ' + e.message, 'error', 'fa-circle-exclamation');
   }
 };
 
 window.proSaveVideo = async function() {
   const title = document.getElementById('proVideoTitle').value.trim();
   const url   = document.getElementById('proVideoUrl').value.trim();
-  if (!title || !url) return showToast('Title ও URL দিন', 'error', 'fa-circle-exclamation');
-  if (!extractYouTubeId(url)) return showToast('সঠিক YouTube URL দিন', 'error', 'fa-circle-exclamation');
+  if (!title || !url) return showToast('Please enter Title and URL', 'error', 'fa-circle-exclamation');
+  if (!extractYouTubeId(url)) return showToast('Please enter a valid YouTube URL', 'error', 'fa-circle-exclamation');
 
   try {
     await addDoc(collection(db, 'pro_videos'), { title, url, createdAt: serverTimestamp() });
     closeModal('proAdminModal');
-    showToast('Video যোগ হয়েছে', 'success', 'fa-circle-check');
+    showToast('Video added', 'success', 'fa-circle-check');
     renderProPanel();
   } catch(e) {
-    showToast('ব্যর্থ হয়েছে: ' + e.message, 'error', 'fa-circle-exclamation');
+    showToast('Failed: ' + e.message, 'error', 'fa-circle-exclamation');
   }
 };
 
@@ -470,13 +470,13 @@ window.proSaveVideo = async function() {
 // ══════════════════════════════════════
 window.proDeleteItem = async function(e, colName, id) {
   e.preventDefault(); e.stopPropagation();
-  showConfirm('আইটেমটি মুছে ফেলবেন?', async () => {
+  showConfirm('Delete this item?', async () => {
     try {
       await deleteDoc(doc(db, colName, id));
-      showToast('মুছে ফেলা হয়েছে', 'info', 'fa-trash-can');
+      showToast('Deleted', 'info', 'fa-trash-can');
       renderProPanel();
     } catch(err) {
-      showToast('মুছতে ব্যর্থ: ' + err.message, 'error', 'fa-circle-exclamation');
+      showToast('Failed to delete: ' + err.message, 'error', 'fa-circle-exclamation');
     }
   });
 };
