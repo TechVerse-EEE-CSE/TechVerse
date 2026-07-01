@@ -92,6 +92,11 @@ function _populateInfoTab(user) {
   // Names
   _setText('profileNameDisplay', displayName);
   _setText('profileEmailDisplay', user.email || '—');
+  _setText('profileUsernameDisplay', 'ইউজারনেম লোড হচ্ছে…');
+  getDoc(doc(db, 'users', user.uid)).then(snap => {
+    const uname = snap.exists() ? snap.data().username : null;
+    _setText('profileUsernameDisplay', uname ? `@${uname}` : 'কোনো ইউজারনেম সেট করা নেই');
+  }).catch(() => _setText('profileUsernameDisplay', ''));
 
   // Provider badge
   const isGoogle = user.providerData?.some(p => p.providerId === 'google.com');
