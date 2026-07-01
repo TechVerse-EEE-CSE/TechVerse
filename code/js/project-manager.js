@@ -12,45 +12,16 @@
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  arrayUnion, arrayRemove, serverTimestamp, collection
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  arrayUnion, serverTimestamp, collection,
+  query, where, getDocs, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import firebaseConfig from "../config/firebase-config.js";
 
 const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
-
-// ══════════════════════════════════════
-//  ০. Auth "ready" হেল্পার
-//     — Firebase auth state async ভাবে লোড হয়, তাই পেজ লোডের সাথে সাথে
-//     auth.currentUser চেক করলে ভুলভাবে "লগইন নেই" ধরে নেওয়া হতে পারে,
-//     যদিও ইউজার আসলে লগইন করা আছে (persisted session)।
-// ══════════════════════════════════════
-let _authResolved = false;
-let _authWaiters   = [];
-
-onAuthStateChanged(auth, (user) => {
-  _authResolved = true;
-  const waiters = _authWaiters;
-  _authWaiters = [];
-  waiters.forEach((fn) => fn(user));
-
-  // ── ইউজার এইমাত্র লগইন করলো এবং আগে থেকে pending join-invite ছিল ──
-  if (user && window._pendingJoinShareId) {
-    const shareId = window._pendingJoinShareId;
-    window._pendingJoinShareId = null;
-    setTimeout(() => window.handleJoinFromUrl(shareId), 250);
-  }
-});
-
-function waitForAuthUser() {
-  return new Promise((resolve) => {
-    if (_authResolved) resolve(auth.currentUser);
-    else _authWaiters.push(resolve);
-  });
-}
 
 // ── ছোট র‍্যান্ডম id জেনারেটর (shareId / projectId এর জন্য) ──
 function randId(len = 10) {
@@ -77,6 +48,7 @@ window.createProject = async function (name, fsData) {
     ownerName: user.displayName || user.email || 'অজানা',
     fs: fsData,
     collaboratorUids: [],          // ← কোলাবোরেটরদের uid এখানে যোগ হবে
+    roles: {},                     // ← { uid: 'admin' | 'editor' }
     updatedAt: serverTimestamp(),
     updatedBy: user.uid,
   });
@@ -90,79 +62,116 @@ window.createProject = async function (name, fsData) {
 };
 
 // ══════════════════════════════════════
-//  ২. শেয়ার লিংক জেনারেট করা (owner বা existing collaborator করতে পারবে)
-//     ⚠️ এটা শুধু একবার তৈরি হয়, প্রতিবার আলাদা write হয় না —
-//     চাইলে একই shareId বারবার পুনরায় কপি করে শেয়ার করা যায়।
+//  ২. ইউজারনেম বা ইমেইল দিয়ে সরাসরি ইনভাইট করা (এডমিন / এডিটর রোল)
+//     — কোনো শেয়ার লিংক নেই, সরাসরি ইউজারের অ্যাকাউন্টে প্রজেক্ট যুক্ত হয়
 // ══════════════════════════════════════
-window.createShareLink = async function (projectId, role = 'editor') {
+window.inviteUserToProject = async function (projectId, identifier, role = 'editor') {
   const user = auth.currentUser;
-  if (!user) return null;
+  if (!user) { showToast?.('লগইন করুন প্রথমে', 'error'); return null; }
 
-  // ── প্রিভিউ (নাম/মালিক) shareLink ডকেই সেভ রাখা হচ্ছে, কারণ যে জয়েন
-  //    করবে সে তখনও owner/collaborator না হওয়ায় projects কালেকশন পড়তে
-  //    পারবে না (rules অনুযায়ী) — shareLinks সবার জন্যই readable ──
-  const projSnap = await getDoc(doc(db, 'projects', projectId));
+  identifier = (identifier || '').trim();
+  if (!identifier) { showToast?.('ইউজারনেম বা ইমেইল লিখুন', 'error'); return null; }
+  if (!['admin', 'editor'].includes(role)) role = 'editor';
+
+  let targetUid   = null;
+  let targetLabel = identifier;
+
+  try {
+    if (identifier.includes('@')) {
+      // ── ইমেইল দিয়ে খোঁজা ──
+      const q    = query(collection(db, 'users'), where('emailLower', '==', identifier.toLowerCase()));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        targetUid   = snap.docs[0].id;
+        targetLabel = snap.docs[0].data().username || identifier;
+      }
+    } else {
+      // ── ইউজারনেম দিয়ে খোঁজা ──
+      const uSnap = await getDoc(doc(db, 'usernames', identifier.toLowerCase()));
+      if (uSnap.exists()) {
+        targetUid   = uSnap.data().uid;
+        targetLabel = uSnap.data().username || identifier;
+      }
+    }
+  } catch (e) {
+    showToast?.('ইউজার খুঁজতে সমস্যা হয়েছে', 'error');
+    return null;
+  }
+
+  if (!targetUid) {
+    showToast?.('এই ইউজারনেম/ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি', 'error');
+    return null;
+  }
+
+  if (targetUid === user.uid) {
+    showToast?.('নিজেকে ইনভাইট করা যাবে না', 'error');
+    return null;
+  }
+
+  const projRef  = doc(db, 'projects', projectId);
+  const projSnap = await getDoc(projRef);
   if (!projSnap.exists()) { showToast?.('প্রজেক্ট খুঁজে পাওয়া যায়নি', 'error'); return null; }
+
   const projData = projSnap.data();
+  if (projData.ownerUid === targetUid) {
+    showToast?.('উনি ইতোমধ্যে এই প্রজেক্টের মালিক', 'info');
+    return null;
+  }
 
-  const shareId   = randId(14);
-  const shareRef  = doc(db, 'shareLinks', shareId);
-
-  await setDoc(shareRef, {
-    projectId,
-    role,                    // 'editor' | 'viewer'
-    createdBy: user.uid,
-    createdAt: serverTimestamp(),
-    active: true,
-    projectName: projData.name || 'নামহীন প্রজেক্ট',
-    ownerName: projData.ownerName || 'অজানা',
-    ownerUid: projData.ownerUid,
+  await updateDoc(projRef, {
+    collaboratorUids: arrayUnion(targetUid),
+    [`roles.${targetUid}`]: role,
   });
 
-  const link = `${location.origin}${location.pathname}?join=${shareId}`;
-  return link;
+  await setDoc(doc(db, 'users', targetUid), {
+    sharedProjectIds: arrayUnion(projectId),
+    roles: { [projectId]: role },
+  }, { merge: true });
+
+  showToast?.(
+    `${targetLabel} কে ${role === 'admin' ? 'এডমিন' : 'এডিটর'} হিসেবে ইনভাইট করা হয়েছে ✅`,
+    'success', 'fa-user-plus'
+  );
+  return targetUid;
 };
 
 // ══════════════════════════════════════
-//  ৩. শেয়ার লিংক দিয়ে জয়েন করা
-//     — মাত্র 2 write (project + user doc), এরপর কোনো recurring cost নেই
+//  ৩. প্রজেক্টের কোলাবোরেটর লিস্ট (ইউজারনেম/ইমেইল/রোল সহ)
 // ══════════════════════════════════════
-window.joinProjectViaShareLink = async function (shareId) {
-  const user = auth.currentUser;
-  if (!user) { showToast?.('জয়েন করার জন্য আগে লগইন করুন', 'error'); return null; }
+window.getProjectCollaborators = async function (projectId) {
+  const projSnap = await getDoc(doc(db, 'projects', projectId));
+  if (!projSnap.exists()) return [];
 
-  const shareRef  = doc(db, 'shareLinks', shareId);
-  const shareSnap = await getDoc(shareRef);
+  const d     = projSnap.data();
+  const uids  = d.collaboratorUids || [];
+  const roles = d.roles || {};
 
-  if (!shareSnap.exists() || shareSnap.data().active === false) {
-    showToast?.('এই শেয়ার লিংকটি বৈধ নয় বা বন্ধ করা হয়েছে', 'error');
-    return null;
-  }
-
-  const { projectId, role } = shareSnap.data();
-  const projRef = doc(db, 'projects', projectId);
-  const userRef = doc(db, 'users', user.uid);
-
-  // ⚠️ এখানে ইচ্ছাকৃতভাবে join-এর আগে projects/{projectId} read করা হচ্ছে না,
-  //    কারণ rules অনুযায়ী শুধু owner/collaborator-ই প্রজেক্ট read করতে পারে —
-  //    নতুন জয়েনকারী তখনও কোনোটাই না, তাই সেই read সবসময় permission-denied
-  //    দিতো। এর বদলে arrayUnion() ব্যবহার করা হচ্ছে যেটা ইতোমধ্যে
-  //    collaborator থাকলেও নিরাপদে (duplicate ছাড়া) কাজ করে।
-  try {
-    await updateDoc(projRef, {
-      collaboratorUids: arrayUnion(user.uid),
+  const out = [];
+  for (const uid of uids) {
+    const uSnap = await getDoc(doc(db, 'users', uid));
+    const ud    = uSnap.exists() ? uSnap.data() : {};
+    out.push({
+      uid,
+      username: ud.username || null,
+      email: ud.email || null,
+      role: roles[uid] || 'editor',
     });
-    await setDoc(userRef, {
-      sharedProjectIds: arrayUnion(projectId),
-      roles: { [projectId]: role },
-    }, { merge: true });
-  } catch (err) {
-    console.error('joinProjectViaShareLink error:', err);
-    showToast?.('প্রজেক্টে জয়েন করা যায়নি। লিংকটি হয়তো মেয়াদোত্তীর্ণ, অথবা Firestore rules আপডেট করা হয়নি।', 'error');
-    return null;
   }
+  return out;
+};
 
-  return projectId;
+// ══════════════════════════════════════
+//  ৪. কোলাবোরেটরের রোল পরিবর্তন (এডমিন ⇄ এডিটর)
+// ══════════════════════════════════════
+window.updateCollaboratorRole = async function (projectId, uid, role) {
+  if (!['admin', 'editor'].includes(role)) return;
+  await updateDoc(doc(db, 'projects', projectId), {
+    [`roles.${uid}`]: role,
+  });
+  await setDoc(doc(db, 'users', uid), {
+    roles: { [projectId]: role },
+  }, { merge: true });
+  showToast?.('রোল আপডেট হয়েছে', 'success', 'fa-user-gear');
 };
 
 // ══════════════════════════════════════
@@ -186,15 +195,10 @@ window.listMyProjects = async function () {
     const snap = await getDoc(doc(db, 'projects', id));
     if (snap.exists()) {
       const d = snap.data();
-      const isOwner = d.ownerUid === user.uid;
       projects.push({
         id,
         name: d.name,
-        isOwner,
-        ownerName: d.ownerName || 'অজানা',
-        // ── এই ইউজারের role — owner হলে সবসময় 'owner', নাহলে যোগ দেওয়ার সময়
-        //    নির্ধারিত role (এখন শুধু 'editor' সাপোর্টেড) ──
-        role: isOwner ? 'owner' : (data.roles?.[id] || 'editor'),
+        isOwner: d.ownerUid === user.uid,
         collaboratorCount: (d.collaboratorUids || []).length,
         updatedAt: d.updatedAt?.toMillis?.() || 0,
       });
@@ -204,7 +208,7 @@ window.listMyProjects = async function () {
 };
 
 // ══════════════════════════════════════
-//  ৫. কোলাবোরেটর রিমুভ করা (শুধু owner পারবে — rule দিয়ে enforce হবে)
+//  ৫. কোলাবোরেটর রিমুভ করা (শুধু owner/admin পারবে — rule দিয়ে enforce হবে)
 // ══════════════════════════════════════
 window.removeCollaborator = async function (projectId, uid) {
   const projRef  = doc(db, 'projects', projectId);
@@ -212,147 +216,9 @@ window.removeCollaborator = async function (projectId, uid) {
   if (!projSnap.exists()) return;
 
   const list = (projSnap.data().collaboratorUids || []).filter(u => u !== uid);
-  await updateDoc(projRef, { collaboratorUids: list });
+  await updateDoc(projRef, {
+    collaboratorUids: list,
+    [`roles.${uid}`]: deleteField(),
+  });
+  showToast?.('কোলাবোরেটর রিমুভ করা হয়েছে', 'info', 'fa-user-minus');
 };
-
-// ══════════════════════════════════════
-//  ৬. প্রজেক্ট ডিলিট করা — শুধুমাত্র owner এই কাজ করতে পারবে।
-//     কোলাবোরেটর (এডিটর হিসেবে যোগ দেওয়া ইউজার) কখনোই ডিলিট করতে পারবে না —
-//     এটা এখানে client-side এ চেক করা হয়, এবং একই নিয়ম firestore.rules
-//     ফাইলেও enforce করা আছে (ক্লায়েন্ট সাইড চেক বাইপাস করা গেলেও সার্ভার
-//     সাইডে আটকে যাবে)।
-// ══════════════════════════════════════
-window.deleteProject = async function (projectId) {
-  const user = auth.currentUser;
-  if (!user) { showToast?.('লগইন করুন প্রথমে', 'error'); return false; }
-
-  const projRef  = doc(db, 'projects', projectId);
-  const projSnap = await getDoc(projRef);
-  if (!projSnap.exists()) return false;
-
-  const d = projSnap.data();
-  if (d.ownerUid !== user.uid) {
-    showToast?.('শুধু প্রজেক্টের মালিক এটি ডিলিট করতে পারবেন। আপনি এই প্রজেক্টে এডিটর হিসেবে যুক্ত আছেন।', 'error');
-    return false;
-  }
-
-  await deleteDoc(projRef);
-
-  const userRef = doc(db, 'users', user.uid);
-  await setDoc(userRef, { ownedProjectIds: arrayRemove(projectId) }, { merge: true });
-
-  return true;
-};
-
-// ══════════════════════════════════════
-//  ৭. শেয়ার লিংক থেকে প্রজেক্টের প্রিভিউ তথ্য আনা (join না করেই)
-//     — অ্যাপ্রুভ/ক্যান্সেল মোডালে দেখানোর জন্য ব্যবহার হবে
-// ══════════════════════════════════════
-window.getShareLinkInfo = async function (shareId) {
-  const shareRef  = doc(db, 'shareLinks', shareId);
-  const shareSnap = await getDoc(shareRef);
-  if (!shareSnap.exists() || shareSnap.data().active === false) return null;
-
-  const sd = shareSnap.data();
-  const { projectId, role } = sd;
-  const user = auth.currentUser;
-
-  // ── "ইতোমধ্যে সদস্য কিনা" এটা projects/{projectId} পড়ে না, বরং ইউজারের
-  //    নিজের users/{uid} ডক থেকে চেক করা হচ্ছে — কারণ নতুন জয়েনকারী তখনও
-  //    projects কালেকশন পড়ার অনুমতি পায় না, কিন্তু নিজের ডক সবসময় পড়তে পারে ──
-  let already = false;
-  if (user) {
-    const userSnap = await getDoc(doc(db, 'users', user.uid));
-    if (userSnap.exists()) {
-      const ud = userSnap.data();
-      already = (ud.ownedProjectIds || []).includes(projectId) ||
-                (ud.sharedProjectIds || []).includes(projectId);
-    }
-  }
-
-  return {
-    shareId,
-    projectId,
-    role,
-    // ── shareLink তৈরির সময় denormalized করে রাখা প্রিভিউ তথ্য ──
-    projectName: sd.projectName || 'নামহীন প্রজেক্ট',
-    ownerName: sd.ownerName || 'অজানা',
-    ownerUid: sd.ownerUid,
-    alreadyMember: already,
-  };
-};
-
-// ══════════════════════════════════════
-//  ৮. URL-এ ?join=shareId থাকলে হ্যান্ডল করা
-//     নতুন ফ্লো:
-//       ১) আগে auth state resolve হওয়ার জন্য অপেক্ষা করে (রেস কন্ডিশন এড়াতে)
-//       ২) লগইন করা না থাকলে shareId মনে রেখে দেয় — লগইন স্ক্রিন দেখায়,
-//          "আগে লগইন করুন" এরর টোস্ট দেখায় না
-//       ৩) লগইন করা থাকলে (বা এইমাত্র লগইন করলে) সরাসরি জয়েন না করে
-//          একটা অ্যাপ্রুভ/ক্যান্সেল মোডাল দেখায় (share-ui.js এ ডিফাইন করা)
-//       ৪) ইউজার ইতোমধ্যে owner/collaborator হলে সরাসরি প্রজেক্ট ওপেন হয়ে যায়
-// ══════════════════════════════════════
-window.handleJoinFromUrl = async function () {
-  const params  = new URLSearchParams(location.search);
-  const shareId = params.get('join');
-  if (!shareId) return null;
-
-  const user = await waitForAuthUser();
-
-  if (!user) {
-    // ── এখনও লগইন হয়নি — মনে রাখো, লগইন স্ক্রিনেই থাকতে দাও।
-    //    onAuthStateChanged এ ইউজার লগইন করার সাথে সাথে এই ফাংশন আবার চলবে। ──
-    window._pendingJoinShareId = shareId;
-    return null;
-  }
-
-  try {
-    const info = await window.getShareLinkInfo(shareId);
-    if (!info) {
-      showToast?.('এই শেয়ার লিংকটি বৈধ নয় বা বন্ধ করা হয়েছে', 'error');
-      cleanJoinUrlParam();
-      return null;
-    }
-
-    if (info.alreadyMember) {
-      // ── ইতোমধ্যে সদস্য — আবার অ্যাপ্রুভ চাওয়ার দরকার নেই, সরাসরি ওপেন করো ──
-      cleanJoinUrlParam();
-      if (typeof window.openExistingProject === 'function') {
-        await window.openExistingProject(info.projectId);
-      } else {
-        window.currentProjectId = info.projectId;
-        window.openProjectSync?.(info.projectId);
-      }
-      return info.projectId;
-    }
-
-    // ── নতুন সদস্য — অ্যাপ্রুভ/ক্যান্সেল মোডাল দেখাও, এখনই জয়েন করো না ──
-    if (typeof window.showJoinApprovalModal === 'function') {
-      window.showJoinApprovalModal(info);
-    } else {
-      // ফলব্যাক (যদি share-ui.js না লোড হয়): পুরনো আচরণ
-      const projectId = await window.joinProjectViaShareLink(shareId);
-      cleanJoinUrlParam();
-      if (projectId) showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
-      return projectId;
-    }
-    return null;
-  } catch (err) {
-    // ── আগে এখানে কোনো error handling ছিল না, তাই permission-denied হলে
-    //    সম্পূর্ণ নীরবে ব্যর্থ হতো — ইউজার শুধু ডিফল্ট লোকাল প্রজেক্ট দেখতো,
-    //    কোনো এরর মেসেজ ছাড়াই। এখন অন্তত একটা টোস্ট দেখাবে। ──
-    console.error('handleJoinFromUrl error:', err);
-    showToast?.('আমন্ত্রণ লোড করা যায়নি। একটু পর আবার চেষ্টা করুন।', 'error');
-    cleanJoinUrlParam();
-    return null;
-  }
-};
-
-// ── URL থেকে ?join= প্যারামিটার পরিষ্কার করা (রিফ্রেশে যেন আবার না চলে) ──
-function cleanJoinUrlParam() {
-  const params = new URLSearchParams(location.search);
-  params.delete('join');
-  const clean = location.pathname + (params.toString() ? `?${params}` : '');
-  history.replaceState({}, '', clean);
-}
-window._cleanJoinUrlParam = cleanJoinUrlParam;
