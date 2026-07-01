@@ -51,15 +51,44 @@
 
 .project-list-body { max-height: 50vh; overflow-y: auto; margin-bottom: 14px; }
 .project-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  border-radius: 8px;
   background: #1e2230; margin-bottom: 6px;
 }
 .project-row:hover { background: #252a3a; }
-.project-row-name { flex: 1; }
+.project-row-main {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+  padding: 10px 12px; cursor: pointer; min-width: 0;
+}
+.project-row-text { flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.project-row-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-row-sub { font-size: 11px; color: #8b92a5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge-count {
   font-size: 11px; background: #2d3436; padding: 2px 8px; border-radius: 10px;
+  flex-shrink: 0;
 }
+.project-delete-btn {
+  background: transparent; border: none; color: #8b92a5;
+  cursor: pointer; padding: 10px 12px; border-radius: 8px;
+  flex-shrink: 0;
+}
+.project-delete-btn:hover { color: #ff6b6b; background: rgba(255,107,107,.1); }
+
+/* ── জয়েন আমন্ত্রণ অ্যাপ্রুভ/ক্যান্সেল মোডাল ── */
+.join-approval-box p { line-height: 1.6; }
+.join-approval-actions {
+  display: flex; gap: 10px; margin-top: 6px;
+}
+.join-approval-actions button {
+  flex: 1; padding: 10px; border-radius: 8px; border: none;
+  cursor: pointer; font-size: 13px; display: flex; align-items: center;
+  justify-content: center; gap: 6px;
+}
+.btn-approve { background: #3fb950; color: #fff; }
+.btn-approve:hover { filter: brightness(1.08); }
+.btn-approve:disabled { opacity: .7; cursor: default; }
+.btn-cancel { background: #2d3436; color: #e9ecef; }
+.btn-cancel:hover { background: #3a4048; }
 
 .modal-close-btn {
   width: 100%; padding: 10px; border-radius: 8px; border: none;
