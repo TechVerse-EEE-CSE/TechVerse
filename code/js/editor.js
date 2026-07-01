@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
 //  EDITOR CORE — js/editor.js
-//  CodeMirror editor এবং ফাইল ম্যানেজমেন্ট
+//  CodeMirror editor and file management
 // ══════════════════════════════════════
 
 const STORAGE_KEY  = 'tv_promax_v3';
@@ -14,7 +14,7 @@ const DEFAULT_FS = {
 };
 
 // ── State ──
-// fs/cfg এখানে শুধু placeholder — আসল ডেটা IndexedDB থেকে initEditorIfNeeded()-এ async লোড হয়
+// fs/cfg here are just placeholders — actual data is loaded asynchronously from IndexedDB in initEditorIfNeeded()
 let fs               = JSON.parse(JSON.stringify(DEFAULT_FS));
 let cfg              = {};
 const defaults      = {
@@ -46,13 +46,13 @@ const THEMES = [
 const FONTS = ['Fira Code', 'JetBrains Mono', 'Consolas', 'monospace'];
 
 const SHORTCUTS = [
-  { key: 'Ctrl+S',     desc: 'ফাইল সেভ' },
+  { key: 'Ctrl+S',     desc: 'Save file' },
   { key: 'Ctrl+Enter', desc: 'Run / Preview' },
   { key: 'Ctrl+B',     desc: 'Sidebar toggle' },
-  { key: 'Ctrl+F',     desc: 'ফাইলে খোঁজ' },
+  { key: 'Ctrl+F',     desc: 'Find in file' },
   { key: 'Ctrl+Z',     desc: 'Undo' },
   { key: 'Ctrl+Y',     desc: 'Redo' },
-  { key: 'Ctrl+A',     desc: 'সব সিলেক্ট' },
+  { key: 'Ctrl+A',     desc: 'Select all' },
   { key: 'Tab',        desc: 'Indent' },
 ];
 
@@ -61,7 +61,7 @@ window.initEditorIfNeeded = async function () {
   if (editorInitialized) return;
   editorInitialized = true;
 
-  // ── পুরনো ইউজারদের localStorage ডেটা একবারই IndexedDB তে মাইগ্রেট করো ──
+  // ── One-time migration of existing users' localStorage data into IndexedDB ──
   await IDBStore.migrateFromLocalStorage({
     [STORAGE_KEY]:            'fs',
     [SETTINGS_KEY]:           'settings',
@@ -69,7 +69,7 @@ window.initEditorIfNeeded = async function () {
     'tv_promax_cloudtime':    'cloudtime',
   });
 
-  // ── IndexedDB থেকে আসল ডেটা লোড করো ──
+  // ── Load the actual data from IndexedDB ──
   const storedFs  = await IDBStore.get('fs');
   const storedCfg = await IDBStore.get('settings');
   fs  = storedFs  || JSON.parse(JSON.stringify(DEFAULT_FS));
@@ -157,7 +157,7 @@ window.openFile = function (path) {
 window.saveData = async function (manual = false) {
   fs[currentFile] = editor.getValue();
   await IDBStore.set('fs', fs);
-  // local save time রাখো (cloud load এর সাথে তুলনার জন্য)
+  // keep the local save time (for comparison with cloud load)
   await IDBStore.set('localtime', Date.now());
 
   document.getElementById('autosaveDot').classList.remove('active');
@@ -165,16 +165,16 @@ window.saveData = async function (manual = false) {
   if (badge) badge.style.display = 'none';
 
   if (manual) {
-    showToast('সেভ হয়েছে', 'success', 'fa-floppy-disk');
-    // ── শুধু manual Ctrl+S এ cloud save ──
-    // autosave এ cloud save হবে না → Firestore safe থাকবে
+    showToast('Saved', 'success', 'fa-floppy-disk');
+    // ── Cloud save only on manual Ctrl+S ──
+    // autosave will not trigger a cloud save → keeps Firestore safe
     if (typeof window.cloudSave === 'function') {
       window.cloudSave(fs);
     }
   }
 };
 
-// ── Cloud load হলে fs reload ──
+// ── Reload fs when the cloud load happens ──
 window.reloadFsFromStorage = async function () {
   const stored = await IDBStore.get('fs');
   if (!stored) return;
@@ -183,7 +183,7 @@ window.reloadFsFromStorage = async function () {
     editor.setValue(fs[currentFile] || '');
     renderTabs();
     renderFileTree();
-    showToast('Cloud থেকে project লোড হয়েছে', 'info', 'fa-cloud-arrow-down');
+    showToast('Project loaded from Cloud', 'info', 'fa-cloud-arrow-down');
   } catch (e) {
     console.error('reloadFsFromStorage error:', e);
   }
@@ -268,7 +268,7 @@ function renderFileTree() {
   });
 
   if (Object.keys(fs).length === 0)
-    tree.innerHTML = `<li><div class="empty-workspace"><i class="fa-solid fa-folder-open"></i><br>কোনো ফাইল নেই।<br>উপরে তৈরি করুন।</div></li>`;
+    tree.innerHTML = `<li><div class="empty-workspace"><i class="fa-solid fa-folder-open"></i><br>No files yet.<br>Create one above.</div></li>`;
 }
 
 window.toggleFolder = function (name) {
@@ -283,7 +283,7 @@ window.collapseAll = function () {
 };
 
 window.deleteFile = function (path) {
-  showConfirm(`"${path}" মুছবেন?`, () => {
+  showConfirm(`Delete "${path}"?`, () => {
     delete fs[path];
     openTabs = openTabs.filter(t => t !== path);
     if (currentFile === path) {
@@ -294,7 +294,7 @@ window.deleteFile = function (path) {
     saveData();
     renderTabs();
     renderFileTree();
-    showToast(`মুছে ফেলা হয়েছে: ${path.split('/').pop()}`, 'info', 'fa-trash');
+    showToast(`Deleted: ${path.split('/').pop()}`, 'info', 'fa-trash');
   });
 };
 
@@ -345,17 +345,17 @@ window.openCreateModal = function (type) {
 window.createNewItem = function () {
   const type = document.getElementById('createType').value;
   let name = document.getElementById('itemName').value.trim();
-  if (!name) { showToast('নাম দিন!', 'error', 'fa-triangle-exclamation'); return; }
+  if (!name) { showToast('Please enter a name!', 'error', 'fa-triangle-exclamation'); return; }
   if (type === 'folder') {
     if (!name.endsWith('/')) name += '/';
     const placeholder = name + 'index.html';
     if (!fs[placeholder]) fs[placeholder] = `<!-- ${name}index.html -->`;
-    showToast(`ফোল্ডার তৈরি: "${name.slice(0,-1)}"`, 'success', 'fa-folder-plus');
+    showToast(`Folder created: "${name.slice(0,-1)}"`, 'success', 'fa-folder-plus');
     saveData(); renderFileTree();
   } else {
-    if (fs[name] !== undefined) { showToast('ফাইল আছে!', 'error', 'fa-triangle-exclamation'); return; }
+    if (fs[name] !== undefined) { showToast('File already exists!', 'error', 'fa-triangle-exclamation'); return; }
     fs[name] = ''; saveData(); openFile(name);
-    showToast(`তৈরি হয়েছে: ${name}`, 'success', 'fa-file-plus');
+    showToast(`Created: ${name}`, 'success', 'fa-file-plus');
   }
   closeModal('createModal');
 };
@@ -373,14 +373,14 @@ window.doRename = function () {
   const dir     = renamingFile.includes('/') ? renamingFile.split('/')[0]+'/' : '';
   const newPath = dir + newName;
   if (newPath === renamingFile) { closeModal('renameModal'); return; }
-  if (fs[newPath] !== undefined) { showToast('ইতোমধ্যে আছে!', 'error'); return; }
+  if (fs[newPath] !== undefined) { showToast('Already exists!', 'error'); return; }
   fs[newPath] = fs[renamingFile];
   delete fs[renamingFile];
   if (currentFile === renamingFile) currentFile = newPath;
   openTabs = openTabs.map(t => t===renamingFile ? newPath : t);
   saveData(); renderTabs(); renderFileTree();
   closeModal('renameModal');
-  showToast(`নাম পরিবর্তন: ${newName}`, 'success', 'fa-pen');
+  showToast(`Renamed: ${newName}`, 'success', 'fa-pen');
 };
 
 // ── Preview / Run ──
@@ -392,7 +392,7 @@ window.runCode = function () {
 
 window.previewFile = function (path) {
   if (!path || !path.endsWith('.html')) {
-    showToast('শুধু HTML ফাইল preview করা যায়', 'info', 'fa-circle-info');
+    showToast('Only HTML files can be previewed', 'info', 'fa-circle-info');
     return;
   }
   saveData();
@@ -437,7 +437,7 @@ window.closeSource = function () {
 
 window.copySource = function () {
   const src = document.getElementById('sourceBody').textContent;
-  navigator.clipboard.writeText(src).then(() => showToast('সোর্স কপি!', 'success', 'fa-copy'));
+  navigator.clipboard.writeText(src).then(() => showToast('Source copied!', 'success', 'fa-copy'));
 };
 
 // ── Sidebar ──
@@ -498,7 +498,7 @@ window.searchFind = function () {
     searchCursor = editor.getSearchCursor(q, CodeMirror.Pos(0, 0), { caseFold: true });
     lastSearchQuery = q;
     if (!searchCursor.findNext()) {
-      document.getElementById('searchInfo').textContent = 'পাওয়া যায়নি';
+      document.getElementById('searchInfo').textContent = 'Not found';
       return;
     }
   }
@@ -506,7 +506,7 @@ window.searchFind = function () {
   editor.setSelection(searchCursor.from(), searchCursor.to());
   editor.scrollIntoView(searchCursor.from(), 80);
   editor.focus();
-  document.getElementById('searchInfo').textContent = 'পাওয়া গেছে';
+  document.getElementById('searchInfo').textContent = 'Found';
 };
 
 window.doReplace = function () {
@@ -518,7 +518,7 @@ window.doReplace = function () {
   while (c.findNext()) { c.replace(r); count++; }
   searchCursor = null;
   lastSearchQuery = null;
-  showToast(`${count} টি বদলানো হয়েছে`, 'success', 'fa-arrows-rotate');
+  showToast(`${count} replaced`, 'success', 'fa-arrows-rotate');
 };
 
 document.addEventListener('keydown', e => {
@@ -641,7 +641,7 @@ window.toggleAutoSave = function (val) {
   cfg.autoSave = val;
   if (!val) { clearTimeout(autoSaveTimer); document.getElementById('autosaveDot').classList.remove('active'); }
   saveSettings();
-  showToast(`Auto-save ${val?'চালু':'বন্ধ'}`, 'info', 'fa-cloud');
+  showToast(`Auto-save ${val?'On':'Off'}`, 'info', 'fa-cloud');
 };
 
 function applySettingsUI() {
@@ -673,7 +673,7 @@ window.exportProject = function () {
   a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(fs, null, 2));
   a.download = 'techverse-project.json';
   a.click();
-  showToast('Export হয়েছে!', 'success', 'fa-download');
+  showToast('Exported!', 'success', 'fa-download');
 };
 
 // ── Download as ZIP ──
@@ -682,7 +682,7 @@ window.downloadAsZip = async function () {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
   }
 
-  showToast('ZIP তৈরি হচ্ছে…', 'info', 'fa-spinner');
+  showToast('Creating ZIP…', 'info', 'fa-spinner');
 
   fs[currentFile] = editor.getValue();
 
@@ -708,7 +708,7 @@ window.downloadAsZip = async function () {
   a.click();
   URL.revokeObjectURL(url);
 
-  showToast('ZIP ডাউনলোড হচ্ছে!', 'success', 'fa-file-zipper');
+  showToast('Downloading ZIP!', 'success', 'fa-file-zipper');
 };
 
 // ── Dynamic script loader ──
@@ -723,21 +723,21 @@ function loadScript(src) {
 }
 
 
-// ক্লিয়ার ডেটা 
+// Clear data 
 
 window.clearStorage = function () {
   showConfirm(
-    'সব ফাইল ও সেটিংস মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    'Delete all files and settings? This cannot be undone.',
     async () => {
       await IDBStore.clear();
-      // পুরনো কোনো localStorage অবশিষ্ট থাকলে সেটাও সাফ করো
+      // also clear any leftover old localStorage data
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(SETTINGS_KEY);
       localStorage.removeItem('tv_promax_localtime');
       localStorage.removeItem('tv_promax_cloudtime');
       location.reload();
     },
-    { title: 'সব মুছে ফেলবেন?' }
+    { title: 'Delete everything?' }
   );
 };
 
@@ -752,9 +752,9 @@ window.closeModal = id => document.getElementById(id).classList.remove('active')
 //    permission-style popup never shows — uses our own styled modal) ──
 window.showConfirm = function (message, onConfirm, opts = {}) {
   document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('confirmTitle').textContent   = opts.title || 'নিশ্চিত করুন';
+  document.getElementById('confirmTitle').textContent   = opts.title || 'Please Confirm';
   const okBtn = document.getElementById('confirmOkBtn');
-  okBtn.textContent = opts.okText || 'মুছে ফেলুন';
+  okBtn.textContent = opts.okText || 'Delete';
   const newBtn = okBtn.cloneNode(true); // strip old listeners
   okBtn.parentNode.replaceChild(newBtn, okBtn);
   newBtn.addEventListener('click', () => {
