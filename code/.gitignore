@@ -1,13 +1,10 @@
 # ══════════════════════════════════════
 #  .gitignore — Tech Verse Editor
-#  এই ফাইলগুলো GitHub এ যাবে না
+#  These files should not go to GitHub
 # ══════════════════════════════════════
 
-
-
-# 🔒 Firebase Secret Config — কখনো push করবেন না!
+# 🔒 Firebase Secret Config — never push this!
 config/firebase-config.js
-
 
 # Node
 node_modules/
