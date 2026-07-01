@@ -98,6 +98,13 @@ window.createShareLink = async function (projectId, role = 'editor') {
   const user = auth.currentUser;
   if (!user) return null;
 
+  // ── প্রিভিউ (নাম/মালিক) shareLink ডকেই সেভ রাখা হচ্ছে, কারণ যে জয়েন
+  //    করবে সে তখনও owner/collaborator না হওয়ায় projects কালেকশন পড়তে
+  //    পারবে না (rules অনুযায়ী) — shareLinks সবার জন্যই readable ──
+  const projSnap = await getDoc(doc(db, 'projects', projectId));
+  if (!projSnap.exists()) { showToast?.('প্রজেক্ট খুঁজে পাওয়া যায়নি', 'error'); return null; }
+  const projData = projSnap.data();
+
   const shareId   = randId(14);
   const shareRef  = doc(db, 'shareLinks', shareId);
 
@@ -107,6 +114,9 @@ window.createShareLink = async function (projectId, role = 'editor') {
     createdBy: user.uid,
     createdAt: serverTimestamp(),
     active: true,
+    projectName: projData.name || 'নামহীন প্রজেক্ট',
+    ownerName: projData.ownerName || 'অজানা',
+    ownerUid: projData.ownerUid,
   });
 
   const link = `${location.origin}${location.pathname}?join=${shareId}`;
@@ -133,15 +143,12 @@ window.joinProjectViaShareLink = async function (shareId) {
   const projRef = doc(db, 'projects', projectId);
   const userRef = doc(db, 'users', user.uid);
 
-  // ── ইতোমধ্যে owner/collaborator হলে আবার যোগ করার দরকার নেই ──
-  const projSnap = await getDoc(projRef);
-  if (!projSnap.exists()) { showToast?.('প্রজেক্ট খুঁজে পাওয়া যায়নি', 'error'); return null; }
-
-  const projData = projSnap.data();
-  const already = projData.ownerUid === user.uid ||
-                   (projData.collaboratorUids || []).includes(user.uid);
-
-  if (!already) {
+  // ⚠️ এখানে ইচ্ছাকৃতভাবে join-এর আগে projects/{projectId} read করা হচ্ছে না,
+  //    কারণ rules অনুযায়ী শুধু owner/collaborator-ই প্রজেক্ট read করতে পারে —
+  //    নতুন জয়েনকারী তখনও কোনোটাই না, তাই সেই read সবসময় permission-denied
+  //    দিতো। এর বদলে arrayUnion() ব্যবহার করা হচ্ছে যেটা ইতোমধ্যে
+  //    collaborator থাকলেও নিরাপদে (duplicate ছাড়া) কাজ করে।
+  try {
     await updateDoc(projRef, {
       collaboratorUids: arrayUnion(user.uid),
     });
@@ -149,6 +156,10 @@ window.joinProjectViaShareLink = async function (shareId) {
       sharedProjectIds: arrayUnion(projectId),
       roles: { [projectId]: role },
     }, { merge: true });
+  } catch (err) {
+    console.error('joinProjectViaShareLink error:', err);
+    showToast?.('প্রজেক্টে জয়েন করা যায়নি। লিংকটি হয়তো মেয়াদোত্তীর্ণ, অথবা Firestore rules আপডেট করা হয়নি।', 'error');
+    return null;
   }
 
   return projectId;
@@ -242,23 +253,31 @@ window.getShareLinkInfo = async function (shareId) {
   const shareSnap = await getDoc(shareRef);
   if (!shareSnap.exists() || shareSnap.data().active === false) return null;
 
-  const { projectId, role } = shareSnap.data();
-  const projSnap = await getDoc(doc(db, 'projects', projectId));
-  if (!projSnap.exists()) return null;
-
-  const d    = projSnap.data();
+  const sd = shareSnap.data();
+  const { projectId, role } = sd;
   const user = auth.currentUser;
-  const already = !!user && (
-    d.ownerUid === user.uid || (d.collaboratorUids || []).includes(user.uid)
-  );
+
+  // ── "ইতোমধ্যে সদস্য কিনা" এটা projects/{projectId} পড়ে না, বরং ইউজারের
+  //    নিজের users/{uid} ডক থেকে চেক করা হচ্ছে — কারণ নতুন জয়েনকারী তখনও
+  //    projects কালেকশন পড়ার অনুমতি পায় না, কিন্তু নিজের ডক সবসময় পড়তে পারে ──
+  let already = false;
+  if (user) {
+    const userSnap = await getDoc(doc(db, 'users', user.uid));
+    if (userSnap.exists()) {
+      const ud = userSnap.data();
+      already = (ud.ownedProjectIds || []).includes(projectId) ||
+                (ud.sharedProjectIds || []).includes(projectId);
+    }
+  }
 
   return {
     shareId,
     projectId,
     role,
-    projectName: d.name,
-    ownerName: d.ownerName || 'অজানা',
-    ownerUid: d.ownerUid,
+    // ── shareLink তৈরির সময় denormalized করে রাখা প্রিভিউ তথ্য ──
+    projectName: sd.projectName || 'নামহীন প্রজেক্ট',
+    ownerName: sd.ownerName || 'অজানা',
+    ownerUid: sd.ownerUid,
     alreadyMember: already,
   };
 };
@@ -287,36 +306,46 @@ window.handleJoinFromUrl = async function () {
     return null;
   }
 
-  const info = await window.getShareLinkInfo(shareId);
-  if (!info) {
-    showToast?.('এই শেয়ার লিংকটি বৈধ নয় বা বন্ধ করা হয়েছে', 'error');
+  try {
+    const info = await window.getShareLinkInfo(shareId);
+    if (!info) {
+      showToast?.('এই শেয়ার লিংকটি বৈধ নয় বা বন্ধ করা হয়েছে', 'error');
+      cleanJoinUrlParam();
+      return null;
+    }
+
+    if (info.alreadyMember) {
+      // ── ইতোমধ্যে সদস্য — আবার অ্যাপ্রুভ চাওয়ার দরকার নেই, সরাসরি ওপেন করো ──
+      cleanJoinUrlParam();
+      if (typeof window.openExistingProject === 'function') {
+        await window.openExistingProject(info.projectId);
+      } else {
+        window.currentProjectId = info.projectId;
+        window.openProjectSync?.(info.projectId);
+      }
+      return info.projectId;
+    }
+
+    // ── নতুন সদস্য — অ্যাপ্রুভ/ক্যান্সেল মোডাল দেখাও, এখনই জয়েন করো না ──
+    if (typeof window.showJoinApprovalModal === 'function') {
+      window.showJoinApprovalModal(info);
+    } else {
+      // ফলব্যাক (যদি share-ui.js না লোড হয়): পুরনো আচরণ
+      const projectId = await window.joinProjectViaShareLink(shareId);
+      cleanJoinUrlParam();
+      if (projectId) showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
+      return projectId;
+    }
+    return null;
+  } catch (err) {
+    // ── আগে এখানে কোনো error handling ছিল না, তাই permission-denied হলে
+    //    সম্পূর্ণ নীরবে ব্যর্থ হতো — ইউজার শুধু ডিফল্ট লোকাল প্রজেক্ট দেখতো,
+    //    কোনো এরর মেসেজ ছাড়াই। এখন অন্তত একটা টোস্ট দেখাবে। ──
+    console.error('handleJoinFromUrl error:', err);
+    showToast?.('আমন্ত্রণ লোড করা যায়নি। একটু পর আবার চেষ্টা করুন।', 'error');
     cleanJoinUrlParam();
     return null;
   }
-
-  if (info.alreadyMember) {
-    // ── ইতোমধ্যে সদস্য — আবার অ্যাপ্রুভ চাওয়ার দরকার নেই, সরাসরি ওপেন করো ──
-    cleanJoinUrlParam();
-    if (typeof window.openExistingProject === 'function') {
-      await window.openExistingProject(info.projectId);
-    } else {
-      window.currentProjectId = info.projectId;
-      window.openProjectSync?.(info.projectId);
-    }
-    return info.projectId;
-  }
-
-  // ── নতুন সদস্য — অ্যাপ্রুভ/ক্যান্সেল মোডাল দেখাও, এখনই জয়েন করো না ──
-  if (typeof window.showJoinApprovalModal === 'function') {
-    window.showJoinApprovalModal(info);
-  } else {
-    // ফলব্যাক (যদি share-ui.js না লোড হয়): পুরনো আচরণ
-    const projectId = await window.joinProjectViaShareLink(shareId);
-    cleanJoinUrlParam();
-    if (projectId) showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
-    return projectId;
-  }
-  return null;
 };
 
 // ── URL থেকে ?join= প্যারামিটার পরিষ্কার করা (রিফ্রেশে যেন আবার না চলে) ──
