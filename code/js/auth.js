@@ -17,6 +17,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import firebaseConfig from "../config/firebase-config.js";
+import {
+  usernameError,
+  isUsernameTaken,
+  getUserUsername,
+  reserveUsername,
+  resolveLoginIdentifier,
+  showUsernameGate,
+  hideUsernameGate,
+} from "./username.js";
 
 // ── Initialize ──
 const app       = initializeApp(firebaseConfig);
@@ -24,12 +33,30 @@ const auth      = getAuth(app);
 const gProvider = new GoogleAuthProvider();
 
 // ── Auth State Listener ──
-onAuthStateChanged(auth, user => {
-  if (user) {
-    enterEditor(user);
-  } else {
+onAuthStateChanged(auth, async user => {
+  if (!user) {
     showAuthScreen();
+    hideUsernameGate();
+    return;
   }
+
+  // Profile settings এর জন্য আগেই expose করে রাখি (gate থেকেও দরকার হয়)
+  window._firebaseAuth  = auth;
+  window._updateProfile = updateProfile;
+
+  // ── ইউজারনেম আছে কিনা চেক করো ──
+  const username = await getUserUsername(user.uid);
+  if (!username) {
+    // পুরাতন ইউজার / ইউজারনেম ছাড়া অ্যাকাউন্ট → বাধ্যতামূলক Gate দেখাও
+    document.getElementById('authScreen').style.display = 'none';
+    showUsernameGate(user, () => enterEditor(user));
+    return;
+  }
+
+  window._currentUsername      = username;
+  window._currentUsernameLower = username.toLowerCase();
+  hideUsernameGate();
+  enterEditor(user);
 });
 
 // ── Enter Editor ──
@@ -47,6 +74,12 @@ function enterEditor(user) {
   const menuEmailEl = document.getElementById('menuEmail');
   if (menuNameEl)  menuNameEl.textContent  = displayName;
   if (menuEmailEl) menuEmailEl.textContent = user.email;
+
+  const uname = window._currentUsername;
+  const ddUnameEl   = document.getElementById('ddUsername');
+  const menuUnameEl = document.getElementById('menuUsername');
+  if (ddUnameEl)   { ddUnameEl.textContent   = uname ? '@' + uname : ''; ddUnameEl.style.display   = uname ? 'block' : 'none'; }
+  if (menuUnameEl) { menuUnameEl.textContent = uname ? '@' + uname : ''; menuUnameEl.style.display = uname ? 'block' : 'none'; }
 
   const navAv  = document.getElementById('navAvatar');
   const ddAv   = document.getElementById('ddAvatar');
@@ -67,10 +100,6 @@ function enterEditor(user) {
 
   // Editor init (editor.js এ defined)
   if (typeof initEditorIfNeeded === 'function') initEditorIfNeeded();
-
-  // Profile settings এর জন্য expose
-  window._firebaseAuth    = auth;
-  window._updateProfile   = updateProfile;
 }
 
 // ── Show Auth ──
@@ -80,13 +109,19 @@ function showAuthScreen() {
   if (up) up.style.display = 'none';
 }
 
-// ── Login ──
+// ── Login (Email অথবা Username দিয়ে) ──
 window.doLogin = async function () {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-  if (!email || !pass) return showAuthMsg('loginMsg', 'error', 'সব ঘর পূরণ করুন।');
+  const identifier = document.getElementById('loginEmail').value.trim();
+  const pass       = document.getElementById('loginPassword').value;
+  if (!identifier || !pass) return showAuthMsg('loginMsg', 'error', 'সব ঘর পূরণ করুন।');
+
   setLoading('loginBtn', true);
   try {
+    const { email, notFound } = await resolveLoginIdentifier(identifier);
+    if (notFound) {
+      setLoading('loginBtn', false);
+      return showAuthMsg('loginMsg', 'error', 'এই ইউজারনেমে কোনো অ্যাকাউন্ট পাওয়া যায়নি।');
+    }
     await signInWithEmailAndPassword(auth, email, pass);
     showAuthMsg('loginMsg', 'success', 'লগইন সফল! ডেটা লোড হচ্ছে…');
   } catch (e) {
@@ -97,12 +132,15 @@ window.doLogin = async function () {
 
 // ── Register ──
 window.doRegister = async function () {
-  const name    = document.getElementById('registerName').value.trim();
-  const email   = document.getElementById('registerEmail').value.trim();
-  const pass    = document.getElementById('registerPassword').value;
-  const confirm = document.getElementById('registerConfirm').value;
+  const name     = document.getElementById('registerName').value.trim();
+  const username = document.getElementById('registerUsername').value.trim();
+  const email    = document.getElementById('registerEmail').value.trim();
+  const pass     = document.getElementById('registerPassword').value;
+  const confirm  = document.getElementById('registerConfirm').value;
 
   if (!name)              return showAuthMsg('registerMsg', 'error', 'আপনার নাম দিন।');
+  const unameErr = usernameError(username);
+  if (unameErr)            return showAuthMsg('registerMsg', 'error', unameErr);
   if (!email)             return showAuthMsg('registerMsg', 'error', 'ইমেইল দিন।');
   if (pass.length < 6)    return showAuthMsg('registerMsg', 'error', 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
   if (pass !== confirm)   return showAuthMsg('registerMsg', 'error', 'পাসওয়ার্ড মিলছে না।');
@@ -111,8 +149,15 @@ window.doRegister = async function () {
 
   setLoading('registerBtn', true);
   try {
+    const taken = await isUsernameTaken(username.toLowerCase());
+    if (taken) {
+      setLoading('registerBtn', false);
+      return showAuthMsg('registerMsg', 'error', 'এই ইউজারনেম আগে থেকেই নেওয়া হয়েছে। অন্য একটা দিন।');
+    }
+
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
+    await reserveUsername(cred.user.uid, username, email);
     showAuthMsg('registerMsg', 'success', 'অ্যাকাউন্ট তৈরি হয়েছে!');
   } catch (e) {
     setLoading('registerBtn', false);
