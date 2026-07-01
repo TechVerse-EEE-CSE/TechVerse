@@ -7,182 +7,93 @@
   document.addEventListener('DOMContentLoaded', () => {
     injectShareModal();
     injectProjectListModal();
-    injectJoinApprovalModal();
     bindOpenButtons();
-    // project-manager.js নিজেই auth state resolve হওয়া পর্যন্ত অপেক্ষা করে,
-    // তাই এখানে সরাসরি কল করলেও রেস কন্ডিশন হয় না।
-    window.handleJoinFromUrl?.();
   });
 
-  // ── শেয়ার মোডাল HTML ইনজেক্ট ──
+  // ── শেয়ার / ইনভাইট মোডাল HTML ইনজেক্ট ──
   function injectShareModal() {
     const div = document.createElement('div');
     div.id = 'shareModal';
     div.className = 'modal-overlay hidden';
     div.innerHTML = `
       <div class="modal-box">
-        <h3><i class="fa-solid fa-user-group"></i> প্রজেক্ট শেয়ার করুন</h3>
-        <p class="muted">যাকে এই লিংক দেবেন, সে লগইন করে এই প্রজেক্টে এডিট করতে পারবে।</p>
-        <div class="share-link-row">
-          <input id="shareLinkInput" type="text" readonly placeholder="লিংক তৈরি হচ্ছে...">
-          <button id="copyShareLinkBtn"><i class="fa-solid fa-copy"></i></button>
+        <h3><i class="fa-solid fa-user-group"></i> প্রজেক্টে ইনভাইট করুন</h3>
+        <p class="muted">ইউজারনেম বা ইমেইল দিয়ে সরাসরি ইনভাইট করুন — এডমিন বা এডিটর হিসেবে।</p>
+
+        <div class="invite-row">
+          <input id="inviteIdentifierInput" type="text" placeholder="ইউজারনেম বা ইমেইল" autocomplete="off">
+          <select id="inviteRoleSelect">
+            <option value="editor">এডিটর</option>
+            <option value="admin">এডমিন</option>
+          </select>
+          <button id="inviteSendBtn" title="ইনভাইট করুন"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
-        <div class="share-social-row">
-          <button class="share-social-btn sb-whatsapp" data-share="whatsapp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
-          <button class="share-social-btn sb-telegram" data-share="telegram" title="Telegram"><i class="fa-brands fa-telegram"></i></button>
-          <button class="share-social-btn sb-messenger" data-share="messenger" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
-          <button class="share-social-btn sb-facebook" data-share="facebook" title="Facebook"><i class="fa-brands fa-facebook"></i></button>
-          <button class="share-social-btn sb-instagram" data-share="instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></button>
-          <button class="share-social-btn sb-more" data-share="more" title="আরও / সিস্টেম শেয়ার"><i class="fa-solid fa-share-nodes"></i></button>
-        </div>
+
         <div id="collaboratorList" class="collaborator-list"></div>
         <button class="modal-close-btn" onclick="document.getElementById('shareModal').classList.add('hidden')">বন্ধ করুন</button>
       </div>`;
     document.body.appendChild(div);
 
-    document.getElementById('copyShareLinkBtn').onclick = () => {
-      const input = document.getElementById('shareLinkInput');
-      navigator.clipboard.writeText(input.value);
-      showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
-    };
-
-    bindSocialShareButtons(div);
-  }
-
-  // ── সোশ্যাল শেয়ার বাটনগুলোতে ক্লিক হ্যান্ডলার বাইন্ড করা ──
-  function bindSocialShareButtons(root) {
-    root.querySelectorAll('.share-social-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const link = document.getElementById('shareLinkInput').value;
-        if (!link) { showToast?.('লিংক এখনো তৈরি হয়নি, একটু অপেক্ষা করুন', 'error'); return; }
-
-        const projectName = (window.currentProjectName || 'আমার প্রজেক্ট');
-        const shareText = `${projectName} — এই প্রজেক্টে আমার সাথে কোড এডিট করুন:`;
-        const encodedLink = encodeURIComponent(link);
-        const encodedText = encodeURIComponent(shareText);
-        const platform = btn.dataset.share;
-
-        openShareTarget(platform, link, encodedLink, encodedText);
-      });
+    document.getElementById('inviteSendBtn').onclick = handleInviteClick;
+    document.getElementById('inviteIdentifierInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleInviteClick();
     });
   }
 
-  // ── প্ল্যাটফর্ম অনুযায়ী শেয়ার লিংক ওপেন করা ──
-  function openShareTarget(platform, rawLink, encodedLink, encodedText) {
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // ── ইনভাইট বাটনে ক্লিক ──
+  async function handleInviteClick() {
+    const projectId = window.currentProjectId;
+    if (!projectId) { showToast?.('প্রথমে একটা প্রজেক্ট খুলুন বা তৈরি করুন', 'error'); return; }
 
-    switch (platform) {
-      case 'whatsapp': {
-        const url = isMobile
-          ? `whatsapp://send?text=${encodedText}%20${encodedLink}`
-          : `https://web.whatsapp.com/send?text=${encodedText}%20${encodedLink}`;
-        window.open(url, '_blank');
-        break;
-      }
-      case 'telegram': {
-        window.open(`https://t.me/share/url?url=${encodedLink}&text=${encodedText}`, '_blank');
-        break;
-      }
-      case 'facebook': {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`, '_blank', 'width=600,height=500');
-        break;
-      }
-      case 'messenger': {
-        if (isMobile) {
-          // মোবাইলে Messenger অ্যাপ ডিপ-লিংক, না থাকলে ফেসবুকে পাঠানো হবে
-          window.location.href = `fb-messenger://share?link=${encodedLink}`;
-          setTimeout(() => {
-            navigator.clipboard?.writeText(rawLink);
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`, '_blank');
-          }, 800);
-        } else {
-          navigator.clipboard?.writeText(rawLink);
-          showToast?.('লিংক কপি হয়েছে, Messenger-এ পেস্ট করুন', 'info', 'fa-facebook-messenger');
-          window.open('https://www.messenger.com/', '_blank');
-        }
-        break;
-      }
-      case 'instagram': {
-        // ইনস্টাগ্রাম সরাসরি লিংক শেয়ার সাপোর্ট করে না, তাই লিংক কপি করে অ্যাপ খুলে দেওয়া হয়
-        navigator.clipboard?.writeText(rawLink);
-        showToast?.('লিংক কপি হয়েছে, Instagram DM/Story-তে পেস্ট করুন', 'info', 'fa-instagram');
-        window.open(isMobile ? 'instagram://direct/inbox' : 'https://www.instagram.com/', '_blank');
-        break;
-      }
-      case 'more': {
-        if (navigator.share) {
-          navigator.share({ title: 'প্রজেক্ট শেয়ার', text: decodeURIComponent(encodedText), url: rawLink }).catch(() => {});
-        } else {
-          navigator.clipboard?.writeText(rawLink);
-          showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
-        }
-        break;
-      }
+    const input = document.getElementById('inviteIdentifierInput');
+    const role  = document.getElementById('inviteRoleSelect').value;
+    const identifier = input.value.trim();
+    if (!identifier) { showToast?.('ইউজারনেম বা ইমেইল লিখুন', 'error'); return; }
+
+    const btn = document.getElementById('inviteSendBtn');
+    btn.disabled = true;
+    const uid = await window.inviteUserToProject(projectId, identifier, role);
+    btn.disabled = false;
+
+    if (uid) {
+      input.value = '';
+      await refreshCollaboratorList(projectId);
     }
   }
 
-  // ── প্রজেক্টে জয়েন করার আমন্ত্রণ: অ্যাপ্রুভ/ক্যান্সেল মোডাল ──
-  function injectJoinApprovalModal() {
-    const div = document.createElement('div');
-    div.id = 'joinApprovalModal';
-    div.className = 'modal-overlay hidden';
-    div.innerHTML = `
-      <div class="modal-box join-approval-box">
-        <h3><i class="fa-solid fa-user-group"></i> প্রজেক্টে যোগ দেওয়ার আমন্ত্রণ</h3>
-        <p id="joinApprovalText" class="muted"></p>
-        <div class="join-approval-actions">
-          <button id="joinApproveBtn" class="btn-approve"><i class="fa-solid fa-check"></i> অ্যাপ্রুভ করুন</button>
-          <button id="joinCancelBtn" class="btn-cancel"><i class="fa-solid fa-xmark"></i> ক্যান্সেল করুন</button>
+  // ── কোলাবোরেটর লিস্ট রিফ্রেশ ও রেন্ডার ──
+  async function refreshCollaboratorList(projectId) {
+    const listEl = document.getElementById('collaboratorList');
+    listEl.innerHTML = `<p class="muted" style="font-size:12px;">লোড হচ্ছে...</p>`;
+
+    const collaborators = await window.getProjectCollaborators(projectId);
+    if (!collaborators.length) {
+      listEl.innerHTML = `<p class="muted" style="font-size:12px;">এখনো কোনো কোলাবোরেটর নেই।</p>`;
+      return;
+    }
+
+    listEl.innerHTML = collaborators.map(c => `
+      <div class="collaborator-row" data-uid="${c.uid}">
+        <div class="collab-info">
+          <i class="fa-solid fa-user"></i>
+          <span class="collab-name">${c.username ? '@' + c.username : (c.email || c.uid.slice(0, 8))}</span>
         </div>
-      </div>`;
-    document.body.appendChild(div);
+        <select class="collab-role-select" onchange="window.updateCollaboratorRole('${projectId}','${c.uid}', this.value)">
+          <option value="editor" ${c.role === 'editor' ? 'selected' : ''}>এডিটর</option>
+          <option value="admin" ${c.role === 'admin' ? 'selected' : ''}>এডমিন</option>
+        </select>
+        <button class="collab-remove-btn" title="রিমুভ করুন" onclick="window.removeCollaboratorAndRefresh('${projectId}','${c.uid}')">
+          <i class="fa-solid fa-user-minus"></i>
+        </button>
+      </div>
+    `).join('');
   }
 
-  // ── আমন্ত্রণ মোডাল দেখানো (login-এর পরে project-manager.js থেকে কল হয়) ──
-  window.showJoinApprovalModal = function (info) {
-    const modal = document.getElementById('joinApprovalModal');
-    const text  = document.getElementById('joinApprovalText');
-    if (!modal || !text) return;
-
-    text.innerHTML =
-      `<b>${escapeHtml(info.ownerName)}</b> আপনাকে তার
-       <b>"${escapeHtml(info.projectName)}"</b> প্রজেক্টে
-       <b>এডিটর</b> হিসেবে যোগ দেওয়ার আমন্ত্রণ জানিয়েছেন।
-       অ্যাপ্রুভ করলে আপনি এই প্রজেক্ট এডিট করতে পারবেন, তবে এটি ডিলিট করতে পারবেন না — সেই অধিকার শুধু মালিকের।`;
-
-    modal.classList.remove('hidden');
-
-    const approveBtn = document.getElementById('joinApproveBtn');
-    const cancelBtn  = document.getElementById('joinCancelBtn');
-
-    approveBtn.onclick = async () => {
-      approveBtn.disabled = true;
-      approveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> জয়েন হচ্ছে...`;
-
-      const projectId = await window.joinProjectViaShareLink(info.shareId);
-      window._cleanJoinUrlParam?.();
-      modal.classList.add('hidden');
-      approveBtn.disabled = false;
-      approveBtn.innerHTML = `<i class="fa-solid fa-check"></i> অ্যাপ্রুভ করুন`;
-
-      if (projectId) {
-        await window.openExistingProject(projectId);
-        showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
-      }
-    };
-
-    cancelBtn.onclick = () => {
-      window._cleanJoinUrlParam?.();
-      modal.classList.add('hidden');
-      showToast?.('আমন্ত্রণ ক্যান্সেল করা হয়েছে', 'info', 'fa-xmark');
-    };
+  // ── কোলাবোরেটর রিমুভ + লিস্ট রিফ্রেশ (গ্লোবালি এক্সপোজ করা, onclick থেকে ব্যবহারের জন্য) ──
+  window.removeCollaboratorAndRefresh = async function (projectId, uid) {
+    await window.removeCollaborator(projectId, uid);
+    await refreshCollaboratorList(projectId);
   };
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str ?? '';
-    return d.innerHTML;
-  }
 
   // ── "আমার প্রজেক্ট" লিস্ট মোডাল ──
   function injectProjectListModal() {
@@ -205,14 +116,15 @@
     document.getElementById('btnMyProjects')?.addEventListener('click', openProjectListModal);
   }
 
-  // ── শেয়ার মোডাল খোলা + লিংক জেনারেট ──
+  // ── শেয়ার/ইনভাইট মোডাল খোলা ──
   window.openShareModal = async function () {
     const projectId = window.currentProjectId; // editor.js এ সেট থাকতে হবে
     if (!projectId) { showToast?.('প্রথমে একটা প্রজেক্ট খুলুন বা তৈরি করুন', 'error'); return; }
 
     document.getElementById('shareModal').classList.remove('hidden');
-    const link = await window.createShareLink(projectId, 'editor');
-    document.getElementById('shareLinkInput').value = link || '';
+    document.getElementById('inviteIdentifierInput').value = '';
+    document.getElementById('inviteRoleSelect').value = 'editor';
+    await refreshCollaboratorList(projectId);
   };
 
   // ── "আমার প্রজেক্ট" মোডাল খোলা ──
@@ -228,36 +140,12 @@
     }
 
     body.innerHTML = projects.map(p => `
-      <div class="project-row">
-        <div class="project-row-main" onclick="window.openExistingProject('${p.id}')">
-          <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
-          <div class="project-row-text">
-            <span class="project-row-name">${escapeHtml(p.name)}</span>
-            ${!p.isOwner
-              ? `<span class="project-row-sub">${escapeHtml(p.ownerName)}-এর প্রজেক্ট · আপনি এডিটর (ডিলিট করা যাবে না)</span>`
-              : ''}
-          </div>
-          ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount} জন</span>` : ''}
-        </div>
-        ${p.isOwner
-          ? `<button class="project-delete-btn" title="প্রজেক্ট ডিলিট করুন" onclick="event.stopPropagation();window.handleDeleteProjectClick('${p.id}','${escapeHtml(p.name)}')">
-               <i class="fa-solid fa-trash-can"></i>
-             </button>`
-          : ''}
+      <div class="project-row" onclick="window.openExistingProject('${p.id}')">
+        <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
+        <span class="project-row-name">${p.name}</span>
+        ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount} জন</span>` : ''}
       </div>
     `).join('');
-  };
-
-  // ── owner-only ডিলিট বাটনের কনফার্মেশন হ্যান্ডলার ──
-  window.handleDeleteProjectClick = async function (projectId, projectName) {
-    const ok = confirm(`"${projectName}" প্রজেক্টটি স্থায়ীভাবে ডিলিট করতে চান? এটি সব কোলাবোরেটরের জন্য মুছে যাবে।`);
-    if (!ok) return;
-
-    const success = await window.deleteProject(projectId);
-    if (success) {
-      showToast?.('প্রজেক্ট ডিলিট করা হয়েছে', 'info', 'fa-trash-can');
-      window.openProjectListModal?.();
-    }
   };
 
   // ── নির্দিষ্ট প্রজেক্ট ওপেন করা (লোড + sync attach) ──
