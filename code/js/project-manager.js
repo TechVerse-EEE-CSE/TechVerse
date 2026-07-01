@@ -13,8 +13,7 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
-  arrayUnion, serverTimestamp, collection,
-  query, where, getDocs, deleteField
+  arrayUnion, serverTimestamp, collection
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import firebaseConfig from "../config/firebase-config.js";
@@ -48,7 +47,6 @@ window.createProject = async function (name, fsData) {
     ownerName: user.displayName || user.email || 'অজানা',
     fs: fsData,
     collaboratorUids: [],          // ← কোলাবোরেটরদের uid এখানে যোগ হবে
-    roles: {},                     // ← { uid: 'admin' | 'editor' }
     updatedAt: serverTimestamp(),
     updatedBy: user.uid,
   });
@@ -62,116 +60,68 @@ window.createProject = async function (name, fsData) {
 };
 
 // ══════════════════════════════════════
-//  ২. ইউজারনেম বা ইমেইল দিয়ে সরাসরি ইনভাইট করা (এডমিন / এডিটর রোল)
-//     — কোনো শেয়ার লিংক নেই, সরাসরি ইউজারের অ্যাকাউন্টে প্রজেক্ট যুক্ত হয়
+//  ২. শেয়ার লিংক জেনারেট করা (owner বা existing collaborator করতে পারবে)
+//     ⚠️ এটা শুধু একবার তৈরি হয়, প্রতিবার আলাদা write হয় না —
+//     চাইলে একই shareId বারবার পুনরায় কপি করে শেয়ার করা যায়।
 // ══════════════════════════════════════
-window.inviteUserToProject = async function (projectId, identifier, role = 'editor') {
+window.createShareLink = async function (projectId, role = 'editor') {
   const user = auth.currentUser;
-  if (!user) { showToast?.('লগইন করুন প্রথমে', 'error'); return null; }
+  if (!user) return null;
 
-  identifier = (identifier || '').trim();
-  if (!identifier) { showToast?.('ইউজারনেম বা ইমেইল লিখুন', 'error'); return null; }
-  if (!['admin', 'editor'].includes(role)) role = 'editor';
+  const shareId   = randId(14);
+  const shareRef  = doc(db, 'shareLinks', shareId);
 
-  let targetUid   = null;
-  let targetLabel = identifier;
+  await setDoc(shareRef, {
+    projectId,
+    role,                    // 'editor' | 'viewer'
+    createdBy: user.uid,
+    createdAt: serverTimestamp(),
+    active: true,
+  });
 
-  try {
-    if (identifier.includes('@')) {
-      // ── ইমেইল দিয়ে খোঁজা ──
-      const q    = query(collection(db, 'users'), where('emailLower', '==', identifier.toLowerCase()));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        targetUid   = snap.docs[0].id;
-        targetLabel = snap.docs[0].data().username || identifier;
-      }
-    } else {
-      // ── ইউজারনেম দিয়ে খোঁজা ──
-      const uSnap = await getDoc(doc(db, 'usernames', identifier.toLowerCase()));
-      if (uSnap.exists()) {
-        targetUid   = uSnap.data().uid;
-        targetLabel = uSnap.data().username || identifier;
-      }
-    }
-  } catch (e) {
-    showToast?.('ইউজার খুঁজতে সমস্যা হয়েছে', 'error');
+  const link = `${location.origin}${location.pathname}?join=${shareId}`;
+  return link;
+};
+
+// ══════════════════════════════════════
+//  ৩. শেয়ার লিংক দিয়ে জয়েন করা
+//     — মাত্র 2 write (project + user doc), এরপর কোনো recurring cost নেই
+// ══════════════════════════════════════
+window.joinProjectViaShareLink = async function (shareId) {
+  const user = auth.currentUser;
+  if (!user) { showToast?.('জয়েন করার জন্য আগে লগইন করুন', 'error'); return null; }
+
+  const shareRef  = doc(db, 'shareLinks', shareId);
+  const shareSnap = await getDoc(shareRef);
+
+  if (!shareSnap.exists() || shareSnap.data().active === false) {
+    showToast?.('এই শেয়ার লিংকটি বৈধ নয় বা বন্ধ করা হয়েছে', 'error');
     return null;
   }
 
-  if (!targetUid) {
-    showToast?.('এই ইউজারনেম/ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি', 'error');
-    return null;
-  }
+  const { projectId, role } = shareSnap.data();
+  const projRef = doc(db, 'projects', projectId);
+  const userRef = doc(db, 'users', user.uid);
 
-  if (targetUid === user.uid) {
-    showToast?.('নিজেকে ইনভাইট করা যাবে না', 'error');
-    return null;
-  }
-
-  const projRef  = doc(db, 'projects', projectId);
+  // ── ইতোমধ্যে owner/collaborator হলে আবার যোগ করার দরকার নেই ──
   const projSnap = await getDoc(projRef);
   if (!projSnap.exists()) { showToast?.('প্রজেক্ট খুঁজে পাওয়া যায়নি', 'error'); return null; }
 
   const projData = projSnap.data();
-  if (projData.ownerUid === targetUid) {
-    showToast?.('উনি ইতোমধ্যে এই প্রজেক্টের মালিক', 'info');
-    return null;
-  }
+  const already = projData.ownerUid === user.uid ||
+                   (projData.collaboratorUids || []).includes(user.uid);
 
-  await updateDoc(projRef, {
-    collaboratorUids: arrayUnion(targetUid),
-    [`roles.${targetUid}`]: role,
-  });
-
-  await setDoc(doc(db, 'users', targetUid), {
-    sharedProjectIds: arrayUnion(projectId),
-    roles: { [projectId]: role },
-  }, { merge: true });
-
-  showToast?.(
-    `${targetLabel} কে ${role === 'admin' ? 'এডমিন' : 'এডিটর'} হিসেবে ইনভাইট করা হয়েছে ✅`,
-    'success', 'fa-user-plus'
-  );
-  return targetUid;
-};
-
-// ══════════════════════════════════════
-//  ৩. প্রজেক্টের কোলাবোরেটর লিস্ট (ইউজারনেম/ইমেইল/রোল সহ)
-// ══════════════════════════════════════
-window.getProjectCollaborators = async function (projectId) {
-  const projSnap = await getDoc(doc(db, 'projects', projectId));
-  if (!projSnap.exists()) return [];
-
-  const d     = projSnap.data();
-  const uids  = d.collaboratorUids || [];
-  const roles = d.roles || {};
-
-  const out = [];
-  for (const uid of uids) {
-    const uSnap = await getDoc(doc(db, 'users', uid));
-    const ud    = uSnap.exists() ? uSnap.data() : {};
-    out.push({
-      uid,
-      username: ud.username || null,
-      email: ud.email || null,
-      role: roles[uid] || 'editor',
+  if (!already) {
+    await updateDoc(projRef, {
+      collaboratorUids: arrayUnion(user.uid),
     });
+    await setDoc(userRef, {
+      sharedProjectIds: arrayUnion(projectId),
+      roles: { [projectId]: role },
+    }, { merge: true });
   }
-  return out;
-};
 
-// ══════════════════════════════════════
-//  ৪. কোলাবোরেটরের রোল পরিবর্তন (এডমিন ⇄ এডিটর)
-// ══════════════════════════════════════
-window.updateCollaboratorRole = async function (projectId, uid, role) {
-  if (!['admin', 'editor'].includes(role)) return;
-  await updateDoc(doc(db, 'projects', projectId), {
-    [`roles.${uid}`]: role,
-  });
-  await setDoc(doc(db, 'users', uid), {
-    roles: { [projectId]: role },
-  }, { merge: true });
-  showToast?.('রোল আপডেট হয়েছে', 'success', 'fa-user-gear');
+  return projectId;
 };
 
 // ══════════════════════════════════════
@@ -208,7 +158,7 @@ window.listMyProjects = async function () {
 };
 
 // ══════════════════════════════════════
-//  ৫. কোলাবোরেটর রিমুভ করা (শুধু owner/admin পারবে — rule দিয়ে enforce হবে)
+//  ৫. কোলাবোরেটর রিমুভ করা (শুধু owner পারবে — rule দিয়ে enforce হবে)
 // ══════════════════════════════════════
 window.removeCollaborator = async function (projectId, uid) {
   const projRef  = doc(db, 'projects', projectId);
@@ -216,9 +166,26 @@ window.removeCollaborator = async function (projectId, uid) {
   if (!projSnap.exists()) return;
 
   const list = (projSnap.data().collaboratorUids || []).filter(u => u !== uid);
-  await updateDoc(projRef, {
-    collaboratorUids: list,
-    [`roles.${uid}`]: deleteField(),
-  });
-  showToast?.('কোলাবোরেটর রিমুভ করা হয়েছে', 'info', 'fa-user-minus');
+  await updateDoc(projRef, { collaboratorUids: list });
+};
+
+// ══════════════════════════════════════
+//  ৬. URL-এ ?join=shareId থাকলে অটো-হ্যান্ডল করা
+// ══════════════════════════════════════
+window.handleJoinFromUrl = async function () {
+  const params  = new URLSearchParams(location.search);
+  const shareId = params.get('join');
+  if (!shareId) return null;
+
+  const projectId = await window.joinProjectViaShareLink(shareId);
+
+  // URL পরিষ্কার করো যাতে রিফ্রেশে আবার জয়েন না হয়
+  params.delete('join');
+  const clean = location.pathname + (params.toString() ? `?${params}` : '');
+  history.replaceState({}, '', clean);
+
+  if (projectId) {
+    showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
+  }
+  return projectId;
 };
