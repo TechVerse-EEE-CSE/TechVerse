@@ -1,13 +1,13 @@
 // ══════════════════════════════════════
 //  FIRESTORE SYNC (v2 — Collaborative) — js/firestore-sync.js
 //
-//  Firestore লোড কম রাখার কৌশল:
-//   ১. Save এখনো manual (Ctrl+S) — প্রতি কী-স্ট্রোকে write হয় না
-//   ২. একসাথে কাজ করার জন্য onSnapshot লিসেনার ব্যবহার করা হয়েছে,
-//      কিন্তু এটা তখনই ট্রিগার হয় যখন আসলে কেউ save করে — তাই
-//      একাধিক কোলাবোরেটর থাকলেও idle অবস্থায় কোনো read হয় না
-//   ৩. ১টা প্রজেক্টের জন্য একসাথে একটাই active listener রাখা হয়
-//      (tab পরিবর্তন/বন্ধ করলে আগের listener detach করে দেওয়া হয়)
+//  Strategy to keep Firestore load low:
+//   1. Save is still manual (Ctrl+S) — there's no write on every keystroke
+//   2. An onSnapshot listener is used for working together in real time,
+//      but it only triggers when someone actually saves — so
+//      even with multiple collaborators there's no read while idle
+//   3. Only one active listener is kept per project at a time
+//      (the previous listener is detached when the tab is switched/closed)
 // ══════════════════════════════════════
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -24,20 +24,20 @@ const auth = getAuth(app);
 let _currentUser     = null;
 let _isSyncing        = false;
 let _activeProjectId  = null;
-let _unsubscribe       = null;   // ← চলমান onSnapshot listener
-let _lastKnownUpdateMs = 0;      // remote echo এড়াতে (নিজের সেভ-এর জন্য toast না দেখানো)
+let _unsubscribe       = null;   // ← the currently active onSnapshot listener
+let _lastKnownUpdateMs = 0;      // to avoid remote echo (not showing a toast for one's own save)
 
 onAuthStateChanged(auth, async (user) => {
   _currentUser = user;
   if (!user) return;
 
-  // ── users/{uid} ডক চেক করো — আগে থেকে কোনো প্রজেক্ট আছে কিনা ──
+  // ── Check the users/{uid} doc — see if a project already exists ──
   const userRef  = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
   const owned    = userSnap.exists() ? (userSnap.data().ownedProjectIds || []) : [];
 
   if (owned.length > 0) {
-    // ── আগের প্রজেক্ট আছে → সেটাই খুলে দাও ──
+    // ── An existing project exists → open it ──
     window.currentProjectId = owned[0];
     window.openProjectSync(owned[0]);
     const fs = await window.cloudLoadProject(owned[0]);
@@ -46,44 +46,44 @@ onAuthStateChanged(auth, async (user) => {
       if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
     }
   } else {
-    // ── প্রথমবার লগইন → এখনকার লোকাল ফাইল দিয়ে নতুন প্রজেক্ট বানাও ──
+    // ── First-time login → create a new project from the current local files ──
     const localFs = await IDBStore.get('fs');
     const projectId = await window.createProject('My Project', localFs || {});
     window.currentProjectId = projectId;
     window.openProjectSync(projectId);
-    showToast?.('নতুন প্রজেক্ট তৈরি হয়েছে', 'success', 'fa-folder-plus');
+    showToast?.('New project created', 'success', 'fa-folder-plus');
   }
 });
 
 // ══════════════════════════════════════
-//  প্রজেক্ট ওপেন করা — listener attach
+//  Open a project — attach listener
 // ══════════════════════════════════════
 window.openProjectSync = function (projectId) {
-  if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }   // ← আগের listener বন্ধ করো
+  if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }   // ← stop the previous listener
   _activeProjectId = projectId;
 
   const projRef = doc(db, 'projects', projectId);
 
-  // ── এই listener idle অবস্থায় কোনো extra read করে না — শুধু
-  //    actual write হলেই snapshot push হয় (Firestore-এর native behaviour) ──
+  // ── This listener does no extra read while idle — a snapshot is pushed only when
+  //    there's an actual write (native Firestore behaviour) ──
   _unsubscribe = onSnapshot(projRef, (snap) => {
     if (!snap.exists()) return;
     const data = snap.data();
     const remoteMs = data.updatedAt?.toMillis?.() || 0;
 
-    // ── নিজের করা সেভ হলে স্কিপ করো (নিজেকে নিজে রিলোড না করার জন্য) ──
+    // ── Skip if this is one's own save (to avoid reloading oneself) ──
     if (remoteMs <= _lastKnownUpdateMs) return;
     _lastKnownUpdateMs = remoteMs;
 
-    if (data.updatedBy === _currentUser?.uid) return; // নিজেই করেছে
+    if (data.updatedBy === _currentUser?.uid) return; // done by the current user themself
 
-    // ── অন্য কেউ আপডেট করেছে → ইউজারকে জানাও, ফোর্স রিলোড না করে ──
+    // ── Someone else made an update → notify the user, without forcing a reload ──
     if (typeof showToast === 'function') {
-      showToast(`${data.updatedByName || 'একজন কোলাবোরেটর'} নতুন আপডেট করেছে`, 'info', 'fa-users');
+      showToast(`${data.updatedByName || 'A collaborator'} made a new update`, 'info', 'fa-users');
     }
     document.getElementById('reloadAvailableBadge')?.classList.remove('hidden');
     document.getElementById('reloadDot')?.classList.remove('hidden');
-    window._remoteFsAvailable = data.fs; // চাইলে ইউজার বাটনে ক্লিক করে লোড করবে
+    window._remoteFsAvailable = data.fs; // the user can load it by clicking the button if they want
   });
 };
 
@@ -93,12 +93,12 @@ window.closeProjectSync = function () {
 };
 
 // ══════════════════════════════════════
-//  CLOUD SAVE — manual Ctrl+S / Save বাটনে কল হবে
-//  প্রতি save = ঠিক ১টা write (আগের মতোই)
+//  CLOUD SAVE — called on manual Ctrl+S / the Save button
+//  Each save = exactly 1 write (same as before)
 // ══════════════════════════════════════
 window.cloudSave = async function (fsData) {
-  if (!_currentUser)     { showToast?.('লগইন ছাড়া cloud সেভ হবে না, local সেভ আছে', 'info'); return; }
-  if (!_activeProjectId) { showToast?.('কোনো প্রজেক্ট খোলা নেই', 'error'); return; }
+  if (!_currentUser)     { showToast?.('No cloud save without logging in, local save is available', 'info'); return; }
+  if (!_activeProjectId) { showToast?.('No project is open', 'error'); return; }
   if (_isSyncing) return;
   _isSyncing = true;
   showSyncStatus('saving');
@@ -109,12 +109,12 @@ window.cloudSave = async function (fsData) {
 
     if (sizeKB > 900) {
       showSyncStatus('toobig');
-      showToast?.('ফাইল অনেক বড়! শুধু local সেভ হয়েছে।', 'info', 'fa-triangle-exclamation');
+      showToast?.('File is too large! Only saved locally.', 'info', 'fa-triangle-exclamation');
       return;
     }
 
     const now = Date.now();
-    _lastKnownUpdateMs = now; // ← নিজের write কে নিজে remote-update হিসেবে না ধরার জন্য
+    _lastKnownUpdateMs = now; // ← so one's own write isn't treated as a remote update
 
     await setDoc(doc(db, 'projects', _activeProjectId), {
       fs: fsData,
@@ -125,19 +125,19 @@ window.cloudSave = async function (fsData) {
     }, { merge: true });
 
     showSyncStatus('saved');
-    showToast?.('Cloud এ সেভ হয়েছে ☁️', 'success', 'fa-cloud-arrow-up');
+    showToast?.('Saved to Cloud ☁️', 'success', 'fa-cloud-arrow-up');
 
   } catch (err) {
     console.error('Cloud save error:', err);
     showSyncStatus('error');
-    showToast?.('Cloud সেভ ব্যর্থ। Local সেভ আছে।', 'error', 'fa-cloud-slash');
+    showToast?.('Cloud save failed. Local save is available.', 'error', 'fa-cloud-slash');
   } finally {
     _isSyncing = false;
   }
 };
 
 // ══════════════════════════════════════
-//  CLOUD LOAD — প্রজেক্ট ওপেন করার সময় একবার (1 read)
+//  CLOUD LOAD — once when opening a project (1 read)
 // ══════════════════════════════════════
 window.cloudLoadProject = async function (projectId) {
   try {
@@ -152,7 +152,7 @@ window.cloudLoadProject = async function (projectId) {
   }
 };
 
-// ── অন্য কেউ আপডেট দিলে "নতুন ভার্সন লোড করুন" বাটনে ক্লিকে কল হবে ──
+// ── Called when clicking the "Load new version" button after someone else's update ──
 window.applyRemoteUpdate = async function () {
   if (!window._remoteFsAvailable) return;
   await IDBStore.set('fs', window._remoteFsAvailable);
@@ -163,16 +163,16 @@ window.applyRemoteUpdate = async function () {
 };
 
 // ══════════════════════════════════════
-//  SYNC STATUS INDICATOR (navbar এ)
+//  SYNC STATUS INDICATOR (in the navbar)
 // ══════════════════════════════════════
 function showSyncStatus(status) {
   let el = document.getElementById('cloudSyncBadge');
   if (!el) return;
   const map = {
-    saving:  { icon: 'fa-cloud-arrow-up',       color: '#5b8dee', title: 'Cloud এ সেভ হচ্ছে…' },
-    saved:   { icon: 'fa-cloud-check',          color: '#10c98f', title: 'Cloud এ সেভ হয়েছে' },
-    error:   { icon: 'fa-cloud-slash',          color: '#ef4444', title: 'Cloud সেভ ব্যর্থ' },
-    toobig:  { icon: 'fa-triangle-exclamation', color: '#feca57', title: 'ফাইল অনেক বড়' },
+    saving:  { icon: 'fa-cloud-arrow-up',       color: '#5b8dee', title: 'Saving to Cloud…' },
+    saved:   { icon: 'fa-cloud-check',          color: '#10c98f', title: 'Saved to Cloud' },
+    error:   { icon: 'fa-cloud-slash',          color: '#ef4444', title: 'Cloud save failed' },
+    toobig:  { icon: 'fa-triangle-exclamation', color: '#feca57', title: 'File is too large' },
   };
   const s = map[status] || map.saved;
   el.innerHTML = `<i class="fa-solid ${s.icon}" style="color:${s.color}" title="${s.title}"></i>`;
