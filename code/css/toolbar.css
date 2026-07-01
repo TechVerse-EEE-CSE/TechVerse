@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════
    FLOATING TOOLBAR — css/toolbar.css
-   css/styles.css এর শেষে যোগ করুন
+   Add at the end of css/styles.css
 ══════════════════════════════════════ */
 
 /* ── Floating Toolbar ── */
@@ -30,7 +30,7 @@
   right: -52px;
 }
 
-/* ── প্রতিটি item ── */
+/* ── Each item ── */
 .ftb-item {
   display: flex;
   flex-direction: column;
@@ -136,7 +136,7 @@
   transform: rotate(180deg);
 }
 
-/* collapsed হলে শুধু toggle দেখাবে */
+/* only show toggle when collapsed */
 .float-toolbar.collapsed .ftb-item,
 .float-toolbar.collapsed .ftb-sep {
   display: none;
@@ -356,14 +356,14 @@
   transform: scale(1.15);
 }
 
-/* ── Toast সাথে conflict না হওয়ার জন্য ── */
+/* ── To avoid conflicting with Toast ── */
 @media (max-width: 480px) {
   .float-toolbar { top: auto; bottom: 120px; transform: none; }
   .color-popup   { top: auto; bottom: 120px; transform: none; right: 72px; }
   .color-popup.show { transform: none; }
 }
 
-/* ── Peek Button (toolbar collapsed হলে দেখা যায়) ── */
+/* ── Peek Button (visible when toolbar is collapsed) ── */
 #ftbPeekBtn {
   position: fixed;
   right: 0;
