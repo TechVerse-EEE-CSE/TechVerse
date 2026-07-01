@@ -3,7 +3,7 @@
 //  Firebase Authentication সব কাজ এখানে
 // ══════════════════════════════════════
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -15,18 +15,104 @@ import {
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import firebaseConfig from "../config/firebase-config.js";
 
 // ── Initialize ──
-const app       = initializeApp(firebaseConfig);
+const app       = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth      = getAuth(app);
+const db        = getFirestore(app);
 const gProvider = new GoogleAuthProvider();
 
-// ── Auth State Listener ──
-onAuthStateChanged(auth, user => {
-  if (user) {
+let _pendingUsernameUser = null;
+
+// ── ইউজার ডকে ইমেইল/নাম আপ-টু-ডেট রাখা (ইউজারনেম/ইমেইল দিয়ে ইনভাইট খোঁজার জন্য) ──
+async function ensureUserDoc(user) {
+  const userRef = doc(db, 'users', user.uid);
+  const snap    = await getDoc(userRef);
+  const data    = snap.exists() ? snap.data() : {};
+
+  const email     = user.email || null;
+  const emailLower = email ? email.toLowerCase() : null;
+
+  if (data.email !== email || data.emailLower !== emailLower || data.displayName !== user.displayName) {
+    await setDoc(userRef, {
+      email, emailLower,
+      displayName: user.displayName || null,
+    }, { merge: true });
+  }
+  return data;
+}
+
+// ── ইউজারনেম রিজার্ভ করা (uniqueness নিশ্চিত করতে transaction) ──
+async function reserveUsername(uid, username) {
+  const uLower  = username.toLowerCase();
+  const nameRef = doc(db, 'usernames', uLower);
+
+  await runTransaction(db, async (tx) => {
+    const nameSnap = await tx.get(nameRef);
+    if (nameSnap.exists() && nameSnap.data().uid !== uid) {
+      throw new Error('taken');
+    }
+    tx.set(nameRef, { uid, username });
+    tx.set(doc(db, 'users', uid), { username, usernameLower: uLower }, { merge: true });
+  });
+}
+
+// ── প্রথমবার লগইনের পর ইউজারনেম বাধ্যতামূলকভাবে নেওয়া ──
+function openUsernameSetupModal(user) {
+  _pendingUsernameUser = user;
+  const suggestion = (user.email || '').split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
+  const input = document.getElementById('usernameSetupInput');
+  if (input) input.value = suggestion;
+  document.getElementById('usernameSetupMsg')?.classList.remove('show');
+  document.getElementById('usernameSetupModal')?.classList.remove('hidden');
+}
+
+window.submitUsernameSetup = async function () {
+  const input = document.getElementById('usernameSetupInput');
+  const raw   = (input?.value || '').trim();
+
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(raw)) {
+    return showAuthMsg('usernameSetupMsg', 'error', 'ইউজারনেম ৩-২০ অক্ষরের হতে হবে, শুধু a-z, 0-9 এবং _ ব্যবহার করুন।');
+  }
+  if (!_pendingUsernameUser) return;
+
+  setLoading('usernameSetupBtn', true);
+  try {
+    await reserveUsername(_pendingUsernameUser.uid, raw);
+    document.getElementById('usernameSetupModal')?.classList.add('hidden');
+    const user = _pendingUsernameUser;
+    _pendingUsernameUser = null;
     enterEditor(user);
+  } catch (e) {
+    setLoading('usernameSetupBtn', false);
+    if (e.message === 'taken') {
+      showAuthMsg('usernameSetupMsg', 'error', 'এই ইউজারনেমটি অন্য কেউ আগেই নিয়ে নিয়েছে, অন্য একটা চেষ্টা করুন।');
+    } else {
+      showAuthMsg('usernameSetupMsg', 'error', 'কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    }
+  }
+};
+
+// ── Auth State Listener ──
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    document.getElementById('authScreen').style.display = 'none';
+    const up = document.getElementById('userPill');
+    if (up) up.style.display = 'none';
+
+    let data = {};
+    try { data = await ensureUserDoc(user); } catch (e) { /* offline ইত্যাদি — এড়িয়ে যাই */ }
+
+    if (!data.username) {
+      openUsernameSetupModal(user);
+    } else {
+      enterEditor(user);
+    }
   } else {
     showAuthScreen();
   }
