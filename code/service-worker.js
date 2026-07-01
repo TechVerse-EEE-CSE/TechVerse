@@ -1,12 +1,12 @@
 // ══════════════════════════════════════
 //  SERVICE WORKER — service-worker.js
-//  অফলাইন সাপোর্ট: অ্যাপ + CDN লাইব্রেরি ক্যাশ করে
-//  Firebase (Auth/Firestore) রিকোয়েস্ট সবসময় নেটওয়ার্কেই যাবে
+//  Offline support: caches the app + CDN libraries
+//  Firebase (Auth/Firestore) requests always go straight to the network
 // ══════════════════════════════════════
 
-const CACHE_VERSION = 'tv-cache-v3'; // ← v3: username ফিল্ড যোগ হয়েছে, তাই ভার্সন বাম্প করা হলো
+const CACHE_VERSION = 'tv-cache-v1';
 
-// ── নিজের অ্যাপের ফাইল (app shell) ──
+// ── This app's own files (app shell) ──
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -16,9 +16,6 @@ const APP_SHELL = [
   '/512x512.png',
   '/css/styles.css',
   '/css/toolbar.css',
-  '/css/profile.css',
-  '/css/share.css',
-  '/css/privacy-policy.css',
   '/js/idb-store.js',
   '/js/editor.js',
   '/js/toolbar.js',
@@ -26,14 +23,10 @@ const APP_SHELL = [
   '/js/auth-ui.js',
   '/js/firestore-sync.js',
   '/js/pro-editor.js',
-  '/js/project-manager.js',
-  '/js/profile.js',
-  '/js/username.js',
-  '/js/share-ui.js',
   '/config/firebase-config.js',
 ];
 
-// ── বাইরের CDN লাইব্রেরি (CodeMirror, Font Awesome, Google Fonts) ──
+// ── External CDN libraries (CodeMirror, Font Awesome, Google Fonts) ──
 const CDN_SHELL = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap',
@@ -53,14 +46,14 @@ const CDN_SHELL = [
   'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/search.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/searchcursor.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js',
-  // Firebase SDK (এগুলো static module ফাইল — না থাকলে offline এ import fail করে পুরো অ্যাপ ভেঙে যাবে)
+  // Firebase SDK (these are static module files — without them, imports fail offline and break the whole app)
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js',
 ];
 
-// ── এই ডোমেইনগুলো কখনো ক্যাশ করব না — সবসময় লাইভ নেটওয়ার্কে যাবে ──
+// ── Never cache these domains — always go to the live network ──
 const NEVER_CACHE = [
   'firestore.googleapis.com',
   'identitytoolkit.googleapis.com',
@@ -73,18 +66,18 @@ function isNeverCache(url) {
   return NEVER_CACHE.some(host => url.includes(host));
 }
 
-// ══ INSTALL — app shell + CDN ফাইল ক্যাশ করো ══
+// ══ INSTALL — cache the app shell + CDN files ══
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then(async (cache) => {
-      // নিজের ফাইল — fail হলে পুরো ইনস্টল আটকে যাবে, তাই সাবধানে
+      // Own files — a failure here blocks the entire install, so be careful
       await cache.addAll(APP_SHELL).catch(err => console.warn('App shell cache failed:', err));
-      // CDN ফাইল — একটাও fail করলেও বাকিগুলো যেন বাদ না যায়
+      // CDN files — don't let a single failure drop the rest
       await Promise.all(
         CDN_SHELL.map(url =>
           fetch(url, { mode: 'cors' })
             .then(res => res.ok && cache.put(url, res))
-            .catch(() => {/* অফলাইনে install হলে CDN ফাইল মিস হতে পারে, সমস্যা নেই */})
+            .catch(() => {/* CDN files may be missed if installing offline, that's fine */})
         )
       );
     })
@@ -92,7 +85,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// ══ ACTIVATE — পুরনো ক্যাশ ভার্সন মুছে ফেলো ══
+// ══ ACTIVATE — delete old cache versions ══
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -109,7 +102,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = request.url;
 
-  // Firebase/Firestore কল — কখনো ক্যাশ ইন্টারসেপ্ট করব না, সরাসরি নেটওয়ার্কে যাক
+  // Firebase/Firestore calls — never intercept with cache, go straight to the network
   if (isNeverCache(url)) return;
 
   event.respondWith(
@@ -124,20 +117,20 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => null);
 
-      // ক্যাশে থাকলে সাথে সাথে সেটা দেখাও (instant load), পেছনে আপডেট হতে থাকুক
+      // If it's in the cache, show it immediately (instant load), and keep updating in the background
       if (cached) {
-        networkFetch; // fire and forget — পরের বার আপডেট ভার্সন পাওয়া যাবে
+        networkFetch; // fire and forget — the updated version will be available next time
         return cached;
       }
 
-      // ক্যাশে না থাকলে নেটওয়ার্ক চেষ্টা করো
+      // If not in the cache, try the network
       return networkFetch.then((res) => {
         if (res) return res;
-        // অফলাইন এবং ক্যাশেও নেই — পেজ navigation হলে index.html ফেরত দাও
+        // Offline and not in the cache either — return index.html for page navigation
         if (request.mode === 'navigate') {
           return caches.match('/index.html');
         }
-        return new Response('অফলাইন — এটি আগে থেকে নেই', { status: 503 });
+        return new Response('Offline — this is not available', { status: 503 });
       });
     })
   );
