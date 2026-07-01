@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
 //  SHARE / PROJECT UI — js/share-ui.js
-//  project-manager.js এর পরে লোড করুন
+//  Load this after project-manager.js
 // ══════════════════════════════════════
 
 (function () {
@@ -11,17 +11,17 @@
     window.handleJoinFromUrl?.();
   });
 
-  // ── শেয়ার মোডাল HTML ইনজেক্ট ──
+  // ── Inject the share modal HTML ──
   function injectShareModal() {
     const div = document.createElement('div');
     div.id = 'shareModal';
     div.className = 'modal-overlay hidden';
     div.innerHTML = `
       <div class="modal-box">
-        <h3><i class="fa-solid fa-user-group"></i> প্রজেক্ট শেয়ার করুন</h3>
-        <p class="muted">যাকে এই লিংক দেবেন, সে লগইন করে এই প্রজেক্টে এডিট করতে পারবে।</p>
+        <h3><i class="fa-solid fa-user-group"></i> Share Project</h3>
+        <p class="muted">Whoever you give this link to can log in and edit this project.</p>
         <div class="share-link-row">
-          <input id="shareLinkInput" type="text" readonly placeholder="লিংক তৈরি হচ্ছে...">
+          <input id="shareLinkInput" type="text" readonly placeholder="Generating link...">
           <button id="copyShareLinkBtn"><i class="fa-solid fa-copy"></i></button>
         </div>
         <div class="share-social-row">
@@ -30,31 +30,31 @@
           <button class="share-social-btn sb-messenger" data-share="messenger" title="Messenger"><i class="fa-brands fa-facebook-messenger"></i></button>
           <button class="share-social-btn sb-facebook" data-share="facebook" title="Facebook"><i class="fa-brands fa-facebook"></i></button>
           <button class="share-social-btn sb-instagram" data-share="instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></button>
-          <button class="share-social-btn sb-more" data-share="more" title="আরও / সিস্টেম শেয়ার"><i class="fa-solid fa-share-nodes"></i></button>
+          <button class="share-social-btn sb-more" data-share="more" title="More / System Share"><i class="fa-solid fa-share-nodes"></i></button>
         </div>
         <div id="collaboratorList" class="collaborator-list"></div>
-        <button class="modal-close-btn" onclick="document.getElementById('shareModal').classList.add('hidden')">বন্ধ করুন</button>
+        <button class="modal-close-btn" onclick="document.getElementById('shareModal').classList.add('hidden')">Close</button>
       </div>`;
     document.body.appendChild(div);
 
     document.getElementById('copyShareLinkBtn').onclick = () => {
       const input = document.getElementById('shareLinkInput');
       navigator.clipboard.writeText(input.value);
-      showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
+      showToast?.('Link copied', 'success', 'fa-copy');
     };
 
     bindSocialShareButtons(div);
   }
 
-  // ── সোশ্যাল শেয়ার বাটনগুলোতে ক্লিক হ্যান্ডলার বাইন্ড করা ──
+  // ── Bind click handlers to the social share buttons ──
   function bindSocialShareButtons(root) {
     root.querySelectorAll('.share-social-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const link = document.getElementById('shareLinkInput').value;
-        if (!link) { showToast?.('লিংক এখনো তৈরি হয়নি, একটু অপেক্ষা করুন', 'error'); return; }
+        if (!link) { showToast?.('Link not generated yet, please wait a moment', 'error'); return; }
 
-        const projectName = (window.currentProjectName || 'আমার প্রজেক্ট');
-        const shareText = `${projectName} — এই প্রজেক্টে আমার সাথে কোড এডিট করুন:`;
+        const projectName = (window.currentProjectName || 'My Project');
+        const shareText = `${projectName} — edit code with me on this project:`;
         const encodedLink = encodeURIComponent(link);
         const encodedText = encodeURIComponent(shareText);
         const platform = btn.dataset.share;
@@ -64,7 +64,7 @@
     });
   }
 
-  // ── প্ল্যাটফর্ম অনুযায়ী শেয়ার লিংক ওপেন করা ──
+  // ── Open the share link according to the platform ──
   function openShareTarget(platform, rawLink, encodedLink, encodedText) {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -86,7 +86,7 @@
       }
       case 'messenger': {
         if (isMobile) {
-          // মোবাইলে Messenger অ্যাপ ডিপ-লিংক, না থাকলে ফেসবুকে পাঠানো হবে
+          // Deep-link to the Messenger app on mobile, falls back to Facebook if unavailable
           window.location.href = `fb-messenger://share?link=${encodedLink}`;
           setTimeout(() => {
             navigator.clipboard?.writeText(rawLink);
@@ -94,42 +94,42 @@
           }, 800);
         } else {
           navigator.clipboard?.writeText(rawLink);
-          showToast?.('লিংক কপি হয়েছে, Messenger-এ পেস্ট করুন', 'info', 'fa-facebook-messenger');
+          showToast?.('Link copied, paste it in Messenger', 'info', 'fa-facebook-messenger');
           window.open('https://www.messenger.com/', '_blank');
         }
         break;
       }
       case 'instagram': {
-        // ইনস্টাগ্রাম সরাসরি লিংক শেয়ার সাপোর্ট করে না, তাই লিংক কপি করে অ্যাপ খুলে দেওয়া হয়
+        // Instagram doesn't support direct link sharing, so the link is copied and the app is opened
         navigator.clipboard?.writeText(rawLink);
-        showToast?.('লিংক কপি হয়েছে, Instagram DM/Story-তে পেস্ট করুন', 'info', 'fa-instagram');
+        showToast?.('Link copied, paste it in an Instagram DM/Story', 'info', 'fa-instagram');
         window.open(isMobile ? 'instagram://direct/inbox' : 'https://www.instagram.com/', '_blank');
         break;
       }
       case 'more': {
         if (navigator.share) {
-          navigator.share({ title: 'প্রজেক্ট শেয়ার', text: decodeURIComponent(encodedText), url: rawLink }).catch(() => {});
+          navigator.share({ title: 'Project Share', text: decodeURIComponent(encodedText), url: rawLink }).catch(() => {});
         } else {
           navigator.clipboard?.writeText(rawLink);
-          showToast?.('লিংক কপি হয়েছে', 'success', 'fa-copy');
+          showToast?.('Link copied', 'success', 'fa-copy');
         }
         break;
       }
     }
   }
 
-  // ── "আমার প্রজেক্ট" লিস্ট মোডাল ──
+  // ── "My Projects" list modal ──
   function injectProjectListModal() {
     const div = document.createElement('div');
     div.id = 'projectListModal';
     div.className = 'modal-overlay hidden';
     div.innerHTML = `
       <div class="modal-box">
-        <h3><i class="fa-solid fa-folder-open"></i> আমার প্রজেক্টসমূহ</h3>
+        <h3><i class="fa-solid fa-folder-open"></i> My Projects</h3>
         <div id="myProjectListBody" class="project-list-body">
-          <p class="muted">লোড হচ্ছে...</p>
+          <p class="muted">Loading...</p>
         </div>
-        <button class="modal-close-btn" onclick="document.getElementById('projectListModal').classList.add('hidden')">বন্ধ করুন</button>
+        <button class="modal-close-btn" onclick="document.getElementById('projectListModal').classList.add('hidden')">Close</button>
       </div>`;
     document.body.appendChild(div);
   }
@@ -139,25 +139,25 @@
     document.getElementById('btnMyProjects')?.addEventListener('click', openProjectListModal);
   }
 
-  // ── শেয়ার মোডাল খোলা + লিংক জেনারেট ──
+  // ── Open the share modal + generate the link ──
   window.openShareModal = async function () {
-    const projectId = window.currentProjectId; // editor.js এ সেট থাকতে হবে
-    if (!projectId) { showToast?.('প্রথমে একটা প্রজেক্ট খুলুন বা তৈরি করুন', 'error'); return; }
+    const projectId = window.currentProjectId; // must be set in editor.js
+    if (!projectId) { showToast?.('Please open or create a project first', 'error'); return; }
 
     document.getElementById('shareModal').classList.remove('hidden');
     const link = await window.createShareLink(projectId, 'editor');
     document.getElementById('shareLinkInput').value = link || '';
   };
 
-  // ── "আমার প্রজেক্ট" মোডাল খোলা ──
+  // ── Open the "My Projects" modal ──
   window.openProjectListModal = async function () {
     document.getElementById('projectListModal').classList.remove('hidden');
     const body = document.getElementById('myProjectListBody');
-    body.innerHTML = `<p class="muted">লোড হচ্ছে...</p>`;
+    body.innerHTML = `<p class="muted">Loading...</p>`;
 
     const projects = await window.listMyProjects();
     if (!projects.length) {
-      body.innerHTML = `<p class="muted">কোনো প্রজেক্ট নেই। নতুন তৈরি করুন।</p>`;
+      body.innerHTML = `<p class="muted">No projects yet. Create a new one.</p>`;
       return;
     }
 
@@ -165,12 +165,12 @@
       <div class="project-row" onclick="window.openExistingProject('${p.id}')">
         <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
         <span class="project-row-name">${p.name}</span>
-        ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount} জন</span>` : ''}
+        ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount}</span>` : ''}
       </div>
     `).join('');
   };
 
-  // ── নির্দিষ্ট প্রজেক্ট ওপেন করা (লোড + sync attach) ──
+  // ── Open a specific project (load + attach sync) ──
   window.openExistingProject = async function (projectId) {
     document.getElementById('projectListModal')?.classList.add('hidden');
     window.currentProjectId = projectId;
@@ -181,22 +181,22 @@
       if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
     }
     window.openProjectSync(projectId);
-    showToast?.('প্রজেক্ট ওপেন হয়েছে', 'success', 'fa-folder-open');
+    showToast?.('Project opened', 'success', 'fa-folder-open');
   };
-  // ── নতুন প্রজেক্ট তৈরি (ব্ল্যাঙ্ক স্টার্টার ফাইল সহ) ──
+  // ── Create a new project (with a blank starter file) ──
   window.handleCreateNewProject = async function () {
-    const name = prompt('প্রজেক্টের নাম দিন:', 'নতুন প্রজেক্ট');
+    const name = prompt('Enter a project name:', 'New Project');
     if (!name) return;
 
     const starterFs = {
       'index.html': '<!DOCTYPE html>\n<html>\n<head>\n  <title>' + name + '</title>\n</head>\n<body>\n  \n</body>\n</html>'
     };
 
-    showToast?.('প্রজেক্ট তৈরি হচ্ছে...', 'info', 'fa-spinner');
+    showToast?.('Creating project...', 'info', 'fa-spinner');
     const projectId = await window.createProject(name, starterFs);
     if (!projectId) return;
 
-    // ── আগের প্রজেক্টের sync বন্ধ করে নতুনটাতে সুইচ করো ──
+    // ── Stop the previous project's sync and switch to the new one ──
     window.closeProjectSync?.();
     window.currentProjectId = projectId;
 
@@ -204,7 +204,7 @@
     if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
 
     window.openProjectSync(projectId);
-    showToast?.('নতুন প্রজেক্ট তৈরি হয়েছে ✅', 'success', 'fa-folder-plus');
+    showToast?.('New project created ✅', 'success', 'fa-folder-plus');
   };
 
 })();
