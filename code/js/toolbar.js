@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
 //  FLOATING TOOLBAR — js/toolbar.js
-//  index.html এ editor.js এর পরে যোগ করুন
+//  Add this after editor.js in index.html
 // ══════════════════════════════════════
 
 (function () {
@@ -23,7 +23,7 @@
   let colorPopupOpen = false;
   let tbCollapsed    = false;
 
-  // ── Init: DOM তৈরি হলে চালাও ──
+  // ── Init: run once the DOM is ready ──
   document.addEventListener('DOMContentLoaded', initToolbar);
 
   function initToolbar() {
@@ -31,10 +31,10 @@
     bindColorPicker();
     bindColorItemClick();
     updateColorDisplay(currentColor);
-    createPeekButton(); // ← নতুন peek বাটন তৈরি
+    createPeekButton(); // ← create the new peek button
   }
 
-  // ── Peek বাটন তৈরি ──
+  // ── Create the peek button ──
   function createPeekButton() {
     const btn = document.createElement('div');
     btn.id = 'ftbPeekBtn';
@@ -52,7 +52,7 @@
     document.body.appendChild(btn);
   }
 
-  // ── Preset dots তৈরি ──
+  // ── Create preset dots ──
   function buildPresets() {
     const container = document.getElementById('colorPresets');
     if (!container) return;
@@ -84,14 +84,14 @@
     });
   }
 
-  // ── Toolbar এর Color item click → popup খোলা ──
+  // ── Toolbar Color item click → open popup ──
   function bindColorItemClick() {
     const wrap = document.getElementById('ftbColorWrap');
     if (!wrap) return;
     wrap.addEventListener('click', toggleColorPopup);
   }
 
-  // ── Color display আপডেট ──
+  // ── Update color display ──
   function updateColorDisplay(hex) {
     const box = document.getElementById('colorPreviewBox');
     if (box) box.style.background = hex;
@@ -158,7 +158,7 @@
     });
   };
 
-  // ── Editor এ color insert ──
+  // ── Insert color into editor ──
   window.insertColorToEditor = function() {
     const val = document.getElementById('colorValueInput').value;
     if (typeof editor !== 'undefined' && editor) {
@@ -215,7 +215,7 @@
   window.toggleFloatToolbar = function() {
     tbCollapsed = !tbCollapsed;
     document.getElementById('floatToolbar').classList.toggle('collapsed', tbCollapsed);
-    // peek বাটন দেখানো/লুকানো
+    // show/hide peek button
     const peek = document.getElementById('ftbPeekBtn');
     if (peek) peek.classList.toggle('visible', tbCollapsed);
     if (tbCollapsed) closeColorPopup();
