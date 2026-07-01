@@ -1,7 +1,7 @@
 // ══════════════════════════════════════
 //  IDB STORE — js/idb-store.js
-//  হালকা IndexedDB key-value wrapper (কোনো বাহিরের লাইব্রেরি লাগে না)
-//  localStorage এর বদলে এটা ব্যবহার করা হয় বড় ডেটা/quota সমস্যা এড়াতে
+//  Lightweight IndexedDB key-value wrapper (no external library needed)
+//  Used instead of localStorage to avoid large-data/quota issues
 // ══════════════════════════════════════
 
 const IDB_NAME    = 'tv_promax_db';
@@ -29,7 +29,7 @@ function openDB() {
 }
 
 const IDBStore = {
-  // ── একটা key এর value নিয়ে আসা ──
+  // ── Get the value for a key ──
   async get(key) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -40,7 +40,7 @@ const IDBStore = {
     });
   },
 
-  // ── key/value সেভ করা ──
+  // ── Save a key/value ──
   async set(key, value) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ const IDBStore = {
     });
   },
 
-  // ── key মুছে ফেলা ──
+  // ── Remove a key ──
   async remove(key) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -62,7 +62,7 @@ const IDBStore = {
     });
   },
 
-  // ── পুরো স্টোর খালি করা (Clear All Data) ──
+  // ── Clear the entire store (Clear All Data) ──
   async clear() {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -73,8 +73,8 @@ const IDBStore = {
     });
   },
 
-  // ── পুরনো localStorage ডেটা থাকলে একবারই IndexedDB তে নিয়ে আসা ──
-  // (নতুন ইউজারদের জন্য কিছুই করবে না, পুরনো ইউজারদের ডেটা হারাবে না)
+  // ── One-time migration of old localStorage data into IndexedDB, if present ──
+  // (does nothing for new users; won't lose data for existing users)
   async migrateFromLocalStorage(keyMap) {
     for (const lsKey in keyMap) {
       const idbKey = keyMap[lsKey];
