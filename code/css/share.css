@@ -18,38 +18,36 @@
 .modal-box h3 { margin: 0 0 6px; font-size: 17px; display:flex; gap:8px; align-items:center; }
 .modal-box .muted { color: #8b92a5; font-size: 13px; margin-bottom: 14px; }
 
-.invite-row { display: flex; gap: 8px; margin-bottom: 16px; }
-.invite-row input {
+.share-link-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.share-link-row input {
   flex: 1; background: #0d0f14; border: 1px solid #2d3436;
-  border-radius: 8px; padding: 8px 10px; color: #e9ecef; font-size: 13px;
+  border-radius: 8px; padding: 8px 10px; color: #e9ecef; font-size: 12px;
 }
-.invite-row select {
-  background: #0d0f14; border: 1px solid #2d3436;
-  border-radius: 8px; padding: 8px 6px; color: #e9ecef; font-size: 12px;
-}
-.invite-row button {
+.share-link-row button {
   background: #5b8dee; border: none; border-radius: 8px;
   padding: 8px 12px; color: #fff; cursor: pointer;
 }
-.invite-row button:disabled { opacity: .5; cursor: not-allowed; }
+
+.share-social-row {
+  display: flex; gap: 10px; justify-content: center;
+  margin-bottom: 18px; flex-wrap: wrap;
+}
+.share-social-btn {
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  color: #fff; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s ease, filter .15s ease;
+}
+.share-social-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.share-social-btn:active { transform: translateY(0); }
+.sb-whatsapp  { background: #25d366; }
+.sb-telegram  { background: #229ed9; }
+.sb-messenger { background: linear-gradient(135deg, #00b2ff, #b900ff); }
+.sb-facebook  { background: #1877f2; }
+.sb-instagram { background: radial-gradient(circle at 30% 110%, #fdf497, #fd5949 45%, #d6249f 60%, #285AEB); }
+.sb-more      { background: #2d3436; }
 
 .collaborator-list { margin-bottom: 14px; }
-.collaborator-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px; border-radius: 8px; background: #1e2230;
-  margin-bottom: 6px;
-}
-.collab-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-.collab-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.collab-role-select {
-  background: #0d0f14; border: 1px solid #2d3436; color: #e9ecef;
-  border-radius: 6px; padding: 4px 6px; font-size: 11px;
-}
-.collab-remove-btn {
-  background: none; border: none; color: #f87171; cursor: pointer;
-  padding: 4px 6px; font-size: 13px;
-}
-.collab-remove-btn:hover { color: #ef4444; }
 
 .project-list-body { max-height: 50vh; overflow-y: auto; margin-bottom: 14px; }
 .project-row {
