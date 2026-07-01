@@ -76,6 +76,13 @@ document.addEventListener('click', e => {
 // ── Enter Key Submit ──
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
+
+  const gate = document.getElementById('usernameGateScreen');
+  if (gate && gate.style.display !== 'none') {
+    window.doSetUsernameFromGate?.();
+    return;
+  }
+
   if (document.getElementById('authScreen').style.display === 'none') return;
   if (document.getElementById('loginForm').classList.contains('active'))    window.doLogin?.();
   if (document.getElementById('registerForm').classList.contains('active')) window.doRegister?.();
