@@ -7,7 +7,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     injectShareModal();
     injectProjectListModal();
+    injectJoinApprovalModal();
     bindOpenButtons();
+    // project-manager.js নিজেই auth state resolve হওয়া পর্যন্ত অপেক্ষা করে,
+    // তাই এখানে সরাসরি কল করলেও রেস কন্ডিশন হয় না।
     window.handleJoinFromUrl?.();
   });
 
@@ -118,6 +121,69 @@
     }
   }
 
+  // ── প্রজেক্টে জয়েন করার আমন্ত্রণ: অ্যাপ্রুভ/ক্যান্সেল মোডাল ──
+  function injectJoinApprovalModal() {
+    const div = document.createElement('div');
+    div.id = 'joinApprovalModal';
+    div.className = 'modal-overlay hidden';
+    div.innerHTML = `
+      <div class="modal-box join-approval-box">
+        <h3><i class="fa-solid fa-user-group"></i> প্রজেক্টে যোগ দেওয়ার আমন্ত্রণ</h3>
+        <p id="joinApprovalText" class="muted"></p>
+        <div class="join-approval-actions">
+          <button id="joinApproveBtn" class="btn-approve"><i class="fa-solid fa-check"></i> অ্যাপ্রুভ করুন</button>
+          <button id="joinCancelBtn" class="btn-cancel"><i class="fa-solid fa-xmark"></i> ক্যান্সেল করুন</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+  }
+
+  // ── আমন্ত্রণ মোডাল দেখানো (login-এর পরে project-manager.js থেকে কল হয়) ──
+  window.showJoinApprovalModal = function (info) {
+    const modal = document.getElementById('joinApprovalModal');
+    const text  = document.getElementById('joinApprovalText');
+    if (!modal || !text) return;
+
+    text.innerHTML =
+      `<b>${escapeHtml(info.ownerName)}</b> আপনাকে তার
+       <b>"${escapeHtml(info.projectName)}"</b> প্রজেক্টে
+       <b>এডিটর</b> হিসেবে যোগ দেওয়ার আমন্ত্রণ জানিয়েছেন।
+       অ্যাপ্রুভ করলে আপনি এই প্রজেক্ট এডিট করতে পারবেন, তবে এটি ডিলিট করতে পারবেন না — সেই অধিকার শুধু মালিকের।`;
+
+    modal.classList.remove('hidden');
+
+    const approveBtn = document.getElementById('joinApproveBtn');
+    const cancelBtn  = document.getElementById('joinCancelBtn');
+
+    approveBtn.onclick = async () => {
+      approveBtn.disabled = true;
+      approveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> জয়েন হচ্ছে...`;
+
+      const projectId = await window.joinProjectViaShareLink(info.shareId);
+      window._cleanJoinUrlParam?.();
+      modal.classList.add('hidden');
+      approveBtn.disabled = false;
+      approveBtn.innerHTML = `<i class="fa-solid fa-check"></i> অ্যাপ্রুভ করুন`;
+
+      if (projectId) {
+        await window.openExistingProject(projectId);
+        showToast?.('প্রজেক্টে জয়েন করা হয়েছে ✅', 'success', 'fa-users');
+      }
+    };
+
+    cancelBtn.onclick = () => {
+      window._cleanJoinUrlParam?.();
+      modal.classList.add('hidden');
+      showToast?.('আমন্ত্রণ ক্যান্সেল করা হয়েছে', 'info', 'fa-xmark');
+    };
+  };
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+  }
+
   // ── "আমার প্রজেক্ট" লিস্ট মোডাল ──
   function injectProjectListModal() {
     const div = document.createElement('div');
@@ -162,12 +228,36 @@
     }
 
     body.innerHTML = projects.map(p => `
-      <div class="project-row" onclick="window.openExistingProject('${p.id}')">
-        <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
-        <span class="project-row-name">${p.name}</span>
-        ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount} জন</span>` : ''}
+      <div class="project-row">
+        <div class="project-row-main" onclick="window.openExistingProject('${p.id}')">
+          <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
+          <div class="project-row-text">
+            <span class="project-row-name">${escapeHtml(p.name)}</span>
+            ${!p.isOwner
+              ? `<span class="project-row-sub">${escapeHtml(p.ownerName)}-এর প্রজেক্ট · আপনি এডিটর (ডিলিট করা যাবে না)</span>`
+              : ''}
+          </div>
+          ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount} জন</span>` : ''}
+        </div>
+        ${p.isOwner
+          ? `<button class="project-delete-btn" title="প্রজেক্ট ডিলিট করুন" onclick="event.stopPropagation();window.handleDeleteProjectClick('${p.id}','${escapeHtml(p.name)}')">
+               <i class="fa-solid fa-trash-can"></i>
+             </button>`
+          : ''}
       </div>
     `).join('');
+  };
+
+  // ── owner-only ডিলিট বাটনের কনফার্মেশন হ্যান্ডলার ──
+  window.handleDeleteProjectClick = async function (projectId, projectName) {
+    const ok = confirm(`"${projectName}" প্রজেক্টটি স্থায়ীভাবে ডিলিট করতে চান? এটি সব কোলাবোরেটরের জন্য মুছে যাবে।`);
+    if (!ok) return;
+
+    const success = await window.deleteProject(projectId);
+    if (success) {
+      showToast?.('প্রজেক্ট ডিলিট করা হয়েছে', 'info', 'fa-trash-can');
+      window.openProjectListModal?.();
+    }
   };
 
   // ── নির্দিষ্ট প্রজেক্ট ওপেন করা (লোড + sync attach) ──
