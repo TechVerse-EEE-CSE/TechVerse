@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
 //  AUTH UI — js/auth-ui.js
-//  Login/Register ফর্মের UI লজিক
+//  UI logic for the Login/Register form
 // ══════════════════════════════════════
 
 // ── Tab Switch ──
@@ -49,11 +49,11 @@ window.checkPwStrength = function (val) {
   if (/[^a-zA-Z0-9]/.test(val))   score++;
 
   const levels = [
-    { w: '20%',  c: '#ef4444', t: 'খুব দুর্বল' },
-    { w: '40%',  c: '#f97316', t: 'দুর্বল' },
-    { w: '60%',  c: '#eab308', t: 'মোটামুটি' },
-    { w: '80%',  c: '#84cc16', t: 'শক্তিশালী' },
-    { w: '100%', c: '#10c98f', t: 'খুব শক্তিশালী' },
+    { w: '20%',  c: '#ef4444', t: 'Very Weak' },
+    { w: '40%',  c: '#f97316', t: 'Weak' },
+    { w: '60%',  c: '#eab308', t: 'Fair' },
+    { w: '80%',  c: '#84cc16', t: 'Strong' },
+    { w: '100%', c: '#10c98f', t: 'Very Strong' },
   ];
   const l = levels[Math.min(score, 4)];
   fill.style.width      = l.w;
@@ -67,7 +67,7 @@ window.toggleUserDropdown = function () {
   document.getElementById('userDropdown').classList.toggle('show');
 };
 
-// Dropdown বাইরে click এ বন্ধ
+// Close dropdown on outside click
 document.addEventListener('click', e => {
   if (!e.target.closest('#userPill') && !e.target.closest('#userDropdown'))
     document.getElementById('userDropdown').classList.remove('show');
@@ -76,13 +76,6 @@ document.addEventListener('click', e => {
 // ── Enter Key Submit ──
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-
-  const gate = document.getElementById('usernameGateScreen');
-  if (gate && gate.style.display !== 'none') {
-    window.doSetUsernameFromGate?.();
-    return;
-  }
-
   if (document.getElementById('authScreen').style.display === 'none') return;
   if (document.getElementById('loginForm').classList.contains('active'))    window.doLogin?.();
   if (document.getElementById('registerForm').classList.contains('active')) window.doRegister?.();
