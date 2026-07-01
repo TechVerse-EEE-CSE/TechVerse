@@ -1,60 +1,20 @@
 {
-  "name": "Tech Verse - EEE & CSE",
+  "name": "tech verse EEE & CSE",
   "short_name": "Tech Verse",
-  "description": "EEE ও CSE বিভাগের শিক্ষার্থীদের জন্য রিসোর্স ও কমিউনিটি প্ল্যাটফর্ম",
-  "start_url": "/?source=pwa",
-  "scope": "/",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#1b3033",
   "theme_color": "#499183",
-  "lang": "bn",
-  "dir": "ltr",
-  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icons/192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/192x192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     },
     {
       "src": "/icons/512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/512x512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "CSE Resources",
-      "url": "/cse",
-      "icons": [{ "src": "/icons/cse-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "EEE Resources",
-      "url": "/eee",
-      "icons": [{ "src": "/icons/eee-96.png", "sizes": "96x96" }]
+      "type": "image/png"
     }
   ]
 }
