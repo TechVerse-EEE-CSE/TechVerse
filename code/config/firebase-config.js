@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
-//  FIREBASE CONFIG — এই ফাইলটি .gitignore এ রাখুন!
-//  GitHub বা পাবলিক জায়গায় আপলোড করবেন না।
+//  FIREBASE CONFIG — keep this file in .gitignore!
+//  Do not upload it to GitHub or any public place.
 // ══════════════════════════════════════
 
 const firebaseConfig = {
