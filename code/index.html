@@ -178,6 +178,28 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     USERNAME SETUP (প্রথমবার লগইনের পর বাধ্যতামূলক)
+══════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="usernameSetupModal">
+  <div class="modal-box">
+    <h3><i class="fa-solid fa-at"></i> একটা ইউজারনেম বেছে নিন</h3>
+    <p class="muted">অন্যরা এই ইউজারনেম (বা আপনার ইমেইল) দিয়ে আপনাকে প্রজেক্টে ইনভাইট করতে পারবে। এটা পরে প্রোফাইল থেকে বদলানো যাবে।</p>
+    <div class="auth-field">
+      <label>Username</label>
+      <div class="auth-input-wrap">
+        <i class="fa-solid fa-at field-icon"></i>
+        <input class="auth-input" type="text" id="usernameSetupInput" placeholder="username" maxlength="20" autocomplete="off">
+      </div>
+    </div>
+    <div id="usernameSetupMsg" class="auth-msg"></div>
+    <button class="auth-btn auth-btn-primary" id="usernameSetupBtn" onclick="submitUsernameSetup()">
+      <div class="btn-spinner"></div>
+      <span class="btn-label"><i class="fa-solid fa-check"></i> নিশ্চিত করুন</span>
+    </button>
+  </div>
+</div>
+
 <!-- ══ USER DROPDOWN ══ -->
 <div class="user-dropdown" id="userDropdown">
   <div class="user-dd-header">
@@ -231,6 +253,9 @@
       </div>
       <div class="pm-item" id="btnNewProject" onclick="handleCreateNewProject();closeProjectMenu();">
         <i class="fa-solid fa-plus"></i> new project
+      </div>
+      <div class="pm-item" id="btnShareProject" onclick="openShareModal();closeProjectMenu();">
+        <i class="fa-solid fa-user-group"></i> ইনভাইট / শেয়ার
       </div>
       <div class="pm-sep"></div>
       <div class="pm-status-row">
@@ -802,6 +827,7 @@
         <div class="profile-user-meta">
           <div class="profile-name-display" id="profileNameDisplay">—</div>
           <div class="profile-email-display" id="profileEmailDisplay">—</div>
+          <div class="profile-email-display" id="profileUsernameDisplay" style="opacity:.8;">—</div>
           <span class="profile-provider-badge" id="profileProviderBadge">
             <i class="fa-solid fa-envelope"></i> Email Account
           </span>
