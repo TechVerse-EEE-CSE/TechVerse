@@ -4,7 +4,7 @@
 //  Firebase (Auth/Firestore) রিকোয়েস্ট সবসময় নেটওয়ার্কেই যাবে
 // ══════════════════════════════════════
 
-const CACHE_VERSION = 'tv-cache-v4';
+const CACHE_VERSION = 'tv-cache-v3'; // ← v3: username ফিল্ড যোগ হয়েছে, তাই ভার্সন বাম্প করা হলো
 
 // ── নিজের অ্যাপের ফাইল (app shell) ──
 const APP_SHELL = [
@@ -16,6 +16,9 @@ const APP_SHELL = [
   '/512x512.png',
   '/css/styles.css',
   '/css/toolbar.css',
+  '/css/profile.css',
+  '/css/share.css',
+  '/css/privacy-policy.css',
   '/js/idb-store.js',
   '/js/editor.js',
   '/js/toolbar.js',
@@ -23,6 +26,10 @@ const APP_SHELL = [
   '/js/auth-ui.js',
   '/js/firestore-sync.js',
   '/js/pro-editor.js',
+  '/js/project-manager.js',
+  '/js/profile.js',
+  '/js/username.js',
+  '/js/share-ui.js',
   '/config/firebase-config.js',
 ];
 
