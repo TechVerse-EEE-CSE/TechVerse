@@ -4,7 +4,7 @@
 //  Firebase (Auth/Firestore) requests always go straight to the network
 // ══════════════════════════════════════
 
-const CACHE_VERSION = 'tv-cache-v1';
+const CACHE_VERSION = 'tv-cache-v4';
 
 // ── This app's own files (app shell) ──
 const APP_SHELL = [
