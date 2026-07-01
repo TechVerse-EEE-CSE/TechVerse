@@ -34,6 +34,7 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import firebaseConfig from "../config/firebase-config.js";
+import { usernameError, isUsernameTaken, getUserUsername, changeUsername } from "./username.js";
 
 // ── Init ──
 const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -58,6 +59,7 @@ window.openProfileModal = function () {
 
   // Populate info tab
   _populateInfoTab(user);
+  _populateUsernameField(user);
   _populatePasswordTab(user);
   _populateAccountTab(user);
 
@@ -126,6 +128,17 @@ function _populateInfoTab(user) {
       verifiedEl.style.color = 'var(--warning)';
     }
   }
+}
+
+// ── Populate Username Field ──
+async function _populateUsernameField(user) {
+  const input = document.getElementById('profileUsernameInput');
+  const msg   = document.getElementById('profileUsernameMsg');
+  if (msg) { msg.className = 'uname-check'; msg.textContent = ''; }
+  const username = window._currentUsername || await getUserUsername(user.uid);
+  window._currentUsername      = username || window._currentUsername;
+  window._currentUsernameLower = username ? username.toLowerCase() : window._currentUsernameLower;
+  if (input) { input.value = username || ''; input.dataset.original = username || ''; }
 }
 
 // ── Populate Password Tab ──
@@ -201,16 +214,37 @@ window.saveProfileInfo = async function () {
   const user = auth.currentUser;
   if (!user) return;
 
-  const newName  = document.getElementById('profileNameInput')?.value.trim();
-  const newPhoto = document.getElementById('profilePhotoInput')?.value.trim();
+  const newName     = document.getElementById('profileNameInput')?.value.trim();
+  const newPhoto    = document.getElementById('profilePhotoInput')?.value.trim();
+  const unameInput  = document.getElementById('profileUsernameInput');
+  const newUsername = unameInput?.value.trim();
+  const oldUsername = unameInput?.dataset.original || '';
 
   if (!newName) {
     return _showProfileMsg('profileInfoMsg', 'error', 'নাম খালি রাখা যাবে না।');
   }
 
+  const unameErr = usernameError(newUsername);
+  if (unameErr) {
+    return _showProfileMsg('profileInfoMsg', 'error', unameErr);
+  }
+
   _setProfileBtnLoading('profileInfoSaveBtn', true);
 
   try {
+    // ── ইউজারনেম পরিবর্তন হলে আগে সেটা সেভ করো ──
+    if (newUsername.toLowerCase() !== oldUsername.toLowerCase()) {
+      const taken = await isUsernameTaken(newUsername.toLowerCase(), user.uid);
+      if (taken) {
+        _setProfileBtnLoading('profileInfoSaveBtn', false);
+        return _showProfileMsg('profileInfoMsg', 'error', 'এই ইউজারনেম আগে থেকেই নেওয়া হয়েছে।');
+      }
+      await changeUsername(user.uid, newUsername, user.email, oldUsername.toLowerCase());
+      window._currentUsername      = newUsername;
+      window._currentUsernameLower = newUsername.toLowerCase();
+      if (unameInput) unameInput.dataset.original = newUsername;
+    }
+
     await updateProfile(user, {
       displayName: newName,
       photoURL: newPhoto || null,
@@ -219,6 +253,10 @@ window.saveProfileInfo = async function () {
     // Update all UI elements
     _updateAllAvatarsAndNames(user, newName, newPhoto);
     _populateInfoTab(user);
+    const ddUnameEl   = document.getElementById('ddUsername');
+    const menuUnameEl = document.getElementById('menuUsername');
+    if (ddUnameEl)   ddUnameEl.textContent   = '@' + window._currentUsername;
+    if (menuUnameEl) menuUnameEl.textContent = '@' + window._currentUsername;
 
     _showProfileMsg('profileInfoMsg', 'success', 'প্রোফাইল আপডেট হয়েছে!');
     if (typeof showToast === 'function')
