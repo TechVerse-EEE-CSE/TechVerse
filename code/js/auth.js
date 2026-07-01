@@ -1,6 +1,6 @@
 // ══════════════════════════════════════
 //  AUTH MODULE — js/auth.js
-//  Firebase Authentication সব কাজ এখানে
+//  All Firebase Authentication work happens here
 // ══════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -17,15 +17,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import firebaseConfig from "../config/firebase-config.js";
-import {
-  usernameError,
-  isUsernameTaken,
-  getUserUsername,
-  reserveUsername,
-  resolveLoginIdentifier,
-  showUsernameGate,
-  hideUsernameGate,
-} from "./username.js";
 
 // ── Initialize ──
 const app       = initializeApp(firebaseConfig);
@@ -33,30 +24,12 @@ const auth      = getAuth(app);
 const gProvider = new GoogleAuthProvider();
 
 // ── Auth State Listener ──
-onAuthStateChanged(auth, async user => {
-  if (!user) {
+onAuthStateChanged(auth, user => {
+  if (user) {
+    enterEditor(user);
+  } else {
     showAuthScreen();
-    hideUsernameGate();
-    return;
   }
-
-  // Profile settings এর জন্য আগেই expose করে রাখি (gate থেকেও দরকার হয়)
-  window._firebaseAuth  = auth;
-  window._updateProfile = updateProfile;
-
-  // ── ইউজারনেম আছে কিনা চেক করো ──
-  const username = await getUserUsername(user.uid);
-  if (!username) {
-    // পুরাতন ইউজার / ইউজারনেম ছাড়া অ্যাকাউন্ট → বাধ্যতামূলক Gate দেখাও
-    document.getElementById('authScreen').style.display = 'none';
-    showUsernameGate(user, () => enterEditor(user));
-    return;
-  }
-
-  window._currentUsername      = username;
-  window._currentUsernameLower = username.toLowerCase();
-  hideUsernameGate();
-  enterEditor(user);
 });
 
 // ── Enter Editor ──
@@ -75,12 +48,6 @@ function enterEditor(user) {
   if (menuNameEl)  menuNameEl.textContent  = displayName;
   if (menuEmailEl) menuEmailEl.textContent = user.email;
 
-  const uname = window._currentUsername;
-  const ddUnameEl   = document.getElementById('ddUsername');
-  const menuUnameEl = document.getElementById('menuUsername');
-  if (ddUnameEl)   { ddUnameEl.textContent   = uname ? '@' + uname : ''; ddUnameEl.style.display   = uname ? 'block' : 'none'; }
-  if (menuUnameEl) { menuUnameEl.textContent = uname ? '@' + uname : ''; menuUnameEl.style.display = uname ? 'block' : 'none'; }
-
   const navAv  = document.getElementById('navAvatar');
   const ddAv   = document.getElementById('ddAvatar');
   const menuAv = document.getElementById('menuAvatar');
@@ -98,8 +65,12 @@ function enterEditor(user) {
   const userPillEl = document.getElementById('userPill');
   if (userPillEl) userPillEl.style.display = 'flex';
 
-  // Editor init (editor.js এ defined)
+  // Editor init (defined in editor.js)
   if (typeof initEditorIfNeeded === 'function') initEditorIfNeeded();
+
+  // Expose for profile settings
+  window._firebaseAuth    = auth;
+  window._updateProfile   = updateProfile;
 }
 
 // ── Show Auth ──
@@ -109,21 +80,15 @@ function showAuthScreen() {
   if (up) up.style.display = 'none';
 }
 
-// ── Login (Email অথবা Username দিয়ে) ──
+// ── Login ──
 window.doLogin = async function () {
-  const identifier = document.getElementById('loginEmail').value.trim();
-  const pass       = document.getElementById('loginPassword').value;
-  if (!identifier || !pass) return showAuthMsg('loginMsg', 'error', 'সব ঘর পূরণ করুন।');
-
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  if (!email || !pass) return showAuthMsg('loginMsg', 'error', 'Please fill in all fields.');
   setLoading('loginBtn', true);
   try {
-    const { email, notFound } = await resolveLoginIdentifier(identifier);
-    if (notFound) {
-      setLoading('loginBtn', false);
-      return showAuthMsg('loginMsg', 'error', 'এই ইউজারনেমে কোনো অ্যাকাউন্ট পাওয়া যায়নি।');
-    }
     await signInWithEmailAndPassword(auth, email, pass);
-    showAuthMsg('loginMsg', 'success', 'লগইন সফল! ডেটা লোড হচ্ছে…');
+    showAuthMsg('loginMsg', 'success', 'Login successful! Loading data…');
   } catch (e) {
     setLoading('loginBtn', false);
     showAuthMsg('loginMsg', 'error', friendlyError(e.code));
@@ -132,33 +97,23 @@ window.doLogin = async function () {
 
 // ── Register ──
 window.doRegister = async function () {
-  const name     = document.getElementById('registerName').value.trim();
-  const username = document.getElementById('registerUsername').value.trim();
-  const email    = document.getElementById('registerEmail').value.trim();
-  const pass     = document.getElementById('registerPassword').value;
-  const confirm  = document.getElementById('registerConfirm').value;
+  const name    = document.getElementById('registerName').value.trim();
+  const email   = document.getElementById('registerEmail').value.trim();
+  const pass    = document.getElementById('registerPassword').value;
+  const confirm = document.getElementById('registerConfirm').value;
 
-  if (!name)              return showAuthMsg('registerMsg', 'error', 'আপনার নাম দিন।');
-  const unameErr = usernameError(username);
-  if (unameErr)            return showAuthMsg('registerMsg', 'error', unameErr);
-  if (!email)             return showAuthMsg('registerMsg', 'error', 'ইমেইল দিন।');
-  if (pass.length < 6)    return showAuthMsg('registerMsg', 'error', 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
-  if (pass !== confirm)   return showAuthMsg('registerMsg', 'error', 'পাসওয়ার্ড মিলছে না।');
+  if (!name)              return showAuthMsg('registerMsg', 'error', 'Please enter your name.');
+  if (!email)             return showAuthMsg('registerMsg', 'error', 'Please enter an email.');
+  if (pass.length < 6)    return showAuthMsg('registerMsg', 'error', 'Password must be at least 6 characters.');
+  if (pass !== confirm)   return showAuthMsg('registerMsg', 'error', 'Passwords do not match.');
   if (!document.getElementById('termsCheck').checked)
-    return showAuthMsg('registerMsg', 'error', 'Terms মেনে নিন।');
+    return showAuthMsg('registerMsg', 'error', 'Please accept the Terms.');
 
   setLoading('registerBtn', true);
   try {
-    const taken = await isUsernameTaken(username.toLowerCase());
-    if (taken) {
-      setLoading('registerBtn', false);
-      return showAuthMsg('registerMsg', 'error', 'এই ইউজারনেম আগে থেকেই নেওয়া হয়েছে। অন্য একটা দিন।');
-    }
-
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
-    await reserveUsername(cred.user.uid, username, email);
-    showAuthMsg('registerMsg', 'success', 'অ্যাকাউন্ট তৈরি হয়েছে!');
+    showAuthMsg('registerMsg', 'success', 'Account created!');
   } catch (e) {
     setLoading('registerBtn', false);
     showAuthMsg('registerMsg', 'error', friendlyError(e.code));
@@ -181,7 +136,7 @@ window.doGoogleLogin = async function () {
 // ── Password Reset ──
 window.doReset = async function () {
   const email = document.getElementById('resetEmail').value.trim();
-  if (!email) return showAuthMsg('resetMsg', 'error', 'ইমেইল দিন।');
+  if (!email) return showAuthMsg('resetMsg', 'error', 'Please enter an email.');
   setLoading('resetBtn', true);
   try {
     await sendPasswordResetEmail(auth, email);
@@ -198,14 +153,14 @@ window.doReset = async function () {
 window.doSignOut = async function () {
   await signOut(auth);
   document.getElementById('userDropdown').classList.remove('show');
-  if (typeof showToast === 'function') showToast('সাইন আউট হয়েছে', 'info', 'fa-right-from-bracket');
+  if (typeof showToast === 'function') showToast('Signed out', 'info', 'fa-right-from-bracket');
 };
 
 // ── Copy Email ──
 window.copyEmail = function () {
   const em = document.getElementById('ddEmail').textContent;
   navigator.clipboard.writeText(em).then(() => {
-    if (typeof showToast === 'function') showToast('ইমেইল কপি হয়েছে!', 'success', 'fa-copy');
+    if (typeof showToast === 'function') showToast('Email copied!', 'success', 'fa-copy');
   });
   document.getElementById('userDropdown').classList.remove('show');
 };
@@ -229,18 +184,18 @@ window.saveProfile = function () {
 // ── Helpers ──
 function friendlyError(code) {
   const map = {
-    'auth/invalid-email':           'ইমেইল ঠিকানা সঠিক নয়।',
-    'auth/user-not-found':          'এই ইমেইলে কোনো অ্যাকাউন্ট নেই।',
-    'auth/wrong-password':          'পাসওয়ার্ড ভুল।',
-    'auth/email-already-in-use':    'এই ইমেইলে ইতোমধ্যে অ্যাকাউন্ট আছে।',
-    'auth/weak-password':           'পাসওয়ার্ড দুর্বল (কমপক্ষে ৬ অক্ষর)।',
-    'auth/too-many-requests':       'অনেকবার চেষ্টা করা হয়েছে। একটু অপেক্ষা করুন।',
-    'auth/network-request-failed':  'নেটওয়ার্ক সমস্যা।',
-    'auth/popup-closed-by-user':    'Google সাইন-ইন বাতিল হয়েছে।',
-    'auth/invalid-credential':      'ইমেইল বা পাসওয়ার্ড ভুল।',
-    'auth/user-disabled':           'এই অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে।',
+    'auth/invalid-email':           'The email address is not valid.',
+    'auth/user-not-found':          'No account exists with this email.',
+    'auth/wrong-password':          'Incorrect password.',
+    'auth/email-already-in-use':    'An account already exists with this email.',
+    'auth/weak-password':           'Password is too weak (at least 6 characters).',
+    'auth/too-many-requests':       'Too many attempts. Please wait a moment.',
+    'auth/network-request-failed':  'Network error.',
+    'auth/popup-closed-by-user':    'Google sign-in was cancelled.',
+    'auth/invalid-credential':      'Incorrect email or password.',
+    'auth/user-disabled':           'This account has been disabled.',
   };
-  return map[code] || 'কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+  return map[code] || 'Something went wrong. Please try again.';
 }
 
 function setLoading(btnId, loading) {
