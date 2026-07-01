@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════
    css/styles.css — Tech Verse Editor
-   সব CSS এক জায়গায়
+   All CSS in one place
 ══════════════════════════════════════ */
 
 :root {
@@ -201,34 +201,6 @@ body {
 .auth-msg.error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
 .auth-msg.success { background: rgba(16,201,143,0.1); border: 1px solid rgba(16,201,143,0.25); color: #6ee7b7; }
 .auth-msg.info    { background: rgba(91,141,238,0.1); border: 1px solid rgba(91,141,238,0.25); color: #93c5fd; }
-
-/* ══ USERNAME AVAILABILITY MESSAGE ══ */
-.uname-check { font-size: 11px; font-weight: 600; min-height: 14px; margin-top: -2px; }
-.uname-check.checking { color: var(--text-muted); }
-.uname-check.success  { color: #6ee7b7; }
-.uname-check.error    { color: #fca5a5; }
-
-/* ══ USERNAME GATE SCREEN (bধ্যতামূলক) ══ */
-#usernameGateScreen {
-  position: fixed; inset: 0; z-index: 9500;
-  background: var(--bg-main);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
-  overflow-y: auto; padding: 20px;
-}
-#usernameGateScreen::before {
-  content: '';
-  position: fixed; inset: 0; z-index: -1;
-  background-image:
-    linear-gradient(rgba(91,141,238,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(91,141,238,0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: gridDrift 20s linear infinite;
-}
-
-/* ══ @USERNAME LABELS ══ */
-.user-dd-username { font-size: 11px; color: var(--text-muted); margin-top: -4px; margin-bottom: 4px; }
-.drawer-username  { font-size: 11px; color: var(--text-muted); }
 
 .auth-switch { text-align: center; font-size: 13px; color: var(--text-muted); }
 .auth-switch a { color: var(--primary); text-decoration: none; font-weight: 600; }
