@@ -5,6 +5,10 @@
 
 
 
+# 🔒 Firebase Secret Config — কখনো push করবেন না!
+config/firebase-config.js
+
+
 # Node
 node_modules/
 .env
