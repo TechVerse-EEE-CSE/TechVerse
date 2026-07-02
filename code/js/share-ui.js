@@ -198,7 +198,15 @@
     div.className = 'modal-overlay hidden';
     div.innerHTML = `
       <div class="modal-box">
-        <h3><i class="fa-solid fa-folder-open"></i> My Projects</h3>
+        <h3><i class="fa-solid fa-folder-open"></i> Projects</h3>
+        <div class="pl-tabs" id="plTabs">
+          <button class="pl-tab-btn active" data-tab="owned" onclick="window.switchProjectListTab('owned')">
+            <i class="fa-solid fa-crown"></i> My Projects
+          </button>
+          <button class="pl-tab-btn" data-tab="shared" onclick="window.switchProjectListTab('shared')">
+            <i class="fa-solid fa-user-group"></i> Shared with Me
+          </button>
+        </div>
         <div id="myProjectListBody" class="project-list-body">
           <p class="muted">Loading...</p>
         </div>
@@ -229,15 +237,47 @@
     document.getElementById('shareLinkInput').value = link || '';
   };
 
-  // ── Open the "My Projects" modal ──
+  // ── Cache of the last-fetched project list + which tab is active ──
+  let _projectListCache = null;
+  let _activeProjectTab = 'owned';
+
+  // ── Open the "My Projects" modal (defaults to the "My Projects" tab) ──
   window.openProjectListModal = async function () {
     document.getElementById('projectListModal').classList.remove('hidden');
+    _activeProjectTab = 'owned';
+    _updateProjectTabButtons();
+
     const body = document.getElementById('myProjectListBody');
     body.innerHTML = `<p class="muted">Loading...</p>`;
 
-    const projects = await window.listMyProjects();
+    _projectListCache = await window.listMyProjects();
+    _renderProjectListTab();
+  };
+
+  // ── Switch between "My Projects" and "Shared with Me" (no re-fetch needed) ──
+  window.switchProjectListTab = function (tab) {
+    _activeProjectTab = tab;
+    _updateProjectTabButtons();
+    _renderProjectListTab();
+  };
+
+  function _updateProjectTabButtons() {
+    document.querySelectorAll('#plTabs .pl-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === _activeProjectTab);
+    });
+  }
+
+  function _renderProjectListTab() {
+    const body = document.getElementById('myProjectListBody');
+    if (!body) return;
+    if (!_projectListCache) { body.innerHTML = `<p class="muted">Loading...</p>`; return; }
+
+    const projects = _projectListCache.filter(p => _activeProjectTab === 'owned' ? p.isOwner : !p.isOwner);
+
     if (!projects.length) {
-      body.innerHTML = `<p class="muted">No projects yet. Create a new one.</p>`;
+      body.innerHTML = _activeProjectTab === 'owned'
+        ? `<p class="muted">No projects yet. Create a new one.</p>`
+        : `<p class="muted">No one has shared a project with you yet.</p>`;
       return;
     }
 
@@ -248,7 +288,7 @@
         ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount}</span>` : ''}
       </div>
     `).join('');
-  };
+  }
 
   // ── Open a specific project (load + attach sync) ──
   window.openExistingProject = async function (projectId) {
