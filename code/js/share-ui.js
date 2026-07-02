@@ -19,6 +19,15 @@
     div.innerHTML = `
       <div class="modal-box">
         <h3><i class="fa-solid fa-user-group"></i> Share Project</h3>
+
+        <p class="muted" style="margin-bottom:8px;">Invite someone directly by their email or username:</p>
+        <div class="share-invite-row">
+          <input id="shareInviteInput" type="text" placeholder="email or username">
+          <button id="shareInviteBtn"><i class="fa-solid fa-user-plus"></i> Add</button>
+        </div>
+        <div id="shareInviteMsg" class="share-invite-msg"></div>
+
+        <div class="share-divider">or share a link</div>
         <p class="muted">Whoever you give this link to can log in and edit this project.</p>
         <div class="share-link-row">
           <input id="shareLinkInput" type="text" readonly placeholder="Generating link...">
@@ -32,6 +41,8 @@
           <button class="share-social-btn sb-instagram" data-share="instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></button>
           <button class="share-social-btn sb-more" data-share="more" title="More / System Share"><i class="fa-solid fa-share-nodes"></i></button>
         </div>
+
+        <p class="muted" style="margin-bottom:6px;">People with access:</p>
         <div id="collaboratorList" class="collaborator-list"></div>
         <button class="modal-close-btn" onclick="document.getElementById('shareModal').classList.add('hidden')">Close</button>
       </div>`;
@@ -43,8 +54,70 @@
       showToast?.('Link copied', 'success', 'fa-copy');
     };
 
+    document.getElementById('shareInviteBtn').onclick = handleInviteByIdentifier;
+    document.getElementById('shareInviteInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleInviteByIdentifier();
+    });
+
     bindSocialShareButtons(div);
   }
+
+  // ── Handle inviting a collaborator by email/username ──
+  async function handleInviteByIdentifier() {
+    const projectId = window.currentProjectId;
+    if (!projectId) { showToast?.('Please open or create a project first', 'error'); return; }
+
+    const input = document.getElementById('shareInviteInput');
+    const msg   = document.getElementById('shareInviteMsg');
+    const btn   = document.getElementById('shareInviteBtn');
+    const identifier = input.value.trim();
+    if (!identifier) { msg.textContent = 'Please enter an email or username.'; msg.className = 'share-invite-msg error'; return; }
+
+    btn.disabled = true;
+    msg.textContent = 'Adding…';
+    msg.className = 'share-invite-msg';
+
+    const ok = await window.addCollaboratorByIdentifier(projectId, identifier);
+    btn.disabled = false;
+
+    if (ok) {
+      input.value = '';
+      msg.textContent = 'Added! They now have access to this project.';
+      msg.className = 'share-invite-msg success';
+      renderCollaboratorList(projectId);
+    } else {
+      msg.textContent = "Couldn't add — check the email/username and try again.";
+      msg.className = 'share-invite-msg error';
+    }
+  }
+
+  // ── Render the "people with access" list ──
+  async function renderCollaboratorList(projectId) {
+    const el = document.getElementById('collaboratorList');
+    if (!el) return;
+    el.innerHTML = `<p class="muted">Loading…</p>`;
+
+    const list = await window.getProjectCollaborators(projectId);
+    const currentUid = window._firebaseAuth?.currentUser?.uid;
+
+    el.innerHTML = list.map(p => `
+      <div class="collaborator-row">
+        <div class="collaborator-avatar">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : (p.displayName || '?').slice(0,2).toUpperCase()}</div>
+        <div class="collaborator-info">
+          <div class="collaborator-name">${p.displayName}${p.role === 'owner' ? ' <i class="fa-solid fa-crown" title="Owner"></i>' : ''}</div>
+          ${p.username ? `<div class="collaborator-username">@${p.username}</div>` : ''}
+        </div>
+        ${(p.role === 'collaborator' && p.uid !== currentUid) ? `<button class="collaborator-remove-btn" onclick="window.handleRemoveCollaborator('${projectId}','${p.uid}')" title="Remove"><i class="fa-solid fa-xmark"></i></button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ── Remove a collaborator + refresh the list ──
+  window.handleRemoveCollaborator = async function (projectId, uid) {
+    await window.removeCollaborator(projectId, uid);
+    showToast?.('Collaborator removed', 'info', 'fa-user-minus');
+    renderCollaboratorList(projectId);
+  };
 
   // ── Bind click handlers to the social share buttons ──
   function bindSocialShareButtons(root) {
@@ -145,6 +218,13 @@
     if (!projectId) { showToast?.('Please open or create a project first', 'error'); return; }
 
     document.getElementById('shareModal').classList.remove('hidden');
+    const inviteInput = document.getElementById('shareInviteInput');
+    const inviteMsg    = document.getElementById('shareInviteMsg');
+    if (inviteInput) inviteInput.value = '';
+    if (inviteMsg)   { inviteMsg.textContent = ''; inviteMsg.className = 'share-invite-msg'; }
+
+    renderCollaboratorList(projectId);
+
     const link = await window.createShareLink(projectId, 'editor');
     document.getElementById('shareLinkInput').value = link || '';
   };
