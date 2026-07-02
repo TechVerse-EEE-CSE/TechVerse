@@ -1037,55 +1037,10 @@
 <div class="preview-overlay" id="previewOverlay">
   <div class="preview-header">
     <button class="preview-close" onclick="closePreview()"><i class="fa-solid fa-arrow-left"></i></button>
-    <div class="preview-url"><i class="fa-solid fa-lock"></i> <span id="previewUrlText">http://localhost:8080/index.html</span> <span class="live-dot" id="liveDot" title="Live"></span></div>
-    <button class="preview-close" onclick="refreshPreview()" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
-    <button class="preview-close" id="previewMenuBtn" onclick="togglePreviewMenu(event)" title="More"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    <div class="preview-url"><i class="fa-solid fa-lock"></i> <span id="previewUrlText">localhost8060/index.html</span> <span class="live-dot" id="liveDot" title="Live"></span></div>
+    <button class="preview-close" onclick="closePreview()"><i class="fa-solid fa-xmark"></i></button>
   </div>
-
-  <!-- ── 3-dot dropdown menu (Acode style) ── -->
-  <div class="preview-menu" id="previewMenu">
-    <div class="preview-menu-item" onclick="togglePreviewDevices()">
-      <span><i class="fa-solid fa-display"></i> Devices</span>
-      <span class="preview-menu-check" id="chkDevices"></span>
-    </div>
-    <div class="preview-menu-item" onclick="togglePreviewCache()">
-      <span><i class="fa-solid fa-paintbrush"></i> Disable Cache</span>
-      <span class="preview-menu-check" id="chkCache"></span>
-    </div>
-    <div class="preview-menu-item" onclick="togglePreviewConsole()">
-      <span><i class="fa-solid fa-terminal"></i> Console</span>
-      <span class="preview-menu-check" id="chkConsole"></span>
-    </div>
-    <div class="preview-menu-sep"></div>
-    <div class="preview-menu-item" onclick="openPreviewInBrowser()">
-      <span><i class="fa-solid fa-up-right-from-square"></i> Open in Browser</span>
-    </div>
-    <div class="preview-menu-item" onclick="closePreview()">
-      <span><i class="fa-solid fa-right-from-bracket"></i> Exit</span>
-    </div>
-  </div>
-
-  <!-- ── Device toolbar (shown when Devices is on) ── -->
-  <div class="preview-device-bar" id="previewDeviceBar">
-    <button class="device-btn active" data-w="0" onclick="setPreviewDevice(0,this)">Responsive</button>
-    <button class="device-btn" data-w="375" onclick="setPreviewDevice(375,this)">Mobile</button>
-    <button class="device-btn" data-w="768" onclick="setPreviewDevice(768,this)">Tablet</button>
-    <button class="device-btn" data-w="1280" onclick="setPreviewDevice(1280,this)">Desktop</button>
-  </div>
-
-  <div class="preview-frame-wrap" id="previewFrameWrap">
-    <iframe class="preview-frame" id="liveFrame" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
-  </div>
-
-  <!-- ── Console panel ── -->
-  <div class="preview-console" id="previewConsole">
-    <div class="preview-console-header">
-      <span><i class="fa-solid fa-terminal"></i> Console</span>
-      <button class="preview-close" onclick="clearPreviewConsole()" title="Clear"><i class="fa-solid fa-ban"></i></button>
-      <button class="preview-close" onclick="togglePreviewConsole()" title="Close"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="preview-console-body" id="previewConsoleBody"></div>
-  </div>
+  <iframe class="preview-frame" id="liveFrame" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
 </div>
 
 <!-- ══ SOURCE VIEW ══ -->
