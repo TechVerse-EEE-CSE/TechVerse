@@ -8,12 +8,12 @@ const TEAM_MEMBERS = [
   {
     name:   'Imran Ahmed',
     role:   'Developer',
-    photo:  'https://techversesite.vercel.app/gallery/imran3.webp',
+    photo:  '/gallery/imran3.webp',
     bio:    'Developer of Tech Verse — a browser-based code editor built entirely from scratch. Passionate about crafting seamless experiences across the stack, from pixel-perfect frontends to Firebase-powered backends.',
     links: [
-      { icon: 'fa-brands fa-facebook',  label: 'Facebook',  url: 'https://facebook.com/Imran.ahmeddddd' },
+      { icon: 'fa-brands fa-facebook',  label: 'Facebook',  url: 'https://facebook.com/imran.ahmedddddd' },
       { icon: 'fa-brands fa-github',    label: 'GitHub',    url: 'https://github.com/imranahmed-dev-tech' },
-      { icon: 'fa-brands fa-instagram', label: 'Instagram', url: 'https://instagram.com/Imran.ahmeddddd' },
+      { icon: 'fa-brands fa-instagram', label: 'Instagram', url: 'https://instagram.com/Imran.ahmedddddd' },
       { icon: 'fa-brands fa-whatsapp',  label: 'WhatsApp',  url: 'https://wa.me/8801957329211' },
       { icon: 'fa-solid fa-envelope',   label: 'Email',     url: 'mailto:imran.info.me@gmail.com' },
     ],
