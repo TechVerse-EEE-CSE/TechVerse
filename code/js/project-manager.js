@@ -12,11 +12,12 @@
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc,
-  arrayUnion, serverTimestamp, collection
+  getFirestore, doc, getDoc, getDocs, setDoc, updateDoc,
+  arrayUnion, arrayRemove, serverTimestamp, collection, query, where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import firebaseConfig from "../config/firebase-config.js";
+import { resolveIdentifierToUid, getPublicProfile } from "./username.js";
 
 const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db   = getFirestore(app);
@@ -133,10 +134,23 @@ window.listMyProjects = async function () {
 
   const userRef  = doc(db, 'users', user.uid);
   const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return [];
+  const data     = userSnap.exists() ? userSnap.data() : {};
 
-  const data = userSnap.data();
-  const ids  = [...new Set([...(data.ownedProjectIds || []), ...(data.sharedProjectIds || [])])];
+  // Projects joined via a share link are denormalized onto the user doc.
+  // Projects someone added us to directly (by email/username) are not —
+  // so we also query the projects collection itself for those (1 extra read query).
+  let directShareIds = [];
+  try {
+    const directQuery = query(collection(db, 'projects'), where('collaboratorUids', 'array-contains', user.uid));
+    const directSnap  = await getDocs(directQuery);
+    directShareIds = directSnap.docs.map(d => d.id);
+  } catch (_) { /* ignore, fall back to denormalized list only */ }
+
+  const ids = [...new Set([
+    ...(data.ownedProjectIds || []),
+    ...(data.sharedProjectIds || []),
+    ...directShareIds,
+  ])];
 
   // ── An individual read is needed to fetch each project's name/meta,
   //    but this only happens when the user opens the dashboard, not recurring ──
@@ -161,12 +175,81 @@ window.listMyProjects = async function () {
 //  5. Remove a collaborator (only the owner can do this — enforced by a rule)
 // ══════════════════════════════════════
 window.removeCollaborator = async function (projectId, uid) {
+  const projRef = doc(db, 'projects', projectId);
+  await updateDoc(projRef, { collaboratorUids: arrayRemove(uid) });
+};
+
+// ══════════════════════════════════════
+//  7. Invite a collaborator directly by email or username
+//     (alternative to sharing a link — only the owner should call this,
+//     enforced by the Firestore rule on the 'projects' collection)
+// ══════════════════════════════════════
+window.addCollaboratorByIdentifier = async function (projectId, identifier) {
+  const user = auth.currentUser;
+  if (!user) { showToast?.('Please log in first', 'error'); return false; }
+
+  const id = (identifier || '').trim();
+  if (!id) { showToast?.('Please enter an email or username', 'error'); return false; }
+
+  const targetUid = await resolveIdentifierToUid(id);
+  if (!targetUid) {
+    showToast?.('No user found with that email/username', 'error');
+    return false;
+  }
+  if (targetUid === user.uid) {
+    showToast?.("That's you — you already have access", 'info');
+    return false;
+  }
+
   const projRef  = doc(db, 'projects', projectId);
   const projSnap = await getDoc(projRef);
-  if (!projSnap.exists()) return;
+  if (!projSnap.exists()) { showToast?.('Project not found', 'error'); return false; }
 
-  const list = (projSnap.data().collaboratorUids || []).filter(u => u !== uid);
-  await updateDoc(projRef, { collaboratorUids: list });
+  const projData = projSnap.data();
+  if (projData.ownerUid !== targetUid && (projData.collaboratorUids || []).includes(targetUid)) {
+    showToast?.('This person already has access', 'info');
+    return false;
+  }
+  if (projData.ownerUid === targetUid) {
+    showToast?.('This person already owns the project', 'info');
+    return false;
+  }
+
+  await updateDoc(projRef, { collaboratorUids: arrayUnion(targetUid) });
+  showToast?.('Collaborator added ✅', 'success', 'fa-user-plus');
+  return true;
+};
+
+// ══════════════════════════════════════
+//  8. Get collaborator display info (owner + each collaborator's public profile)
+//     for rendering the "who has access" list in the Share modal.
+// ══════════════════════════════════════
+window.getProjectCollaborators = async function (projectId) {
+  const projSnap = await getDoc(doc(db, 'projects', projectId));
+  if (!projSnap.exists()) return [];
+  const data = projSnap.data();
+
+  const ownerProfile = await getPublicProfile(data.ownerUid);
+  const list = [{
+    uid: data.ownerUid,
+    role: 'owner',
+    username: ownerProfile?.username || null,
+    displayName: ownerProfile?.displayName || data.ownerName || 'Owner',
+    photoURL: ownerProfile?.photoURL || null,
+  }];
+
+  const collabUids = data.collaboratorUids || [];
+  for (const uid of collabUids) {
+    const profile = await getPublicProfile(uid);
+    list.push({
+      uid,
+      role: 'collaborator',
+      username: profile?.username || null,
+      displayName: profile?.displayName || profile?.username || 'Collaborator',
+      photoURL: profile?.photoURL || null,
+    });
+  }
+  return list;
 };
 
 // ══════════════════════════════════════
