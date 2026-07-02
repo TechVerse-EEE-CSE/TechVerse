@@ -34,6 +34,12 @@ let editor;
 let editorInitialized = false;
 let collapsedFolders  = new Set();
 
+// ── Live Preview State ──
+let previewOpen        = false;   // preview overlay currently visible?
+let previewTargetFile  = null;    // which .html file the live preview is tracking
+let previewDebounceT   = null;    // debounce handle for live rebuilds
+const PREVIEW_DEBOUNCE_MS = 350;  // typing pause before the preview refreshes
+
 // ── Themes & Fonts ──
 const THEMES = [
   { id: 'material-ocean', name: 'Material Ocean', dots: ['#0f111a','#c792ea','#89ddff'] },
@@ -138,6 +144,7 @@ window.openFile = function (path) {
   if (!fs[path] && fs[path] !== '') return;
   if (currentFile !== path) fs[currentFile] = editor.getValue();
   currentFile = path;
+  schedulePreviewRefresh();
   editor.setValue(fs[path] || '');
   editor.setOption('mode', getMode(path));
   editor.clearHistory();
@@ -199,6 +206,7 @@ function onEditorChange() {
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(() => saveData(), 1500);
   }
+  schedulePreviewRefresh();
 }
 
 function updateStatusbar() {
@@ -383,11 +391,11 @@ window.doRename = function () {
   showToast(`Renamed: ${newName}`, 'success', 'fa-pen');
 };
 
-// ── Preview / Run ──
+// ── Preview / Run (real-time / live) ──
 window.runCode = function () {
   saveData();
   const target = currentFile.endsWith('.html') ? currentFile : 'index.html';
-  buildAndPreview(target);
+  openLivePreview(target);
 };
 
 window.previewFile = function (path) {
@@ -396,11 +404,26 @@ window.previewFile = function (path) {
     return;
   }
   saveData();
-  buildAndPreview(path);
+  openLivePreview(path);
 };
 
+// Opens the preview overlay and starts tracking targetFile for live reload.
+function openLivePreview(targetFile) {
+  previewTargetFile = targetFile;
+  previewOpen = true;
+  document.getElementById('previewOverlay').classList.add('show');
+  const dot = document.getElementById('liveDot');
+  if (dot) dot.classList.add('on');
+  buildAndPreview(targetFile);
+}
+
+// Builds the merged HTML/CSS/JS bundle and writes it into the preview iframe.
+// Uses srcdoc (instead of document.write) so live refreshes don't flash/flicker
+// and behave like a real dev-server hot reload.
 function buildAndPreview(targetFile) {
+  fs[currentFile] = editor.getValue(); // make sure latest keystrokes are included
   let html = fs[targetFile] || '';
+
   Object.keys(fs).forEach(path => {
     if (path.endsWith('.css')) {
       const base = path.split('/').pop();
@@ -413,14 +436,35 @@ function buildAndPreview(targetFile) {
         `<script>${fs[path]}<\/script>`);
     }
   });
+
   document.getElementById('previewUrlText').textContent = `localhost / ${targetFile}`;
-  document.getElementById('previewOverlay').classList.add('show');
-  const frameDoc = document.getElementById('liveFrame').contentWindow.document;
-  frameDoc.open(); frameDoc.write(html); frameDoc.close();
+  const frame = document.getElementById('liveFrame');
+  frame.srcdoc = html;
+
+  // brief pulse on the LIVE dot so it's clear a refresh just happened
+  const dot = document.getElementById('liveDot');
+  if (dot) {
+    dot.classList.add('updating');
+    setTimeout(() => dot.classList.remove('updating'), 250);
+  }
+}
+
+// Called on every keystroke / tab switch. Only rebuilds while the preview
+// overlay is actually open, and debounces so it doesn't rebuild on every
+// single character — just after a short pause, like a real hot-reload dev server.
+function schedulePreviewRefresh() {
+  if (!previewOpen || !previewTargetFile) return;
+  clearTimeout(previewDebounceT);
+  previewDebounceT = setTimeout(() => buildAndPreview(previewTargetFile), PREVIEW_DEBOUNCE_MS);
 }
 
 window.closePreview = function () {
   document.getElementById('previewOverlay').classList.remove('show');
+  previewOpen = false;
+  previewTargetFile = null;
+  clearTimeout(previewDebounceT);
+  const dot = document.getElementById('liveDot');
+  if (dot) dot.classList.remove('on', 'updating');
 };
 
 // ── View Source ──
