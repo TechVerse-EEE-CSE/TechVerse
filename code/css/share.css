@@ -98,6 +98,21 @@
 .collaborator-remove-btn:hover { background: rgba(239,68,68,.15); color: #ef4444; }
 
 .project-list-body { max-height: 50vh; overflow-y: auto; margin-bottom: 14px; }
+
+.pl-tabs {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  background: #0d0f14; border-radius: 10px; padding: 4px;
+}
+.pl-tab-btn {
+  flex: 1; background: none; border: none; border-radius: 8px;
+  padding: 8px 6px; color: #8b92a5; font-size: 12px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background .15s ease, color .15s ease;
+}
+.pl-tab-btn i { font-size: 11px; }
+.pl-tab-btn.active { background: #5b8dee; color: #fff; }
+.pl-tab-btn:not(.active):hover { color: #e9ecef; }
+
 .project-row {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 12px; border-radius: 8px; cursor: pointer;
