@@ -60,10 +60,10 @@
       <div class="auth-subtitle">Sign in to your Tech Verse account.</div>
       <div id="loginMsg" class="auth-msg"></div>
       <div class="auth-field">
-        <label>Email</label>
+        <label>Email or Username</label>
         <div class="auth-input-wrap">
           <i class="fa-solid fa-envelope field-icon"></i>
-          <input class="auth-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          <input class="auth-input" type="text" id="loginEmail" placeholder="you@example.com or username" autocomplete="username">
         </div>
       </div>
       <div class="auth-field">
@@ -108,6 +108,14 @@
           <i class="fa-solid fa-envelope field-icon"></i>
           <input class="auth-input" type="email" id="registerEmail" placeholder="you@example.com" autocomplete="email">
         </div>
+      </div>
+      <div class="auth-field">
+        <label>Username</label>
+        <div class="auth-input-wrap">
+          <i class="fa-solid fa-at field-icon"></i>
+          <input class="auth-input" type="text" id="registerUsername" placeholder="e.g. rafi_dev" autocomplete="username" maxlength="20">
+        </div>
+        <div class="username-hint" id="registerUsernameHint"></div>
       </div>
       <div class="auth-field">
         <label>Password</label>
@@ -183,6 +191,7 @@
   <div class="user-dd-header">
     <div class="user-dd-avatar" id="ddAvatar">?</div>
     <div class="user-dd-name" id="ddName">—</div>
+    <div class="user-dd-username" id="ddUsername" style="display:none;"></div>
     <div class="user-dd-email" id="ddEmail">—</div>
   </div>
   <div class="user-dd-item" onclick="openProfileModal()"><i class="fa-solid fa-user-gear"></i> Profile Settings</div>
@@ -270,6 +279,7 @@
     <div class="drawer-avatar" id="menuAvatar"><i class="fa-solid fa-terminal"></i></div>
     <div class="drawer-title">Tech Verse EEE & CSE </div>
     <div class="drawer-name" id="menuName">Guest User</div>
+    <div class="drawer-username" id="menuUsername" style="display:none;"></div>
     <div class="drawer-email" id="menuEmail">Sign in to sync your work</div>
   </div>
 
@@ -818,6 +828,14 @@
       <div class="pf-field">
         <div class="pf-label"><i class="fa-solid fa-user-pen"></i> Display Name</div>
         <input type="text" id="profileNameInput" class="pf-input" placeholder="Enter your name">
+      </div>
+
+      <!-- Username -->
+      <div class="pf-field">
+        <div class="pf-label"><i class="fa-solid fa-at"></i> Username</div>
+        <input type="text" id="profileUsernameInput" class="pf-input" placeholder="e.g. rafi_dev" maxlength="20" autocomplete="username">
+        <div class="username-hint" id="profileUsernameHint"></div>
+        <div class="pf-hint">Others can find you and share projects with you using this username, or log in with it instead of your email.</div>
       </div>
 
       <!-- Photo URL -->
