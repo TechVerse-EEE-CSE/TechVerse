@@ -8,8 +8,8 @@ const TEAM_MEMBERS = [
   {
     name:   'Imran Ahmed',
     role:   'Developer',
-    photo:  'https://techversesite.vercel.app/gallery/imran6.webp',
-    bio:    'Tech Verse-এর ডেভেলপার — এই ব্রাউজার-বেইজড কোড এডিটরটা নিজের হাতে বানিয়েছে। ফ্রন্টএন্ড থেকে শুরু করে Firebase-ভিত্তিক ব্যাকএন্ড, সবকিছুতেই কাজ করতে ভালোবাসে।',
+    photo:  'https://techversesite.vercel.app/gallery/imran3.webp',
+    bio:    'Developer of Tech Verse — a browser-based code editor built entirely from scratch. Passionate about crafting seamless experiences across the stack, from pixel-perfect frontends to Firebase-powered backends.',
     links: [
       { icon: 'fa-brands fa-facebook',  label: 'Facebook',  url: 'https://facebook.com/Imran.ahmeddddd' },
       { icon: 'fa-brands fa-github',    label: 'GitHub',    url: 'https://github.com/imranahmed-dev-tech' },
