@@ -40,12 +40,6 @@ let previewTargetFile  = null;    // which .html file the live preview is tracki
 let previewDebounceT   = null;    // debounce handle for live rebuilds
 const PREVIEW_DEBOUNCE_MS = 350;  // typing pause before the preview refreshes
 
-// ── Preview: 3-dot menu (Devices / Disable Cache / Console / Open in Browser / Exit) ──
-let previewDevicesOn   = false;   // device size bar visible?
-let previewCacheOff    = false;   // "Disable Cache" — forces a hard iframe reset on every rebuild
-let previewConsoleOn   = false;   // console panel visible?
-let previewLastHtml    = '';      // last built HTML, reused by "Open in Browser"
-
 // ── Themes & Fonts ──
 const THEMES = [
   { id: 'material-ocean', name: 'Material Ocean', dots: ['#0f111a','#c792ea','#89ddff'] },
@@ -423,31 +417,9 @@ function openLivePreview(targetFile) {
   buildAndPreview(targetFile);
 }
 
-// Small shim injected into every preview build so console.log/warn/error/info
-// (and uncaught runtime errors) inside the iframe show up in the Console panel.
-const PREVIEW_CONSOLE_SHIM = `<script>(function(){
-  function send(type, args){
-    try {
-      var parts = Array.prototype.map.call(args, function(a){
-        try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch(e){ return String(a); }
-      });
-      window.parent.postMessage({ __tvConsole: true, type: type, text: parts.join(' ') }, '*');
-    } catch(e){}
-  }
-  ['log','warn','error','info'].forEach(function(m){
-    var orig = console[m];
-    console[m] = function(){ send(m, arguments); if (orig) orig.apply(console, arguments); };
-  });
-  window.addEventListener('error', function(e){
-    send('error', [(e.message || 'Error') + ' (line ' + e.lineno + ')']);
-  });
-})();<\/script>`;
-
 // Builds the merged HTML/CSS/JS bundle and writes it into the preview iframe.
 // Uses srcdoc (instead of document.write) so live refreshes don't flash/flicker
-// and behave like a real dev-server hot reload — unless "Disable Cache" is on,
-// in which case the iframe is fully torn down and rebuilt from scratch (a true
-// hard reload: no leftover globals/state/localStorage from the previous run).
+// and behave like a real dev-server hot reload.
 function buildAndPreview(targetFile) {
   fs[currentFile] = editor.getValue(); // make sure latest keystrokes are included
   let html = fs[targetFile] || '';
@@ -465,24 +437,9 @@ function buildAndPreview(targetFile) {
     }
   });
 
-  // Inject the console shim right after <head> (or at the very top as a fallback)
-  if (/<head[^>]*>/i.test(html)) {
-    html = html.replace(/<head[^>]*>/i, m => m + PREVIEW_CONSOLE_SHIM);
-  } else {
-    html = PREVIEW_CONSOLE_SHIM + html;
-  }
-
-  previewLastHtml = html;
-  document.getElementById('previewUrlText').textContent = `http://localhost:8080/${targetFile}`;
+  document.getElementById('previewUrlText').textContent = `localhost:8080/${targetFile}`;
   const frame = document.getElementById('liveFrame');
-
-  if (previewCacheOff) {
-    // hard reset: blank the frame first so nothing from the old run persists
-    frame.src = 'about:blank';
-    setTimeout(() => { frame.srcdoc = html; }, 20);
-  } else {
-    frame.srcdoc = html;
-  }
+  frame.srcdoc = html;
 
   // brief pulse on the LIVE dot so it's clear a refresh just happened
   const dot = document.getElementById('liveDot');
@@ -491,13 +448,6 @@ function buildAndPreview(targetFile) {
     setTimeout(() => dot.classList.remove('updating'), 250);
   }
 }
-
-// Manual reload button in the preview header
-window.refreshPreview = function () {
-  if (!previewOpen || !previewTargetFile) return;
-  buildAndPreview(previewTargetFile);
-  showToast('Preview reloaded', 'success', 'fa-rotate-right');
-};
 
 // Called on every keystroke / tab switch. Only rebuilds while the preview
 // overlay is actually open, and debounces so it doesn't rebuild on every
@@ -515,86 +465,6 @@ window.closePreview = function () {
   clearTimeout(previewDebounceT);
   const dot = document.getElementById('liveDot');
   if (dot) dot.classList.remove('on', 'updating');
-  document.getElementById('previewMenu')?.classList.remove('show');
-};
-
-// ── Preview: 3-dot menu ──
-window.togglePreviewMenu = function (e) {
-  e?.stopPropagation();
-  document.getElementById('previewMenu').classList.toggle('show');
-};
-
-// close the dropdown on any tap/click outside it
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('previewMenu');
-  const btn  = document.getElementById('previewMenuBtn');
-  if (menu && menu.classList.contains('show') && !menu.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
-    menu.classList.remove('show');
-  }
-});
-
-// ── Preview: Devices (Responsive / Mobile / Tablet / Desktop) ──
-window.togglePreviewDevices = function () {
-  previewDevicesOn = !previewDevicesOn;
-  document.getElementById('chkDevices').classList.toggle('on', previewDevicesOn);
-  document.getElementById('previewDeviceBar').classList.toggle('show', previewDevicesOn);
-  document.getElementById('previewFrameWrap').classList.toggle('device-active', previewDevicesOn);
-  if (!previewDevicesOn) {
-    document.getElementById('liveFrame').style.width = '';
-  }
-};
-
-window.setPreviewDevice = function (width, btn) {
-  document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const frame = document.getElementById('liveFrame');
-  frame.style.width = width ? width + 'px' : '100%';
-};
-
-// ── Preview: Disable Cache ──
-window.togglePreviewCache = function () {
-  previewCacheOff = !previewCacheOff;
-  document.getElementById('chkCache').classList.toggle('on', previewCacheOff);
-  showToast(previewCacheOff ? 'Cache disabled — every change hard-reloads' : 'Cache re-enabled', 'info', 'fa-paintbrush');
-};
-
-// ── Preview: Console panel ──
-window.togglePreviewConsole = function () {
-  previewConsoleOn = !previewConsoleOn;
-  document.getElementById('chkConsole').classList.toggle('on', previewConsoleOn);
-  document.getElementById('previewConsole').classList.toggle('show', previewConsoleOn);
-};
-
-window.clearPreviewConsole = function () {
-  document.getElementById('previewConsoleBody').innerHTML = '';
-};
-
-function appendConsoleLine(type, text) {
-  const body = document.getElementById('previewConsoleBody');
-  if (!body) return;
-  const icon = { error: 'fa-circle-xmark', warn: 'fa-triangle-exclamation', info: 'fa-circle-info' }[type] || 'fa-angle-right';
-  const line = document.createElement('div');
-  line.className = `console-line ${type}`;
-  line.innerHTML = `<i class="fa-solid ${icon}"></i> ${text.replace(/</g, '&lt;')}`;
-  body.appendChild(line);
-  body.scrollTop = body.scrollHeight;
-}
-
-// receive console.log/warn/error/info calls forwarded from inside the preview iframe
-window.addEventListener('message', (e) => {
-  if (e.data && e.data.__tvConsole) {
-    appendConsoleLine(e.data.type, e.data.text);
-  }
-});
-
-// ── Preview: Open in Browser ──
-window.openPreviewInBrowser = function () {
-  if (!previewLastHtml) { showToast('Nothing to open yet', 'info', 'fa-circle-info'); return; }
-  const blob = new Blob([previewLastHtml], { type: 'text/html' });
-  const url  = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  document.getElementById('previewMenu').classList.remove('show');
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
 
 // ── View Source ──
