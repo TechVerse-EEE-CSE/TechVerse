@@ -13,10 +13,19 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   signOut,
-  updateProfile
+  updateProfile,
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import firebaseConfig from "../config/firebase-config.js";
+import {
+  isValidUsername,
+  isUsernameAvailable,
+  usernameFormatHint,
+  reserveUsernameForNewUser,
+  resolveLoginEmail,
+  ensureUserHasUsername,
+} from "./username.js";
 
 // ── Initialize ──
 const app       = initializeApp(firebaseConfig);
@@ -27,6 +36,12 @@ const gProvider = new GoogleAuthProvider();
 onAuthStateChanged(auth, user => {
   if (user) {
     enterEditor(user);
+    // Make sure this user has a username (auto-generated for Google sign-ins
+    // and pre-existing accounts made before this feature existed).
+    // Runs in the background — never blocks entering the editor.
+    ensureUserHasUsername(user).then(username => {
+      if (username) _showUsernameInUI(username);
+    }).catch(err => console.error('ensureUserHasUsername failed:', err));
   } else {
     showAuthScreen();
   }
@@ -73,6 +88,15 @@ function enterEditor(user) {
   window._updateProfile   = updateProfile;
 }
 
+// ── Show the username under the email in the dropdown/drawer ──
+function _showUsernameInUI(username) {
+  const ddU   = document.getElementById('ddUsername');
+  const menuU = document.getElementById('menuUsername');
+  if (ddU)   { ddU.textContent   = '@' + username; ddU.style.display   = 'block'; }
+  if (menuU) { menuU.textContent = '@' + username; menuU.style.display = 'block'; }
+  window._currentUsername = username;
+}
+
 // ── Show Auth ──
 function showAuthScreen() {
   document.getElementById('authScreen').style.display = 'flex';
@@ -80,13 +104,20 @@ function showAuthScreen() {
   if (up) up.style.display = 'none';
 }
 
-// ── Login ──
+// ── Login (accepts either an email or a username) ──
 window.doLogin = async function () {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-  if (!email || !pass) return showAuthMsg('loginMsg', 'error', 'Please fill in all fields.');
+  const identifier = document.getElementById('loginEmail').value.trim();
+  const pass       = document.getElementById('loginPassword').value;
+  if (!identifier || !pass) return showAuthMsg('loginMsg', 'error', 'Please fill in all fields.');
   setLoading('loginBtn', true);
   try {
+    const email = await resolveLoginEmail(identifier);
+    if (!email) {
+      setLoading('loginBtn', false);
+      return showAuthMsg('loginMsg', 'error', identifier.includes('@')
+        ? 'The email address is not valid.'
+        : 'No account exists with this username.');
+    }
     await signInWithEmailAndPassword(auth, email, pass);
     showAuthMsg('loginMsg', 'success', 'Login successful! Loading data…');
   } catch (e) {
@@ -97,28 +128,90 @@ window.doLogin = async function () {
 
 // ── Register ──
 window.doRegister = async function () {
-  const name    = document.getElementById('registerName').value.trim();
-  const email   = document.getElementById('registerEmail').value.trim();
-  const pass    = document.getElementById('registerPassword').value;
-  const confirm = document.getElementById('registerConfirm').value;
+  const name     = document.getElementById('registerName').value.trim();
+  const email    = document.getElementById('registerEmail').value.trim();
+  const username = document.getElementById('registerUsername').value.trim();
+  const pass     = document.getElementById('registerPassword').value;
+  const confirm  = document.getElementById('registerConfirm').value;
 
   if (!name)              return showAuthMsg('registerMsg', 'error', 'Please enter your name.');
   if (!email)             return showAuthMsg('registerMsg', 'error', 'Please enter an email.');
+  if (!username)          return showAuthMsg('registerMsg', 'error', 'Please choose a username.');
+  if (!isValidUsername(username))
+    return showAuthMsg('registerMsg', 'error', usernameFormatHint());
   if (pass.length < 6)    return showAuthMsg('registerMsg', 'error', 'Password must be at least 6 characters.');
   if (pass !== confirm)   return showAuthMsg('registerMsg', 'error', 'Passwords do not match.');
   if (!document.getElementById('termsCheck').checked)
     return showAuthMsg('registerMsg', 'error', 'Please accept the Terms.');
 
   setLoading('registerBtn', true);
+
+  // Fast best-effort check before creating the account (final say is the atomic transaction below)
+  const available = await isUsernameAvailable(username);
+  if (!available) {
+    setLoading('registerBtn', false);
+    return showAuthMsg('registerMsg', 'error', 'This username is already taken. Please choose another.');
+  }
+
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
+
+    try {
+      await reserveUsernameForNewUser(cred.user.uid, username, email, name, null);
+    } catch (unameErr) {
+      // Someone grabbed the username in the split second between our check and this write.
+      // Roll back the freshly-created account so we don't leave a user with no username.
+      await deleteUser(cred.user).catch(() => {});
+      setLoading('registerBtn', false);
+      return showAuthMsg('registerMsg', 'error', 'This username was just taken by someone else. Please choose another.');
+    }
+
     showAuthMsg('registerMsg', 'success', 'Account created!');
   } catch (e) {
     setLoading('registerBtn', false);
     showAuthMsg('registerMsg', 'error', friendlyError(e.code));
   }
 };
+
+// ── Live username availability check (bound after DOM is ready) ──
+function _bindUsernameAvailabilityCheck(inputId, hintId, currentUsernameGetter) {
+  const input = document.getElementById(inputId);
+  const hint  = document.getElementById(hintId);
+  if (!input || !hint) return;
+
+  let timer = null;
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    clearTimeout(timer);
+
+    if (!val) { hint.textContent = ''; hint.className = 'username-hint'; return; }
+    if (!isValidUsername(val)) {
+      hint.textContent = usernameFormatHint();
+      hint.className = 'username-hint error';
+      return;
+    }
+    if (currentUsernameGetter && val.toLowerCase() === (currentUsernameGetter() || '').toLowerCase()) {
+      hint.textContent = 'This is your current username.';
+      hint.className = 'username-hint';
+      return;
+    }
+
+    hint.textContent = 'Checking availability…';
+    hint.className = 'username-hint';
+    timer = setTimeout(async () => {
+      const ok = await isUsernameAvailable(val);
+      // Ignore stale results if the value changed while we were checking
+      if (input.value.trim() !== val) return;
+      hint.textContent = ok ? 'Username is available ✓' : 'This username is already taken.';
+      hint.className   = ok ? 'username-hint success' : 'username-hint error';
+    }, 400);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  _bindUsernameAvailabilityCheck('registerUsername', 'registerUsernameHint');
+});
 
 // ── Google Login ──
 window.doGoogleLogin = async function () {
