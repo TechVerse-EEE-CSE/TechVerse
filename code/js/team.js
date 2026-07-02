@@ -8,7 +8,7 @@ const TEAM_MEMBERS = [
   {
     name:   'Imran Ahmed',
     role:   'Developer',
-    photo:  '/gallery/imran3.webp',
+    photo:  '/gallery/about.webp',
     bio:    'Developer of Tech Verse — a browser-based code editor built entirely from scratch. Passionate about crafting seamless experiences across the stack, from pixel-perfect frontends to Firebase-powered backends.',
     links: [
       { icon: 'fa-brands fa-facebook',  label: 'Facebook',  url: 'https://facebook.com/imran.ahmedddddd' },
