@@ -1,0 +1,98 @@
+/* ══════════════════════════════════════
+   css/team.css — About / Team flip card
+══════════════════════════════════════ */
+
+.team-grid {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 4px 0 6px;
+}
+
+.team-card {
+  perspective: 1200px;
+  height: 300px;
+  cursor: pointer;
+}
+
+.team-card-inner {
+  position: relative; width: 100%; height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  transform-style: preserve-3d;
+}
+
+.team-card.flipped .team-card-inner { transform: rotateY(180deg); }
+
+.team-card-front,
+.team-card-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--bg-surface-light), var(--bg-surface));
+  overflow: hidden;
+}
+
+/* ── Front ── */
+.team-card-front {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 20px;
+}
+.team-photo-wrap {
+  width: 96px; height: 96px; border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  margin-bottom: 6px;
+}
+.team-photo {
+  width: 100%; height: 100%; border-radius: 50%;
+  object-fit: cover; display: block;
+  border: 2px solid var(--bg-surface);
+}
+.team-name { font-size: 16px; font-weight: 700; color: var(--text-main); }
+.team-role {
+  font-size: 12px; color: var(--primary); font-weight: 600;
+  background: var(--primary-glow); padding: 2px 10px; border-radius: 20px;
+  margin-top: 2px;
+}
+.team-flip-hint {
+  margin-top: auto; padding-top: 14px;
+  font-size: 10.5px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* ── Back ── */
+.team-card-back {
+  transform: rotateY(180deg);
+  display: flex; flex-direction: column;
+  padding: 18px;
+}
+.team-back-top {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.team-photo-mini {
+  width: 42px; height: 42px; border-radius: 50%;
+  object-fit: cover; border: 2px solid var(--primary);
+  flex-shrink: 0;
+}
+.team-name-mini { font-size: 13.5px; font-weight: 700; color: var(--text-main); }
+.team-role-mini { font-size: 11px; color: var(--text-muted); }
+
+.team-bio {
+  font-size: 12.5px; line-height: 1.6; color: var(--text-muted);
+  padding: 12px 0; flex: 1; overflow-y: auto;
+}
+
+.team-links {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.team-link-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--bg-surface-hover); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; text-decoration: none;
+  transition: var(--transition);
+}
+.team-link-btn:hover { background: var(--primary); color: #fff; transform: translateY(-2px); }
+
+.team-card-back .team-flip-hint { padding-top: 10px; justify-content: center; }
