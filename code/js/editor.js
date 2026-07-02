@@ -437,7 +437,7 @@ function buildAndPreview(targetFile) {
     }
   });
 
-  document.getElementById('previewUrlText').textContent = `localhost / ${targetFile}`;
+  document.getElementById('previewUrlText').textContent = `http://localhost:8080/${targetFile}`;
   const frame = document.getElementById('liveFrame');
   frame.srcdoc = html;
 
