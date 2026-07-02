@@ -34,6 +34,12 @@ import {
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import firebaseConfig from "../config/firebase-config.js";
+import {
+  isValidUsername,
+  isUsernameAvailable,
+  usernameFormatHint,
+  changeUsername,
+} from "./username.js";
 
 // ── Init ──
 const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -42,6 +48,7 @@ const db   = getFirestore(app);
 
 let _currentUser = null;
 let _deleteTarget = null; // 'data' | 'account'
+let _currentUsername = '';
 
 // ── Auth state ──
 onAuthStateChanged(auth, (user) => {
@@ -51,7 +58,7 @@ onAuthStateChanged(auth, (user) => {
 // ══════════════════════════════════════
 //  OPEN PROFILE MODAL
 // ══════════════════════════════════════
-window.openProfileModal = function () {
+window.openProfileModal = async function () {
   const user = auth.currentUser;
   if (!user) return;
   _currentUser = user;
@@ -72,7 +79,53 @@ window.openProfileModal = function () {
 
   if (typeof openModal === 'function') openModal('profileModal');
   document.getElementById('userDropdown')?.classList.remove('show');
+
+  // Fetch the current username (stored in users/{uid}, not in Firebase Auth itself)
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    _currentUsername = snap.exists() ? (snap.data().username || '') : '';
+  } catch (_) {
+    _currentUsername = '';
+  }
+  const unameInput = document.getElementById('profileUsernameInput');
+  if (unameInput) unameInput.value = _currentUsername;
+  const unameHint = document.getElementById('profileUsernameHint');
+  if (unameHint) { unameHint.textContent = ''; unameHint.className = 'username-hint'; }
 };
+
+// ── Live username availability check in the profile modal ──
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('profileUsernameInput');
+  const hint  = document.getElementById('profileUsernameHint');
+  if (!input || !hint) return;
+
+  let timer = null;
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    clearTimeout(timer);
+
+    if (!val) { hint.textContent = ''; hint.className = 'username-hint'; return; }
+    if (!isValidUsername(val)) {
+      hint.textContent = usernameFormatHint();
+      hint.className = 'username-hint error';
+      return;
+    }
+    if (val.toLowerCase() === (_currentUsername || '').toLowerCase()) {
+      hint.textContent = 'This is your current username.';
+      hint.className = 'username-hint';
+      return;
+    }
+
+    hint.textContent = 'Checking availability…';
+    hint.className = 'username-hint';
+    timer = setTimeout(async () => {
+      const ok = await isUsernameAvailable(val);
+      if (input.value.trim() !== val) return;
+      hint.textContent = ok ? 'Username is available ✓' : 'This username is already taken.';
+      hint.className   = ok ? 'username-hint success' : 'username-hint error';
+    }, 400);
+  });
+});
 
 // ── Populate Info Tab ──
 function _populateInfoTab(user) {
@@ -201,11 +254,15 @@ window.saveProfileInfo = async function () {
   const user = auth.currentUser;
   if (!user) return;
 
-  const newName  = document.getElementById('profileNameInput')?.value.trim();
-  const newPhoto = document.getElementById('profilePhotoInput')?.value.trim();
+  const newName     = document.getElementById('profileNameInput')?.value.trim();
+  const newPhoto    = document.getElementById('profilePhotoInput')?.value.trim();
+  const newUsername = document.getElementById('profileUsernameInput')?.value.trim();
 
   if (!newName) {
     return _showProfileMsg('profileInfoMsg', 'error', 'Name cannot be left empty.');
+  }
+  if (newUsername && !isValidUsername(newUsername)) {
+    return _showProfileMsg('profileInfoMsg', 'error', usernameFormatHint());
   }
 
   _setProfileBtnLoading('profileInfoSaveBtn', true);
@@ -216,9 +273,28 @@ window.saveProfileInfo = async function () {
       photoURL: newPhoto || null,
     });
 
+    // Username changed? Reserve the new one (atomic) and release the old one.
+    const usernameChanged = newUsername && newUsername.toLowerCase() !== (_currentUsername || '').toLowerCase();
+    if (usernameChanged) {
+      try {
+        await changeUsername(user.uid, _currentUsername, newUsername, user.email);
+        _currentUsername = newUsername;
+      } catch (unameErr) {
+        _setProfileBtnLoading('profileInfoSaveBtn', false);
+        return _showProfileMsg('profileInfoMsg', 'error', 'This username is already taken. Please choose another.');
+      }
+    }
+
     // Update all UI elements
     _updateAllAvatarsAndNames(user, newName, newPhoto);
     _populateInfoTab(user);
+    if (usernameChanged) {
+      const ddU   = document.getElementById('ddUsername');
+      const menuU = document.getElementById('menuUsername');
+      if (ddU)   { ddU.textContent   = '@' + _currentUsername; ddU.style.display   = 'block'; }
+      if (menuU) { menuU.textContent = '@' + _currentUsername; menuU.style.display = 'block'; }
+      window._currentUsername = _currentUsername;
+    }
 
     _showProfileMsg('profileInfoMsg', 'success', 'Profile updated!');
     if (typeof showToast === 'function')
@@ -476,17 +552,33 @@ async function _deleteAllFirestoreData(user) {
   const userRef = doc(db, 'users', user.uid);
   batch.delete(userRef);
 
-  // 3. shared projects (present in collaborators)
+  // 3. shared projects (present in collaboratorUids) — just remove this user
+  //    from the collaborator list rather than deleting the whole project,
+  //    since other people's data lives in it too.
   try {
     const sharedQuery = query(
       collection(db, 'projects'),
-      where('collaborators', 'array-contains', user.uid)
+      where('collaboratorUids', 'array-contains', user.uid)
     );
     const sharedSnap = await getDocs(sharedQuery);
-    sharedSnap.forEach(d => batch.delete(d.ref));
+    sharedSnap.forEach(d => {
+      const list = (d.data().collaboratorUids || []).filter(u => u !== user.uid);
+      batch.update(d.ref, { collaboratorUids: list });
+    });
   } catch (_) {
-    // skip if the collaborators field does not exist
+    // skip if the collaboratorUids field does not exist
   }
+
+  // 4. release this user's username + lookup docs
+  try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      if (data.usernameLower) batch.delete(doc(db, 'usernames', data.usernameLower));
+      if (data.emailLower)    batch.delete(doc(db, 'userEmails', data.emailLower));
+    }
+  } catch (_) {}
+  batch.delete(doc(db, 'publicProfiles', user.uid));
 
   await batch.commit();
 
