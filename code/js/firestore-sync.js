@@ -27,6 +27,11 @@ let _activeProjectId  = null;
 let _unsubscribe       = null;   // ← the currently active onSnapshot listener
 let _lastKnownUpdateMs = 0;      // to avoid remote echo (not showing a toast for one's own save)
 
+// ── Update history (kept as a capped array on the project doc — no extra write) ──
+let _historyCache = [];          // last N entries, oldest → newest
+let _prevFsCache  = null;        // last known fs, used to diff against on the next save
+const HISTORY_LIMIT = 20;
+
 onAuthStateChanged(auth, async (user) => {
   _currentUser = user;
   if (!user) return;
@@ -75,6 +80,11 @@ window.openProjectSync = function (projectId) {
     if (remoteMs <= _lastKnownUpdateMs) return;
     _lastKnownUpdateMs = remoteMs;
 
+    // ── Keep the history/diff cache in sync with the server, even for others' saves ──
+    _historyCache = data.history || _historyCache;
+    _prevFsCache  = data.fs || _prevFsCache;
+    if (typeof window.renderHistoryUI === 'function') window.renderHistoryUI(_historyCache);
+
     if (data.updatedBy === _currentUser?.uid) return; // done by the current user themself
 
     // ── Someone else made an update → notify the user, without forcing a reload ──
@@ -116,13 +126,34 @@ window.cloudSave = async function (fsData) {
     const now = Date.now();
     _lastKnownUpdateMs = now; // ← so one's own write isn't treated as a remote update
 
+    // ── Build a history entry from the diff against the last known fs ──
+    const diff = _prevFsCache === null
+      ? { added: Object.keys(fsData), removed: [], modified: [] }
+      : _diffFs(_prevFsCache, fsData);
+    const summary = _prevFsCache === null ? 'প্রজেক্ট তৈরি হলো' : _summarizeDiff(diff);
+
+    const historyEntry = {
+      at: now,
+      byUid: _currentUser.uid,
+      byName: _currentUser.displayName || _currentUser.email || 'Unknown',
+      added: diff.added,
+      removed: diff.removed,
+      modified: diff.modified,
+      summary,
+    };
+    _historyCache = [..._historyCache, historyEntry].slice(-HISTORY_LIMIT);
+
     await setDoc(doc(db, 'projects', _activeProjectId), {
       fs: fsData,
       updatedAt: serverTimestamp(),
       updatedBy: _currentUser.uid,
       updatedByName: _currentUser.displayName || _currentUser.email,
       sizeKB: Math.round(sizeKB),
+      history: _historyCache,
     }, { merge: true });
+
+    _prevFsCache = JSON.parse(JSON.stringify(fsData));
+    if (typeof window.renderHistoryUI === 'function') window.renderHistoryUI(_historyCache);
 
     showSyncStatus('saved');
     showToast?.('Saved to Cloud ☁️', 'success', 'fa-cloud-arrow-up');
@@ -145,6 +176,9 @@ window.cloudLoadProject = async function (projectId) {
     if (!snap.exists()) return null;
     const data = snap.data();
     _lastKnownUpdateMs = data.updatedAt?.toMillis?.() || 0;
+    _historyCache = data.history || [];
+    _prevFsCache  = data.fs || null;
+    if (typeof window.renderHistoryUI === 'function') window.renderHistoryUI(_historyCache);
     return data.fs;
   } catch (err) {
     console.error('Cloud load error:', err);
@@ -182,3 +216,29 @@ function showSyncStatus(status) {
 }
 
 window._cloudSyncReady = true;
+
+// ══════════════════════════════════════
+//  Diff two fs objects (path → content) — client-side only, no extra reads
+// ══════════════════════════════════════
+function _diffFs(oldFs, newFs) {
+  oldFs = oldFs || {};
+  newFs = newFs || {};
+  const added = [], removed = [], modified = [];
+
+  for (const path of Object.keys(newFs)) {
+    if (!(path in oldFs)) added.push(path);
+    else if (oldFs[path] !== newFs[path]) modified.push(path);
+  }
+  for (const path of Object.keys(oldFs)) {
+    if (!(path in newFs)) removed.push(path);
+  }
+  return { added, removed, modified };
+}
+
+function _summarizeDiff(diff) {
+  const parts = [];
+  if (diff.added.length)    parts.push(`${diff.added.length}টি ফাইল যোগ হয়েছে`);
+  if (diff.modified.length) parts.push(`${diff.modified.length}টি ফাইল পরিবর্তন হয়েছে`);
+  if (diff.removed.length)  parts.push(`${diff.removed.length}টি ফাইল মুছে ফেলা হয়েছে`);
+  return parts.length ? parts.join(', ') : 'কোনো ফাইল পরিবর্তন হয়নি';
+}
