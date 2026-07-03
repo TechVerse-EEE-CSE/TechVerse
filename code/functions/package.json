@@ -1,0 +1,18 @@
+{
+  "name": "techverse-functions",
+  "description": "Cloud Functions for Tech Verse — enforces one sign-in method per email (blocks the password-reset backdoor that lets a Google/GitHub-only account gain a password).",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "private": true
+}
