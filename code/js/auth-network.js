@@ -1,25 +1,18 @@
 // ══════════════════════════════════════
 //  AUTH NETWORK BACKGROUND — js/auth-network.js
-//  Animated constellation of glowing, connected nodes
+//  Animated constellation of glowing, connected neurons
 //  drifting slowly behind the login/register card.
-//
-//  UPGRADED: crisp retina rendering, mouse-reactive nodes,
-//  gradient glow, twinkle variation, smooth fade-in,
-//  and a soft cursor-follow highlight halo.
 // ══════════════════════════════════════
 (function () {
-  const NODE_COLORS = ['#5b8dee', '#10c98f', '#7c5cbf', '#22d3ee', '#f59e0b'];
-  const NODE_COUNT_DESKTOP = 90;
-  const NODE_COUNT_MOBILE  = 55;
-  const LINK_DIST          = 150;
-  const MOUSE_RADIUS       = 180;   // how far the cursor influence reaches
-  const MOUSE_PUSH         = 0.6;   // how strongly nodes drift from the cursor
-  const FADE_IN_MS         = 900;
+  const NODE_COLORS = ['#5b8dee', '#10c98f', '#7c5cbf', '#22d3ee', '#f59e0b', '#ec4899', '#3b82f6'];
+  const NODE_COUNT_DESKTOP = 220;
+  const NODE_COUNT_TABLET  = 140;
+  const NODE_COUNT_MOBILE  = 90;
+  const LINK_DIST          = 165;
+  const MOUSE_RADIUS       = 180;
 
   let canvas, ctx, nodes = [], raf = null, running = false;
-  let dpr = 1;
   let mouse = { x: -9999, y: -9999, active: false };
-  let startTime = null;
 
   function init() {
     canvas = document.getElementById('authNetworkCanvas');
@@ -27,91 +20,70 @@
     ctx = canvas.getContext('2d');
     resize();
     seedNodes();
-    window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', onMouseMove, { passive: true });
-    window.addEventListener('mouseleave', onMouseLeave);
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchend', onMouseLeave);
-    startTime = performance.now();
+    window.addEventListener('resize', () => { resize(); seedNodes(); });
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true;
+    });
+    window.addEventListener('mouseleave', () => { mouse.active = false; });
     start();
-  }
-
-  function onMouseMove(e) {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    mouse.active = true;
-  }
-
-  function onTouchMove(e) {
-    if (!e.touches || !e.touches[0]) return;
-    mouse.x = e.touches[0].clientX;
-    mouse.y = e.touches[0].clientY;
-    mouse.active = true;
-  }
-
-  function onMouseLeave() {
-    mouse.active = false;
   }
 
   function resize() {
     if (!canvas) return;
-    dpr = Math.min(window.devicePixelRatio || 1, 2); // cap DPR for perf
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    canvas.style.width  = w + 'px';
-    canvas.style.height = h + 'px';
-    canvas.width  = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width  = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function cssW() { return canvas.width / dpr; }
-  function cssH() { return canvas.height / dpr; }
+  function nodeCount() {
+    const w = window.innerWidth;
+    if (w < 640) return NODE_COUNT_MOBILE;
+    if (w < 1100) return NODE_COUNT_TABLET;
+    return NODE_COUNT_DESKTOP;
+  }
 
   function seedNodes() {
-    const count = window.innerWidth < 640 ? NODE_COUNT_MOBILE : NODE_COUNT_DESKTOP;
+    const w = window.innerWidth, h = window.innerHeight;
+    const count = nodeCount();
     nodes = Array.from({ length: count }, () => ({
-      x: Math.random() * cssW(),
-      y: Math.random() * cssH(),
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25,
-      r: Math.random() * 1.6 + 1,
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      r: Math.random() * 1.8 + 0.9,
       color: NODE_COLORS[Math.floor(Math.random() * NODE_COLORS.length)],
       pulse: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.012 + Math.random() * 0.012, // slight variety = less mechanical
-      twinkle: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.012 + Math.random() * 0.014,
+      twinkle: Math.random() < 0.18, // a subset of neurons "fire" brighter
     }));
   }
 
-  function step(now) {
-    const w = cssW(), h = cssH();
+  function step() {
+    const w = window.innerWidth, h = window.innerHeight;
     ctx.clearRect(0, 0, w, h);
-
-    // Smooth fade-in on first load
-    const elapsed = now - startTime;
-    const globalAlpha = Math.min(1, elapsed / FADE_IN_MS);
 
     // Update positions
     for (const n of nodes) {
-      // Gentle repulsion from the cursor for a "living" feel
-      if (mouse.active) {
-        const dx = n.x - mouse.x, dy = n.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < MOUSE_RADIUS && dist > 0.001) {
-          const force = (1 - dist / MOUSE_RADIUS) * MOUSE_PUSH;
-          n.vx += (dx / dist) * force * 0.02;
-          n.vy += (dy / dist) * force * 0.02;
-        }
-      }
-
-      // Mild drag so velocity doesn't grow unbounded from mouse pushes
-      n.vx *= 0.985;
-      n.vy *= 0.985;
-
       n.x += n.vx;
       n.y += n.vy;
       n.pulse += n.pulseSpeed;
-      n.twinkle += 0.02;
+
+      // gentle attraction/repulsion near the cursor for an "alive" feel
+      if (mouse.active) {
+        const dx = n.x - mouse.x, dy = n.y - mouse.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < MOUSE_RADIUS && d > 0.01) {
+          const force = (1 - d / MOUSE_RADIUS) * 0.04;
+          n.vx += (dx / d) * force;
+          n.vy += (dy / d) * force;
+        }
+      }
+      // gentle damping so speeds stay calm
+      n.vx *= 0.985;
+      n.vy *= 0.985;
 
       if (n.x < -20) n.x = w + 20;
       if (n.x > w + 20) n.x = -20;
@@ -119,30 +91,21 @@
       if (n.y > h + 20) n.y = -20;
     }
 
-    // Draw links between nearby nodes (gradient + cursor-proximity highlight)
+    // Draw synapse links between nearby neurons, colored as a blend
+    // of the two endpoint colors for a richer, layered look.
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < LINK_DIST) {
-          let opacity = (1 - dist / LINK_DIST) * 0.35;
-
-          // Boost link brightness near the cursor
-          if (mouse.active) {
-            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-            const mdist = Math.hypot(mx - mouse.x, my - mouse.y);
-            if (mdist < MOUSE_RADIUS) {
-              opacity += (1 - mdist / MOUSE_RADIUS) * 0.25;
-            }
-          }
-
+          const t = 1 - dist / LINK_DIST;
+          const opacity = t * t * 0.5;
           const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-          grad.addColorStop(0, hexToRgba(a.color, opacity * globalAlpha));
-          grad.addColorStop(1, hexToRgba(b.color, opacity * globalAlpha));
-
+          grad.addColorStop(0, hexToRgba(a.color, opacity));
+          grad.addColorStop(1, hexToRgba(b.color, opacity));
           ctx.strokeStyle = grad;
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 0.8 + t * 0.7;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
@@ -151,38 +114,28 @@
       }
     }
 
-    // Draw nodes with soft glow + twinkle
+    // Draw neurons: soft outer glow + bright core, with occasional
+    // brighter "firing" flicker for a smarter, more alive network feel.
     for (const n of nodes) {
-      const glow = 0.55 + Math.sin(n.pulse) * 0.35;
-      const twinkleMul = 0.85 + Math.sin(n.twinkle) * 0.15;
+      const base = 0.55 + Math.sin(n.pulse) * 0.35;
+      const glow = n.twinkle ? Math.min(1, base + 0.25) : base;
 
-      const outerR = n.r * 3.4 * twinkleMul;
-      const glowGrad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, outerR);
-      glowGrad.addColorStop(0, hexToRgba(n.color, glow * 0.28 * globalAlpha));
-      glowGrad.addColorStop(1, hexToRgba(n.color, 0));
-
+      const outerR = n.r * (n.twinkle ? 5 : 3.5);
+      const radial = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, outerR);
+      radial.addColorStop(0, hexToRgba(n.color, glow * 0.35));
+      radial.addColorStop(1, hexToRgba(n.color, 0));
       ctx.beginPath();
       ctx.arc(n.x, n.y, outerR, 0, Math.PI * 2);
-      ctx.fillStyle = glowGrad;
+      ctx.fillStyle = radial;
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r * twinkleMul, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba(n.color, 0.9 * globalAlpha);
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(n.color, 0.9);
+      ctx.shadowColor = n.color;
+      ctx.shadowBlur = n.twinkle ? 12 : 6;
       ctx.fill();
-    }
-
-    // Soft halo right at the cursor for tactile feedback
-    if (mouse.active) {
-      const haloGrad = ctx.createRadialGradient(
-        mouse.x, mouse.y, 0, mouse.x, mouse.y, MOUSE_RADIUS
-      );
-      haloGrad.addColorStop(0, `rgba(91,141,238,${0.06 * globalAlpha})`);
-      haloGrad.addColorStop(1, 'rgba(91,141,238,0)');
-      ctx.beginPath();
-      ctx.arc(mouse.x, mouse.y, MOUSE_RADIUS, 0, Math.PI * 2);
-      ctx.fillStyle = haloGrad;
-      ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     if (running) raf = requestAnimationFrame(step);
