@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  GithubAuthProvider,
   sendPasswordResetEmail,
   onAuthStateChanged,
   signOut,
@@ -31,6 +32,7 @@ import {
 const app       = initializeApp(firebaseConfig);
 const auth      = getAuth(app);
 const gProvider = new GoogleAuthProvider();
+const ghProvider = new GithubAuthProvider();
 
 // ── Auth State Listener ──
 onAuthStateChanged(auth, user => {
@@ -226,6 +228,19 @@ window.doGoogleLogin = async function () {
   }
 };
 
+// ── GitHub Login ──
+window.doGithubLogin = async function () {
+  ['loginGithubBtn', 'registerGithubBtn'].forEach(id => setLoading(id, true));
+  try {
+    await signInWithPopup(auth, ghProvider);
+  } catch (e) {
+    ['loginGithubBtn', 'registerGithubBtn'].forEach(id => setLoading(id, false));
+    const msgId = document.getElementById('loginForm').classList.contains('active')
+      ? 'loginMsg' : 'registerMsg';
+    showAuthMsg(msgId, 'error', friendlyError(e.code));
+  }
+};
+
 // ── Password Reset ──
 window.doReset = async function () {
   const email = document.getElementById('resetEmail').value.trim();
@@ -287,6 +302,8 @@ function friendlyError(code) {
     'auth/popup-closed-by-user':    'Google sign-in was cancelled.',
     'auth/invalid-credential':      'Incorrect email or password.',
     'auth/user-disabled':           'This account has been disabled.',
+    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+    'auth/popup-blocked':           'Popup was blocked by the browser. Please allow popups and try again.',
   };
   return map[code] || 'Something went wrong. Please try again.';
 }
