@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/toolbar.css">
 <link rel="stylesheet" href="css/github-deploy.css">
+<link rel="stylesheet" href="css/history.css">
 <link rel="stylesheet" href="css/share.css">
 <link rel="stylesheet" href="css/privacy-policy.css">
 <link rel="stylesheet" href="css/profile.css">
@@ -248,6 +249,7 @@
         <span id="cloudSyncBadge" style="opacity:.5;"></span>
         <span class="pm-status-text">Cloud sync status</span>
       </div>
+      <div class="pm-history-line" id="pmHistoryLine" onclick="openHistoryModal()"></div>
       <div class="pm-item hidden" id="reloadAvailableBadge" onclick="applyRemoteUpdate();closeProjectMenu();">
         <i class="fa-solid fa-rotate" style="color:#5b8dee"></i> update a new future
       </div>
@@ -1060,6 +1062,17 @@
   </div>
 </div>
 
+<!-- ══ UPDATE HISTORY MODAL ══ -->
+<div class="modal" id="historyModal">
+  <div class="modal-content history-modal-content">
+    <h3><i class="fa-solid fa-clock-rotate-left"></i> Update History</h3>
+    <div class="history-list" id="historyList"></div>
+    <div class="btn-group">
+      <button class="btn btn-cancel" style="width:100%" onclick="closeHistoryModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ DELETE CONFIRM MODAL ══ -->
 <div class="modal" id="deleteConfirmModal">
   <div class="modal-content">
@@ -1269,6 +1282,7 @@
 <script src="js/editor.js"></script>
 <script src="js/team.js"></script>
 <script src="js/toolbar.js"></script>
+<script src="js/history-ui.js"></script>
 
 
 <!-- 5. Firebase Modules -->
