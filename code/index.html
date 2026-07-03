@@ -39,14 +39,17 @@
      AUTH SCREEN
 ══════════════════════════════════════ -->
 <div id="authScreen">
+  <canvas id="authNetworkCanvas"></canvas>
   <div class="auth-glow-1"></div>
   <div class="auth-glow-2"></div>
+  <div class="auth-glow-3"></div>
+  <div class="auth-glow-4"></div>
 
   <div class="auth-card">
     <div class="auth-logo-row">
-      <div class="auth-logo-badge">TV</div>
+      <div class="auth-logo-badge"><i class="fa-solid fa-right-to-bracket"></i></div>
       <div>
-        <div class="auth-logo-text">Code Editor</div>
+        <div class="auth-logo-text">Sign in to Account</div>
         <div class="auth-logo-sub">Tech Verse IDE — Sign in to continue</div>
       </div>
     </div>
@@ -58,30 +61,25 @@
 
     <!-- LOGIN -->
     <div class="auth-form active" id="loginForm">
-      <div class="auth-title">Welcome Tech Verse</div>
-      <div class="auth-subtitle">Sign in to your Tech Verse account.</div>
       <div id="loginMsg" class="auth-msg"></div>
       <div class="auth-field">
-        <label>Email or Username</label>
-        <div class="auth-input-wrap">
-          <i class="fa-solid fa-envelope field-icon"></i>
-          <input class="auth-input" type="text" id="loginEmail" placeholder="you@example.com or username" autocomplete="username">
-        </div>
+        <input class="auth-input" type="text" id="loginEmail" placeholder="Email" autocomplete="username">
       </div>
       <div class="auth-field">
-        <label>Password</label>
         <div class="auth-input-wrap">
-          <i class="fa-solid fa-lock field-icon"></i>
-          <input class="auth-input" type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+          <input class="auth-input" type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
           <button class="pw-toggle" type="button" onclick="togglePw('loginPassword',this)"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
-      <div class="auth-forgot"><a href="#" onclick="switchAuthTab('reset');return false;">Forgot password?</a></div>
       <button class="auth-btn auth-btn-primary" id="loginBtn" onclick="doLogin()">
         <div class="btn-spinner"></div>
-        <span class="btn-label"><i class="fa-solid fa-right-to-bracket"></i> Sign In</span>
+        <span class="btn-label">Sign In</span>
       </button>
       <div class="auth-divider">or continue with</div>
+      <button class="auth-btn auth-btn-github" id="loginGithubBtn" onclick="doGithubLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label"><i class="fa-brands fa-github"></i> Continue with GitHub</span>
+      </button>
       <button class="auth-btn auth-btn-google" id="loginGoogleBtn" onclick="doGoogleLogin()">
         <div class="btn-spinner"></div>
         <span class="btn-label">
@@ -89,8 +87,13 @@
           Continue with Google
         </span>
       </button>
-      <div class="auth-switch">Do not have an account? <a href="#" onclick="switchAuthTab('register');return false;">Register</a></div>
+      <div class="auth-bottom-row">
+        <a href="#" onclick="switchAuthTab('register');return false;">Create Account</a>
+        <span class="auth-bottom-sep">|</span>
+        <a href="#" onclick="switchAuthTab('reset');return false;">Forgot password?</a>
+      </div>
     </div>
+
 
     <!-- REGISTER -->
     <div class="auth-form" id="registerForm">
@@ -148,6 +151,10 @@
         <span class="btn-label"><i class="fa-solid fa-user-plus"></i> Create Account</span>
       </button>
       <div class="auth-divider">or</div>
+      <button class="auth-btn auth-btn-github" id="registerGithubBtn" onclick="doGithubLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-label"><i class="fa-brands fa-github"></i> Sign up with GitHub</span>
+      </button>
       <button class="auth-btn auth-btn-google" id="registerGoogleBtn" onclick="doGoogleLogin()">
         <div class="btn-spinner"></div>
         <span class="btn-label">
@@ -1248,6 +1255,7 @@
 ══════════════════════════════════════ -->
 
 <!-- 1. Firebase Auth (module) -->
+<script src="js/auth-network.js"></script>
 <script type="module" src="js/auth.js"></script>
 
 <!-- 2. Auth UI helpers -->
