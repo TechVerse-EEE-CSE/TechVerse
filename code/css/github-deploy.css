@@ -1,0 +1,129 @@
+/* ══════════════════════════════════════
+   GITHUB DEPLOY MODAL — css/github-deploy.css
+   Uses the same CSS variables/theme as the rest of the app (see styles.css)
+══════════════════════════════════════ */
+
+.gh-modal-content { width: 380px; max-width: 90vw; }
+
+.gh-modal-content h3 i.fa-brands { color: var(--text-main); }
+
+.gh-desc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.gh-step { display: none; }
+
+/* ── Connected account row ── */
+.gh-account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.gh-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-surface-light);
+  flex-shrink: 0;
+}
+.gh-account-row span {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gh-disconnect-btn {
+  background: none;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.gh-disconnect-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ── Progress list ── */
+.gh-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+.gh-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-main);
+  animation: ghFadeIn 0.25s ease;
+}
+.gh-progress-item i {
+  width: 16px;
+  text-align: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+@keyframes ghFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Success step ── */
+.gh-success-icon {
+  text-align: center;
+  font-size: 46px;
+  color: var(--success);
+  margin: 6px 0 14px;
+}
+.gh-live-link {
+  display: block;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  word-break: break-all;
+}
+.gh-live-link:hover { border-color: var(--primary); }
+.gh-repo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+.gh-repo-link:hover { color: var(--text-main); }
+
+/* Connect button uses a GitHub-ish dark tone regardless of accent theme */
+#ghConnectBtn {
+  background: #24292e;
+  color: #fff;
+  width: 100%;
+  margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+#ghConnectBtn:hover { background: #1a1e22; }
