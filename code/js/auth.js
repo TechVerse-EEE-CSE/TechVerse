@@ -33,6 +33,7 @@ const app       = initializeApp(firebaseConfig);
 const auth      = getAuth(app);
 const gProvider = new GoogleAuthProvider();
 const ghProvider = new GithubAuthProvider();
+ghProvider.addScope('repo'); // so a token from sign-in can also create/push repos for GitHub Deploy
 
 // ── Auth State Listener ──
 onAuthStateChanged(auth, user => {
@@ -232,7 +233,13 @@ window.doGoogleLogin = async function () {
 window.doGithubLogin = async function () {
   ['loginGithubBtn', 'registerGithubBtn'].forEach(id => setLoading(id, true));
   try {
-    await signInWithPopup(auth, ghProvider);
+    const result = await signInWithPopup(auth, ghProvider);
+    // Hand the GitHub access token to the GitHub Deploy feature so the
+    // account is already "connected" there — no need to connect twice.
+    const credential = GithubAuthProvider.credentialFromResult(result);
+    if (credential && credential.accessToken && typeof window.applyGithubSessionFromSignIn === 'function') {
+      window.applyGithubSessionFromSignIn(credential.accessToken).catch(() => {});
+    }
   } catch (e) {
     ['loginGithubBtn', 'registerGithubBtn'].forEach(id => setLoading(id, false));
     const msgId = document.getElementById('loginForm').classList.contains('active')
