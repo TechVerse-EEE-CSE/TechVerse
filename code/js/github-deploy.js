@@ -58,6 +58,22 @@ window.isGithubConnected = function () {
 };
 
 // ══════════════════════════════════════
+//  Called from auth.js right after a user signs in/up with GitHub —
+//  reuses that same access token here so the Deploy modal already
+//  shows "create a repository" instead of asking to connect again.
+// ══════════════════════════════════════
+window.applyGithubSessionFromSignIn = async function (accessToken) {
+  if (!accessToken) return;
+  githubToken = accessToken;
+  sessionStorage.setItem('gh_token', githubToken);
+  try {
+    await _fetchGithubProfile();
+  } catch (e) {
+    console.error('applyGithubSessionFromSignIn: failed to fetch profile', e);
+  }
+};
+
+// ══════════════════════════════════════
 //  Connect (link or refresh the GitHub identity + token)
 // ══════════════════════════════════════
 window.connectGithub = async function () {
