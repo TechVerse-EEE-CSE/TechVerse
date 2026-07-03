@@ -13,7 +13,7 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, updateDoc,
-  arrayUnion, arrayRemove, serverTimestamp, collection, query, where
+  arrayUnion, arrayRemove, serverTimestamp, collection, query, where, documentId
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import firebaseConfig from "../config/firebase-config.js";
@@ -152,21 +152,30 @@ window.listMyProjects = async function () {
     ...directShareIds,
   ])];
 
-  // ── An individual read is needed to fetch each project's name/meta,
-  //    but this only happens when the user opens the dashboard, not recurring ──
+  // ── Fetch each project's name/meta in batches of 30 using a
+  //    documentId() 'in' query instead of one getDoc() per project.
+  //    e.g. 20 projects = 1 read-query (billed as 20 doc reads either way,
+  //    but far fewer round-trips) instead of 20 separate sequential
+  //    round-trips — this only runs when the dashboard is opened, not
+  //    on every keystroke, but batching still cuts latency/connection
+  //    overhead on the client and is the right pattern to reuse elsewhere. ──
   const projects = [];
-  for (const id of ids) {
-    const snap = await getDoc(doc(db, 'projects', id));
-    if (snap.exists()) {
+  const CHUNK = 30; // Firestore 'in' query limit
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunkIds = ids.slice(i, i + CHUNK);
+    if (!chunkIds.length) continue;
+    const chunkQuery = query(collection(db, 'projects'), where(documentId(), 'in', chunkIds));
+    const chunkSnap  = await getDocs(chunkQuery);
+    chunkSnap.forEach((snap) => {
       const d = snap.data();
       projects.push({
-        id,
+        id: snap.id,
         name: d.name,
         isOwner: d.ownerUid === user.uid,
         collaboratorCount: (d.collaboratorUids || []).length,
         updatedAt: d.updatedAt?.toMillis?.() || 0,
       });
-    }
+    });
   }
   return projects.sort((a, b) => b.updatedAt - a.updatedAt);
 };
