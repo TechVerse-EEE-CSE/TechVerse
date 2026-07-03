@@ -24,9 +24,18 @@ import {
   reauthenticateWithPopup,
   unlink,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import firebaseConfig from "../config/firebase-config.js";
 
 const githubProvider = new GithubAuthProvider();
 githubProvider.addScope('repo'); // needed to create repos + push files on the user's behalf
+
+// ── Firestore — used only to remember which repos this user has deployed to,
+//    so the "Your deployments" list survives closing the modal / reloading the page ──
+const _app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const _db  = getFirestore(_app);
+const MAX_SAVED_DEPLOYMENTS = 20;
 
 // ── In-memory state (never persisted beyond this tab/session) ──
 let githubToken = sessionStorage.getItem('gh_token') || null;
@@ -100,6 +109,7 @@ window.connectGithub = async function () {
     _toast('GitHub connected ✅', 'success', 'fa-brands fa-github');
     _showStep('deploy');
     _prefillRepoName();
+    _renderDeploymentsList();
     return true;
   } catch (e) {
     console.error('connectGithub failed:', e);
@@ -107,7 +117,7 @@ window.connectGithub = async function () {
     if (e.code === 'auth/credential-already-in-use') msg = 'This GitHub account is already linked to a different user.';
     else if (e.code === 'auth/popup-closed-by-user') msg = 'GitHub connection was cancelled.';
     else if (e.code === 'auth/operation-not-allowed') msg = 'GitHub sign-in isn\u2019t enabled for this app yet.';
-    else if (e.code === 'auth/provider-already-linked') { await _fetchGithubProfile().catch(()=>{}); _showStep('deploy'); _prefillRepoName(); return true; }
+    else if (e.code === 'auth/provider-already-linked') { await _fetchGithubProfile().catch(()=>{}); _showStep('deploy'); _prefillRepoName(); _renderDeploymentsList(); return true; }
     _toast(msg, 'error', 'fa-triangle-exclamation');
     return false;
   } finally {
@@ -165,6 +175,7 @@ window.openGithubDeployModal = async function () {
     _renderAccountRow();
     _showStep('deploy');
     _prefillRepoName();
+    _renderDeploymentsList();
   } else {
     _showStep('connect');
   }
@@ -324,7 +335,7 @@ window.startGithubDeploy = async function () {
     const finalPages = (await _ghGet(`/repos/${owner}/${repoName}/pages`)) || pages;
     const liveUrl = (finalPages && finalPages.html_url) || `https://${owner}.github.io/${repoName}/`;
 
-    _showDone(liveUrl, `https://github.com/${owner}/${repoName}`);
+    _showDone(liveUrl, `https://github.com/${owner}/${repoName}`, repoName);
   } catch (e) {
     console.error('GitHub deploy failed:', e);
     _showStep('deploy');
@@ -332,14 +343,104 @@ window.startGithubDeploy = async function () {
   }
 };
 
-function _showDone(liveUrl, repoUrl) {
+function _showDone(liveUrl, repoUrl, repoName) {
   _showStep('done');
   const liveLink = document.getElementById('ghLiveLink');
   const repoLink = document.getElementById('ghRepoLink');
   if (liveLink) { liveLink.href = liveUrl; liveLink.textContent = liveUrl.replace(/^https?:\/\//, ''); }
   if (repoLink) { repoLink.href = repoUrl; }
   _toast('Deployed successfully 🚀', 'success', 'fa-rocket');
+  _saveDeploymentRecord({ repoName, owner: githubUser?.login, liveUrl, repoUrl });
 }
+
+// ══════════════════════════════════════
+//  Deployment history — persisted per Tech Verse user in Firestore, so it
+//  shows up again the next time the modal is opened (fixes repos "disappearing")
+// ══════════════════════════════════════
+function _userDeploymentsRef() {
+  const auth = window._firebaseAuth;
+  const user = auth && auth.currentUser;
+  if (!user) return null;
+  return doc(_db, 'users', user.uid);
+}
+
+async function _loadDeployments() {
+  const ref = _userDeploymentsRef();
+  if (!ref) return [];
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return [];
+    return snap.data().deployments || [];
+  } catch (e) {
+    console.error('Could not load deployment history:', e);
+    return [];
+  }
+}
+
+async function _saveDeploymentRecord(record) {
+  const ref = _userDeploymentsRef();
+  if (!ref || !record.repoName || !record.owner) return;
+  try {
+    const existing = await _loadDeployments();
+    const key = `${record.owner}/${record.repoName}`;
+    const filtered = existing.filter(d => `${d.owner}/${d.repoName}` !== key);
+    const updated = [{ ...record, deployedAt: new Date().toISOString() }, ...filtered].slice(0, MAX_SAVED_DEPLOYMENTS);
+    await setDoc(ref, { deployments: updated }, { merge: true });
+    _renderDeploymentsList();
+  } catch (e) {
+    console.error('Could not save deployment record:', e);
+  }
+}
+
+async function _renderDeploymentsList() {
+  const wrap = document.getElementById('ghDeploymentsWrap');
+  const list = document.getElementById('ghDeploymentsList');
+  if (!wrap || !list) return;
+
+  const deployments = await _loadDeployments();
+  if (!deployments.length) { wrap.style.display = 'none'; list.innerHTML = ''; return; }
+
+  wrap.style.display = 'block';
+  list.innerHTML = deployments.map(d => `
+    <div class="gh-deployment-item" onclick="window.reuseGithubDeployment('${_escAttr(d.repoName)}')">
+      <i class="fa-brands fa-github"></i>
+      <div class="gh-deployment-info">
+        <div class="gh-deployment-name">${_escHtml(d.owner)}/${_escHtml(d.repoName)}</div>
+        <div class="gh-deployment-time">Deployed ${_timeAgo(d.deployedAt)}</div>
+      </div>
+      <a class="gh-deployment-open" href="${_escAttr(d.liveUrl || d.repoUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open live site">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+  `).join('');
+}
+
+// Clicking a saved deployment reuses its repo name — pushes a fresh commit to that same repo
+window.reuseGithubDeployment = function (repoName) {
+  const input = document.getElementById('ghRepoName');
+  if (!input) return;
+  input.value = repoName;
+  window.checkGithubRepoName();
+  input.scrollIntoView({ block: 'nearest' });
+};
+
+function _timeAgo(iso) {
+  if (!iso) return 'recently';
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function _escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function _escAttr(s) { return _escHtml(s).replace(/'/g, '&#39;'); }
 
 // ══════════════════════════════════════
 //  GitHub REST helpers
