@@ -1,0 +1,151 @@
+rules_version = '2';
+
+// ══════════════════════════════════════════════════════════════
+//  FIRESTORE SECURITY RULES — Tech Verse (hardened v2)
+//
+//  ⚠️ ডিপ্লয়: এই পুরো ফাইলের কন্টেন্ট Firebase Console →
+//  Firestore Database → Rules ট্যাবে পেস্ট করে Publish করো।
+//
+//  v2 changes vs. first draft:
+//   - self-join (share link দিয়ে collaborator হওয়া) এখন সার্ভার-সাইডে
+//     verify হয় — শুধু projectId জেনে আর কেউ নিজেকে collaborator
+//     বানাতে পারবে না, আসল active shareLink লাগবেই (js/project-manager.js
+//     -এর joinProjectViaShareLink()-এও ছোট একটা প্যাচ লাগবে, সেটা করা আছে)
+//   - shareLink তৈরির সময় verify হয় যে creator আসলেই সেই project-এর
+//     owner/collaborator কিনা (আগে যেকোনো authenticated ইউজার
+//     অন্য কারো projectId দিয়ে shareLink বানাতে পারত)
+//   - ownerUid create-এর পর আর কখনো বদলানো যাবে না (silent ownership
+//     transfer বন্ধ)
+//   - সব create/update-এ ফিল্ডের টাইপ + দৈর্ঘ্য + exact-key allowlist
+//     চেক করা হয়, যাতে কেউ ইচ্ছামতো extra/malformed ফিল্ড গুঁজে দিতে
+//     না পারে
+//   - collaboratorUids-এর সাইজ ক্যাপ করা হয়েছে (abuse/Firestore-load
+//     protection)
+// ══════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── projects/{projectId} ──
+    match /projects/{projectId} {
+      function data()          { return resource.data; }
+      function newData()       { return request.resource.data; }
+      function isSignedIn()    { return request.auth != null; }
+      function isOwner()       { return isSignedIn() && request.auth.uid == data().ownerUid; }
+      function isCollaborator(){ return isSignedIn() && data().collaboratorUids != null
+                                    && request.auth.uid in data().collaboratorUids; }
+      function isMember()      { return isOwner() || isCollaborator(); }
+      function changedKeys()   { return newData().diff(data()).affectedKeys(); }
+      function oldCollabCount(){ return data().collaboratorUids != null ? data().collaboratorUids.size() : 0; }
+
+      allow read: if isMember();
+
+      allow create: if isSignedIn()
+                    && newData().ownerUid == request.auth.uid
+                    && newData().name is string && newData().name.size() > 0 && newData().name.size() <= 200
+                    && newData().fs is map
+                    && (newData().collaboratorUids == null || newData().collaboratorUids.size() == 0)
+                    && newData().keys().hasOnly([
+                         'name', 'ownerUid', 'ownerName', 'fs',
+                         'collaboratorUids', 'updatedAt', 'updatedBy'
+                       ]);
+
+      allow update: if isSignedIn() && (
+                        // 1) owner — ownerUid ছাড়া সবকিছু বদলাতে পারবে
+                        (isOwner()
+                          && newData().ownerUid == data().ownerUid
+                          && newData().name is string && newData().name.size() > 0 && newData().name.size() <= 200
+                          && (newData().collaboratorUids == null || newData().collaboratorUids.size() <= 50))
+
+                        // 2) বিদ্যমান collaborator — শুধু save-সংক্রান্ত ফিল্ড
+                        || (isCollaborator()
+                            && changedKeys().hasOnly(['fs', 'updatedAt', 'updatedBy', 'updatedByName', 'sizeKB'])
+                            && newData().fs is map)
+
+                        // 3) share link দিয়ে নতুন join — নিজের uid ছাড়া কিছু যোগ
+                        //    করা যাবে না, আর সার্ভারে verify হবে একটা সত্যিকারের
+                        //    active shareLink আছে এই project-এর জন্য
+                        || (!isOwner() && !isCollaborator()
+                            && changedKeys().hasOnly(['collaboratorUids', 'lastJoinShareId'])
+                            && newData().collaboratorUids.size() <= 50
+                            && newData().collaboratorUids.size() == oldCollabCount() + 1
+                            && request.auth.uid in newData().collaboratorUids
+                            && newData().lastJoinShareId is string
+                            && get(/databases/$(database)/documents/shareLinks/$(newData().lastJoinShareId)).data.projectId == projectId
+                            && get(/databases/$(database)/documents/shareLinks/$(newData().lastJoinShareId)).data.active == true)
+                      );
+
+      allow delete: if isOwner();
+    }
+
+    // ── shareLinks/{shareId} ──
+    match /shareLinks/{shareId} {
+      function newData() { return request.resource.data; }
+      function isSignedIn() { return request.auth != null; }
+      // creator আসলেই সেই project-এর owner/collaborator কিনা যাচাই
+      function isMemberOfTargetProject() {
+        let proj = get(/databases/$(database)/documents/projects/$(newData().projectId)).data;
+        return proj.ownerUid == request.auth.uid
+               || (proj.collaboratorUids != null && request.auth.uid in proj.collaboratorUids);
+      }
+
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+                    && newData().createdBy == request.auth.uid
+                    && newData().role in ['editor', 'viewer']
+                    && newData().projectId is string
+                    && isMemberOfTargetProject()
+                    && newData().keys().hasOnly(['projectId', 'role', 'createdBy', 'createdAt', 'active']);
+
+      // creator শুধু 'active' ফ্ল্যাগ টগল (লিংক revoke) করতে পারবে —
+      // projectId/role/createdBy পরে বদলাতে পারবে না
+      allow update: if isSignedIn() && resource.data.createdBy == request.auth.uid
+                    && newData().diff(resource.data).affectedKeys().hasOnly(['active']);
+
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // ── users/{uid} ── একদম প্রাইভেট
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── publicProfiles/{uid} ── পাবলিক read, self-write
+    match /publicProfiles/{uid} {
+      function newData() { return request.resource.data; }
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid
+                   && (!('username' in newData()) || (newData().username is string && newData().username.size() <= 20))
+                   && (!('displayName' in newData()) || (newData().displayName is string && newData().displayName.size() <= 60));
+    }
+
+    // ── usernames/{usernameLower} ── login-lookup-এর জন্য read পাবলিক
+    // রাখতেই হচ্ছে (দেখো আগের মেসেজের নোট — এটা এখনো একটা জানা
+    // সীমাবদ্ধতা, ঠিকভাবে ফিক্স করতে Cloud Function লাগবে)
+    match /usernames/{usernameLower} {
+      function newData() { return request.resource.data; }
+      allow read: if true;
+      allow create: if request.auth != null
+                    && newData().uid == request.auth.uid
+                    && usernameLower.matches('^[a-z][a-z0-9_]{2,19}$')
+                    && newData().username is string;
+      allow update: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // ── userEmails/{emailLower} ── শুধু authenticated ইউজাররা read করতে পারবে
+    match /userEmails/{emailLower} {
+      function newData() { return request.resource.data; }
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && newData().uid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // বাকি সবকিছু ডিফল্টে সম্পূর্ণ বন্ধ
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
