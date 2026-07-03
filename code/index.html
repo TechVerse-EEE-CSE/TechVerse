@@ -21,6 +21,7 @@
 <!-- Main CSS file -->
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/toolbar.css">
+<link rel="stylesheet" href="css/github-deploy.css">
 <link rel="stylesheet" href="css/share.css">
 <link rel="stylesheet" href="css/privacy-policy.css">
 <link rel="stylesheet" href="css/profile.css">
@@ -326,6 +327,11 @@
         <div class="menu-row" onclick="closeSidebar();if(typeof openShareModal==='function')openShareModal();">
           <i class="fa-solid fa-user-group"></i>
           <span>share a project</span>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+        <div class="menu-row" onclick="closeSidebar();if(typeof openGithubDeployModal==='function')openGithubDeployModal();">
+          <i class="fa-brands fa-github"></i>
+          <span>Deploy to GitHub</span>
           <i class="fa-solid fa-chevron-right chev"></i>
         </div>
         <div class="menu-row" onclick="closeSidebar();if(typeof downloadAsZip==='function')downloadAsZip();">
@@ -1002,6 +1008,58 @@
   </div>
 </div>
 
+<!-- ══ GITHUB DEPLOY MODAL ══ -->
+<div class="modal" id="githubDeployModal">
+  <div class="modal-content gh-modal-content">
+    <h3><i class="fa-brands fa-github"></i> Deploy to GitHub</h3>
+
+    <!-- Step 1: connect -->
+    <div class="gh-step" id="ghStepConnect">
+      <p class="gh-desc">Connect your own GitHub account to push this project as a repository and publish it live with GitHub Pages.</p>
+      <button class="btn" id="ghConnectBtn" onclick="connectGithub()">
+        <i class="fa-brands fa-github"></i> Connect GitHub
+      </button>
+      <button class="btn btn-cancel" style="width:100%" onclick="closeGithubDeployModal()">Cancel</button>
+    </div>
+
+    <!-- Step 2: pick repo + deploy -->
+    <div class="gh-step" id="ghStepDeploy">
+      <div class="gh-account-row">
+        <img class="gh-avatar" id="ghAvatar" src="" alt="">
+        <span id="ghLogin"></span>
+        <button class="gh-disconnect-btn" onclick="disconnectGithub()">Disconnect</button>
+      </div>
+      <div class="modal-label">Repository name</div>
+      <input type="text" id="ghRepoName" placeholder="my-project" oninput="checkGithubRepoName()" autocomplete="off">
+      <div class="username-hint" id="ghRepoHint"></div>
+      <div class="btn-group">
+        <button class="btn btn-cancel" onclick="closeGithubDeployModal()">Cancel</button>
+        <button class="btn btn-primary" id="ghDeployBtn" onclick="startGithubDeploy()">
+          <i class="fa-solid fa-rocket"></i> Deploy
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: progress -->
+    <div class="gh-step" id="ghStepProgress">
+      <div class="gh-progress-list" id="ghProgressList"></div>
+    </div>
+
+    <!-- Step 4: done -->
+    <div class="gh-step" id="ghStepDone">
+      <div class="gh-success-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <a class="gh-live-link" id="ghLiveLink" href="#" target="_blank" rel="noopener"></a>
+      <a class="gh-repo-link" id="ghRepoLink" href="#" target="_blank" rel="noopener">
+        <i class="fa-brands fa-github"></i> View repository on GitHub
+      </a>
+      <div class="btn-group">
+        <button class="btn btn-cancel" onclick="closeGithubDeployModal()">Close</button>
+        <button class="btn btn-primary" onclick="document.getElementById('ghLiveLink').click()">Open Site</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ DELETE CONFIRM MODAL ══ -->
 <div class="modal" id="deleteConfirmModal">
   <div class="modal-content">
@@ -1221,6 +1279,7 @@
 
 
 <script src="js/share-ui.js"></script>
+<script type="module" src="js/github-deploy.js"></script>
 <script type="module" src="js/pro-editor.js"></script>
 
 
