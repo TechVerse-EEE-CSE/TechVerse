@@ -755,6 +755,13 @@ window.downloadAsZip = async function () {
   showToast('Downloading ZIP!', 'success', 'fa-file-zipper');
 };
 
+// ── Expose current files for external integrations (e.g. GitHub deploy) ──
+// Always flushes the actively-open file's latest content first, same as downloadAsZip does.
+window.getProjectFiles = function () {
+  if (editor && currentFile) fs[currentFile] = editor.getValue();
+  return JSON.parse(JSON.stringify(fs));
+};
+
 // ── Dynamic script loader ──
 function loadScript(src) {
   return new Promise((resolve, reject) => {
