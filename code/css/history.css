@@ -1,0 +1,104 @@
+/* ══════════════════════════════════════
+   UPDATE HISTORY — css/history.css
+   The "last updated" line under Cloud sync status,
+   and the full History modal.
+══════════════════════════════════════ */
+
+/* ── Compact line shown right under "Cloud sync status" ── */
+.pm-history-line {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 8px;
+  font-size: 10.5px;
+  color: var(--text-muted, #8b92a5);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.pm-history-line:hover { color: var(--text-main, #e8eaf0); }
+.pm-history-line i { color: var(--primary, #5b8dee); flex-shrink: 0; }
+.pm-history-line span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── History modal ── */
+.history-modal-content { width: 380px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column; }
+
+.history-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-right: 2px;
+}
+
+.history-empty {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted, #8b92a5);
+  padding: 24px 0;
+}
+
+.history-item {
+  background: var(--bg-main, #0d0f14);
+  border: 1px solid var(--border, #1f2435);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.history-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.history-date {
+  font-size: 11.5px;
+  color: var(--text-muted, #8b92a5);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.history-by {
+  font-size: 11px;
+  color: var(--primary, #5b8dee);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.history-summary {
+  font-size: 13px;
+  color: var(--text-main, #e8eaf0);
+  margin-bottom: 6px;
+}
+
+.history-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hf-added    { background: rgba(16,201,143,0.12); color: var(--success, #10c98f); }
+.hf-modified { background: rgba(91,141,238,0.12); color: var(--primary, #5b8dee); }
+.hf-removed  { background: rgba(239,68,68,0.12);  color: var(--danger, #ef4444); }
