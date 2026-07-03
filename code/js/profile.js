@@ -541,9 +541,12 @@ async function _deleteAllFirestoreData(user) {
   const batch = writeBatch(db);
 
   // 1. user's projects
+  //    ⚠️ FIX: the field on the project doc is 'ownerUid' (see project-manager.js),
+  //    not 'ownerId'. The old query never matched anything, so a user's own
+  //    projects were silently never deleted on "Delete my data" / "Delete account".
   const projQuery = query(
     collection(db, 'projects'),
-    where('ownerId', '==', user.uid)
+    where('ownerUid', '==', user.uid)
   );
   const projSnap = await getDocs(projQuery);
   projSnap.forEach(d => batch.delete(d.ref));
