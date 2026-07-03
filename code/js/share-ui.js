@@ -4,6 +4,17 @@
 // ══════════════════════════════════════
 
 (function () {
+  // ── Escape user-controlled text before dropping it into innerHTML.
+  //    displayName / username / project name are all editable by users
+  //    (or, for collaborators, by *other* users), so without this a
+  //    project/display name like <img src=x onerror=...> would run as
+  //    script inside every collaborator's browser (stored XSS). ──
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     injectShareModal();
     injectProjectListModal();
@@ -102,12 +113,12 @@
 
     el.innerHTML = list.map(p => `
       <div class="collaborator-row">
-        <div class="collaborator-avatar">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : (p.displayName || '?').slice(0,2).toUpperCase()}</div>
+        <div class="collaborator-avatar">${p.photoURL ? `<img src="${escapeHtml(p.photoURL)}" alt="">` : escapeHtml((p.displayName || '?').slice(0,2).toUpperCase())}</div>
         <div class="collaborator-info">
-          <div class="collaborator-name">${p.displayName}${p.role === 'owner' ? ' <i class="fa-solid fa-crown" title="Owner"></i>' : ''}</div>
-          ${p.username ? `<div class="collaborator-username">@${p.username}</div>` : ''}
+          <div class="collaborator-name">${escapeHtml(p.displayName)}${p.role === 'owner' ? ' <i class="fa-solid fa-crown" title="Owner"></i>' : ''}</div>
+          ${p.username ? `<div class="collaborator-username">@${escapeHtml(p.username)}</div>` : ''}
         </div>
-        ${(p.role === 'collaborator' && p.uid !== currentUid) ? `<button class="collaborator-remove-btn" onclick="window.handleRemoveCollaborator('${projectId}','${p.uid}')" title="Remove"><i class="fa-solid fa-xmark"></i></button>` : ''}
+        ${(p.role === 'collaborator' && p.uid !== currentUid) ? `<button class="collaborator-remove-btn" onclick="window.handleRemoveCollaborator('${escapeHtml(projectId)}','${escapeHtml(p.uid)}')" title="Remove"><i class="fa-solid fa-xmark"></i></button>` : ''}
       </div>
     `).join('');
   }
@@ -282,9 +293,9 @@
     }
 
     body.innerHTML = projects.map(p => `
-      <div class="project-row" onclick="window.openExistingProject('${p.id}')">
+      <div class="project-row" onclick="window.openExistingProject('${escapeHtml(p.id)}')">
         <i class="fa-solid ${p.isOwner ? 'fa-crown' : 'fa-user-group'}"></i>
-        <span class="project-row-name">${p.name}</span>
+        <span class="project-row-name">${escapeHtml(p.name)}</span>
         ${p.collaboratorCount ? `<span class="badge-count">${p.collaboratorCount}</span>` : ''}
       </div>
     `).join('');
