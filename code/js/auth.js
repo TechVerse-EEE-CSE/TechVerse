@@ -137,18 +137,13 @@ window.doRegister = async function () {
   const pass     = document.getElementById('registerPassword').value;
   const confirm  = document.getElementById('registerConfirm').value;
 
-  // These are also checked step-by-step in auth-ui.js as the person moves forward,
-  // but every field is re-validated here too since the final step could in theory
-  // be reached without going through the wizard's Next buttons.
-  if (!name)              { window.goToRegisterStep?.(1); return showAuthMsg('registerMsg', 'error', 'Please enter your name.'); }
-  if (!email)             { window.goToRegisterStep?.(1); return showAuthMsg('registerMsg', 'error', 'Please enter an email.'); }
-  if (!username)          { window.goToRegisterStep?.(2); return showAuthMsg('registerMsg', 'error', 'Please choose a username.'); }
-  if (!isValidUsername(username)) {
-    window.goToRegisterStep?.(2);
+  if (!name)              return showAuthMsg('registerMsg', 'error', 'Please enter your name.');
+  if (!email)             return showAuthMsg('registerMsg', 'error', 'Please enter an email.');
+  if (!username)          return showAuthMsg('registerMsg', 'error', 'Please choose a username.');
+  if (!isValidUsername(username))
     return showAuthMsg('registerMsg', 'error', usernameFormatHint());
-  }
-  if (pass.length < 6)    { window.goToRegisterStep?.(3); return showAuthMsg('registerMsg', 'error', 'Password must be at least 6 characters.'); }
-  if (pass !== confirm)   { window.goToRegisterStep?.(3); return showAuthMsg('registerMsg', 'error', 'Passwords do not match.'); }
+  if (pass.length < 6)    return showAuthMsg('registerMsg', 'error', 'Password must be at least 6 characters.');
+  if (pass !== confirm)   return showAuthMsg('registerMsg', 'error', 'Passwords do not match.');
   if (!document.getElementById('termsCheck').checked)
     return showAuthMsg('registerMsg', 'error', 'Please accept the Terms.');
 
@@ -158,7 +153,6 @@ window.doRegister = async function () {
   const available = await isUsernameAvailable(username);
   if (!available) {
     setLoading('registerBtn', false);
-    window.goToRegisterStep?.(2);
     return showAuthMsg('registerMsg', 'error', 'This username is already taken. Please choose another.');
   }
 
@@ -173,15 +167,12 @@ window.doRegister = async function () {
       // Roll back the freshly-created account so we don't leave a user with no username.
       await deleteUser(cred.user).catch(() => {});
       setLoading('registerBtn', false);
-      window.goToRegisterStep?.(2);
       return showAuthMsg('registerMsg', 'error', 'This username was just taken by someone else. Please choose another.');
     }
 
     showAuthMsg('registerMsg', 'success', 'Account created!');
   } catch (e) {
     setLoading('registerBtn', false);
-    if (e.code === 'auth/email-already-in-use' || e.code === 'auth/invalid-email') window.goToRegisterStep?.(1);
-    else if (e.code === 'auth/weak-password') window.goToRegisterStep?.(3);
     showAuthMsg('registerMsg', 'error', friendlyError(e.code));
   }
 };
