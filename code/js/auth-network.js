@@ -1,9 +1,19 @@
 // ══════════════════════════════════════
 //  AUTH NETWORK BACKGROUND — js/auth-network.js
 //  A dense, living neural constellation: glowing neurons,
-//  gradient synapses, traveling signal pulses, and soft depth
-//  parallax — all spatially-indexed so it stays perfectly smooth
-//  even at high node counts.
+//  synapses, traveling signal pulses, and soft depth parallax —
+//  spatially-indexed AND sprite-cached so it stays smooth even
+//  at high node counts.
+//
+//  PERFORMANCE NOTE: the original version created a brand-new
+//  CanvasGradient object for every link and every node on every
+//  single frame (hundreds of allocations/sec), plus used
+//  ctx.shadowBlur (one of the most expensive canvas operations)
+//  on every node and signal. That combination was the main cause
+//  of site-wide slowness. This version pre-renders the glow as
+//  small offscreen "sprites" once, then just drawImage()s them
+//  per frame — same look, far less CPU/GPU work. Node counts are
+//  unchanged.
 // ══════════════════════════════════════
 (function () {
   const NODE_COLORS = ['#5b8dee', '#10c98f', '#7c5cbf', '#22d3ee', '#f59e0b', '#ec4899', '#3b82f6'];
@@ -20,10 +30,47 @@
   let mouse = { x: -9999, y: -9999, active: false };
   let grid = new Map(), cellSize = LINK_DIST;
 
+  // ── Pre-rendered glow sprites (one per node color) ──
+  // Built once, reused every frame via drawImage instead of
+  // calling createRadialGradient() hundreds of times per frame.
+  const SPRITE_SIZE = 128;
+  const glowSprites = {};
+  function buildGlowSprites() {
+    for (const color of NODE_COLORS) {
+      const s = document.createElement('canvas');
+      s.width = SPRITE_SIZE; s.height = SPRITE_SIZE;
+      const sctx = s.getContext('2d');
+      const r = SPRITE_SIZE / 2;
+      const grad = sctx.createRadialGradient(r, r, 0, r, r, r);
+      grad.addColorStop(0, hexToRgba(color, 1));
+      grad.addColorStop(1, hexToRgba(color, 0));
+      sctx.fillStyle = grad;
+      sctx.beginPath();
+      sctx.arc(r, r, r, 0, Math.PI * 2);
+      sctx.fill();
+      glowSprites[color] = s;
+    }
+  }
+
+  // ── Pre-mixed solid colors for every color-pair, so links use
+  // a cheap solid strokeStyle + globalAlpha instead of a fresh
+  // CanvasGradient every frame (gradient coords can't be cached
+  // since node positions move, but a mixed color can be) ──
+  const mixCache = {};
+  function mixedColor(colorA, colorB) {
+    const key = colorA < colorB ? colorA + colorB : colorB + colorA;
+    if (mixCache[key]) return mixCache[key];
+    const a = hexToRgb(colorA), b = hexToRgb(colorB);
+    const mixed = `rgb(${(a.r + b.r) >> 1},${(a.g + b.g) >> 1},${(a.b + b.b) >> 1})`;
+    mixCache[key] = mixed;
+    return mixed;
+  }
+
   function init() {
     canvas = document.getElementById('authNetworkCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
+    buildGlowSprites();
     resize();
     seedNodes();
     window.addEventListener('resize', onResize);
@@ -134,9 +181,11 @@
 
     buildGrid();
 
-    // Draw synapses: gradient-colored, thickness/opacity scaled by
-    // proximity and combined neuron depth for a layered 3D feel.
+    // Draw synapses: a cheap solid mixed-color stroke (opacity via
+    // globalAlpha) instead of allocating a fresh CanvasGradient per
+    // link every frame — visually near-identical, much lighter.
     links.length = 0;
+    ctx.lineCap = 'round';
     for (let i = 0; i < nodes.length; i++) {
       forEachNeighbor(i, (j) => {
         const a = nodes[i], b = nodes[j];
@@ -146,10 +195,8 @@
           const tt = 1 - dist / LINK_DIST;
           const depthAvg = (a.depth + b.depth) / 2;
           const opacity = tt * tt * 0.55 * depthAvg;
-          const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-          grad.addColorStop(0, hexToRgba(a.color, opacity));
-          grad.addColorStop(1, hexToRgba(b.color, opacity));
-          ctx.strokeStyle = grad;
+          ctx.strokeStyle = mixedColor(a.color, b.color);
+          ctx.globalAlpha = opacity;
           ctx.lineWidth = (0.6 + tt * 0.9) * depthAvg;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -159,6 +206,7 @@
         }
       });
     }
+    ctx.globalAlpha = 1;
 
     // Occasionally fire a traveling signal pulse along a live synapse —
     // gives the network a genuine "thinking" / data-flow feel.
@@ -167,7 +215,7 @@
       signals.push({ i, j, tPos: 0, speed: 0.012 + Math.random() * 0.014 });
     }
 
-    // Draw + advance signals
+    // Draw + advance signals (plain filled circle, no shadowBlur)
     for (let k = signals.length - 1; k >= 0; k--) {
       const s = signals[k];
       s.tPos += s.speed * dt;
@@ -178,48 +226,50 @@
       const px = a.x + (b.x - a.x) * s.tPos;
       const py = a.y + (b.y - a.y) * s.tPos;
       const fade = Math.sin(s.tPos * Math.PI); // fade in/out along the path
+      const sprite = glowSprites[a.color];
+      const sr = (2.1 * fade + 0.4) * 4; // sprite draw radius, glow-boosted
+      ctx.globalAlpha = 0.85 * fade;
+      ctx.drawImage(sprite, px - sr, py - sr, sr * 2, sr * 2);
+      ctx.globalAlpha = 1;
       ctx.beginPath();
       ctx.arc(px, py, 2.1 * fade + 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba('#ffffff', 0.85 * fade);
-      ctx.shadowColor = a.color;
-      ctx.shadowBlur = 10 * fade;
+      ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
-    // Draw neurons: soft outer glow + bright core, with occasional
-    // brighter "firing" flicker layered on top for a smarter feel.
+    // Draw neurons: sprite-based glow (drawImage, cached) + a plain
+    // filled core. No per-node gradient allocation, no shadowBlur.
     for (const n of nodes) {
       const base = 0.55 + Math.sin(n.pulse) * 0.35;
       const glow = n.twinkle ? Math.min(1, base + 0.25) : base;
 
       const outerR = n.r * (n.twinkle ? 5.2 : 3.6);
-      const radial = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, outerR);
-      radial.addColorStop(0, hexToRgba(n.color, glow * 0.38 * n.depth));
-      radial.addColorStop(1, hexToRgba(n.color, 0));
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, outerR, 0, Math.PI * 2);
-      ctx.fillStyle = radial;
-      ctx.fill();
+      const sprite = glowSprites[n.color];
+      ctx.globalAlpha = glow * 0.38 * n.depth;
+      ctx.drawImage(sprite, n.x - outerR, n.y - outerR, outerR * 2, outerR * 2);
+      ctx.globalAlpha = 1;
 
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
       ctx.fillStyle = hexToRgba(n.color, 0.75 + 0.2 * n.depth);
-      ctx.shadowColor = n.color;
-      ctx.shadowBlur = n.twinkle ? 13 : 6;
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
     if (running) raf = requestAnimationFrame(step);
   }
 
-  function hexToRgba(hex, a) {
+  function hexToRgb(hex) {
     const v = hex.replace('#', '');
-    const r = parseInt(v.substring(0, 2), 16);
-    const g = parseInt(v.substring(2, 4), 16);
-    const b = parseInt(v.substring(4, 6), 16);
-    return `rgba(${r},${g},${b},${a})`;
+    return {
+      r: parseInt(v.substring(0, 2), 16),
+      g: parseInt(v.substring(2, 4), 16),
+      b: parseInt(v.substring(4, 6), 16),
+    };
+  }
+
+  function hexToRgba(hex, a) {
+    const c = hexToRgb(hex);
+    return `rgba(${c.r},${c.g},${c.b},${a})`;
   }
 
   function start() {
