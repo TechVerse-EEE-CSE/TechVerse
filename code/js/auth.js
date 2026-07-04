@@ -36,19 +36,8 @@ const ghProvider = new GithubAuthProvider();
 ghProvider.addScope('repo'); // so a token from sign-in can also create/push repos for GitHub Deploy
 
 // ── Auth State Listener ──
-// NOTE: _skipAutoEnter is set to true for the duration of doRegister() below.
-// Without it, createUserWithEmailAndPassword() signs the new user in
-// IMMEDIATELY (that's how Firebase Auth works), which fires this listener
-// and drops the person into the editor + kicks off ensureUserHasUsername()
-// in the background — all before doRegister() has even found out whether
-// the *chosen* username was actually reservable. That's what caused the
-// "username was just taken" message to reappear on the editor page: two
-// separate pieces of code were racing to assign/roll back a username on
-// the same brand-new account at the same time.
-let _skipAutoEnter = false;
 onAuthStateChanged(auth, user => {
   if (user) {
-    if (_skipAutoEnter) return; // doRegister() is handling entry itself once the username is safely reserved
     enterEditor(user);
     // Make sure this user has a username (auto-generated for Google sign-ins
     // and pre-existing accounts made before this feature existed).
@@ -174,7 +163,6 @@ window.doRegister = async function () {
   }
 
   try {
-    _skipAutoEnter = true;
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
 
@@ -184,18 +172,13 @@ window.doRegister = async function () {
       // Someone grabbed the username in the split second between our check and this write.
       // Roll back the freshly-created account so we don't leave a user with no username.
       await deleteUser(cred.user).catch(() => {});
-      _skipAutoEnter = false;
       setLoading('registerBtn', false);
       window.goToRegisterStep?.(2);
       return showAuthMsg('registerMsg', 'error', 'This username was just taken by someone else. Please choose another.');
     }
 
     showAuthMsg('registerMsg', 'success', 'Account created!');
-    _skipAutoEnter = false;
-    enterEditor(cred.user);
-    _showUsernameInUI(username);
   } catch (e) {
-    _skipAutoEnter = false;
     setLoading('registerBtn', false);
     if (e.code === 'auth/email-already-in-use' || e.code === 'auth/invalid-email') window.goToRegisterStep?.(1);
     else if (e.code === 'auth/weak-password') window.goToRegisterStep?.(3);
