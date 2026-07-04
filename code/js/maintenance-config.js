@@ -8,7 +8,7 @@
 
 window.MAINTENANCE_CONFIG = {
   // মূল সুইচ — true মানে সাইট বন্ধ (Maintenance পেজ দেখাবে)
-  MAINTENANCE_MODE: false,
+  MAINTENANCE_MODE: true,
 
   // টাইটেল
   title: "আমরা কিছুটা রক্ষণাবেক্ষণ কাজ করছি",
@@ -18,14 +18,14 @@ window.MAINTENANCE_CONFIG = {
 
   // (ঐচ্ছিক) কতক্ষণের মধ্যে ফিরে আসবে তার তারিখ/সময়। খালি রাখলে countdown দেখাবে না।
   // ফরম্যাট: "YYYY-MM-DDTHH:mm:ss" (আপনার লোকাল টাইম অনুযায়ী)
-  eta: "",
+  eta: "2026-07-19T00:00:00"
 
   // যোগাযোগের জন্য (ঐচ্ছিক) — খালি রাখলে সেকশনটা দেখাবে না
-  contactEmail: "",
+  contactEmail: "imran.info.me@gmail.com",
 
   // সাইটের নাম/লোগো টেক্সট
   siteName: "Tech Verse",
 
   // স্বয়ংক্রিয়ভাবে প্রতি কত সেকেন্ডে সাইট চালু আছে কিনা চেক করবে (0 দিলে বন্ধ)
-  autoCheckSeconds: 15
+  autoCheckSeconds: 5
 };
