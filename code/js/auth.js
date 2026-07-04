@@ -155,11 +155,20 @@ window.doRegister = async function () {
   setLoading('registerBtn', true);
 
   // Fast best-effort check before creating the account (final say is the atomic transaction below)
-  const available = await isUsernameAvailable(username);
-  if (!available) {
+  try {
+    const available = await isUsernameAvailable(username);
+    if (!available) {
+      setLoading('registerBtn', false);
+      window.goToRegisterStep?.(2);
+      return showAuthMsg('registerMsg', 'error', 'This username is already taken. Please choose another.');
+    }
+  } catch (checkErr) {
+    console.error('isUsernameAvailable failed:', checkErr);
     setLoading('registerBtn', false);
-    window.goToRegisterStep?.(2);
-    return showAuthMsg('registerMsg', 'error', 'This username is already taken. Please choose another.');
+    const reason = checkErr.code === 'permission-denied'
+      ? 'Server permission error (Firestore rules may not be deployed). Please contact support.'
+      : 'Could not verify username availability. Please check your connection and try again.';
+    return showAuthMsg('registerMsg', 'error', reason);
   }
 
   try {
@@ -169,12 +178,24 @@ window.doRegister = async function () {
     try {
       await reserveUsernameForNewUser(cred.user.uid, username, email, name, null);
     } catch (unameErr) {
-      // Someone grabbed the username in the split second between our check and this write.
+      console.error('reserveUsernameForNewUser failed:', unameErr);
       // Roll back the freshly-created account so we don't leave a user with no username.
       await deleteUser(cred.user).catch(() => {});
       setLoading('registerBtn', false);
-      window.goToRegisterStep?.(2);
-      return showAuthMsg('registerMsg', 'error', 'This username was just taken by someone else. Please choose another.');
+
+      if (unameErr.message === 'username-taken') {
+        // Someone genuinely grabbed the username in the split second between our check and this write.
+        window.goToRegisterStep?.(2);
+        return showAuthMsg('registerMsg', 'error', 'This username was just taken by someone else. Please choose another.');
+      }
+
+      // Any other error (e.g. Firestore permission-denied because firestore.rules
+      // hasn't been deployed yet, or a network issue) is NOT a username conflict —
+      // show the real reason instead of falsely blaming the username.
+      const reason = unameErr.code === 'permission-denied'
+        ? 'Server permission error (Firestore rules may not be deployed). Please contact support.'
+        : (unameErr.message || 'Something went wrong while creating your account. Please try again.');
+      return showAuthMsg('registerMsg', 'error', reason);
     }
 
     showAuthMsg('registerMsg', 'success', 'Account created!');
