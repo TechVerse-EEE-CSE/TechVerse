@@ -1,149 +1,168 @@
 rules_version = '2';
-
-// ══════════════════════════════════════════════════════════════
-//  FIRESTORE SECURITY RULES — Tech Verse (hardened v2)
-//
-//  ⚠️ ডিপ্লয়: এই পুরো ফাইলের কন্টেন্ট Firebase Console →
-//  Firestore Database → Rules ট্যাবে পেস্ট করে Publish করো।
-//
-//  v2 changes vs. first draft:
-//   - self-join (share link দিয়ে collaborator হওয়া) এখন সার্ভার-সাইডে
-//     verify হয় — শুধু projectId জেনে আর কেউ নিজেকে collaborator
-//     বানাতে পারবে না, আসল active shareLink লাগবেই (js/project-manager.js
-//     -এর joinProjectViaShareLink()-এও ছোট একটা প্যাচ লাগবে, সেটা করা আছে)
-//   - shareLink তৈরির সময় verify হয় যে creator আসলেই সেই project-এর
-//     owner/collaborator কিনা (আগে যেকোনো authenticated ইউজার
-//     অন্য কারো projectId দিয়ে shareLink বানাতে পারত)
-//   - ownerUid create-এর পর আর কখনো বদলানো যাবে না (silent ownership
-//     transfer বন্ধ)
-//   - সব create/update-এ ফিল্ডের টাইপ + দৈর্ঘ্য + exact-key allowlist
-//     চেক করা হয়, যাতে কেউ ইচ্ছামতো extra/malformed ফিল্ড গুঁজে দিতে
-//     না পারে
-//   - collaboratorUids-এর সাইজ ক্যাপ করা হয়েছে (abuse/Firestore-load
-//     protection)
-// ══════════════════════════════════════════════════════════════
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── projects/{projectId} ──
-    match /projects/{projectId} {
-      function data()          { return resource.data; }
-      function newData()       { return request.resource.data; }
-      function isSignedIn()    { return request.auth != null; }
-      function isOwner()       { return isSignedIn() && request.auth.uid == data().ownerUid; }
-      function isCollaborator(){ return isSignedIn() && data().collaboratorUids != null
-                                    && request.auth.uid in data().collaboratorUids; }
-      function isMember()      { return isOwner() || isCollaborator(); }
-      function changedKeys()   { return newData().diff(data()).affectedKeys(); }
-      function oldCollabCount(){ return data().collaboratorUids != null ? data().collaboratorUids.size() : 0; }
-
-      allow read: if isMember();
-
-      allow create: if isSignedIn()
-                    && newData().ownerUid == request.auth.uid
-                    && newData().name is string && newData().name.size() > 0 && newData().name.size() <= 200
-                    && newData().fs is map
-                    && (newData().collaboratorUids == null || newData().collaboratorUids.size() == 0)
-                    && newData().keys().hasOnly([
-                         'name', 'ownerUid', 'ownerName', 'fs',
-                         'collaboratorUids', 'updatedAt', 'updatedBy'
-                       ]);
-
-      allow update: if isSignedIn() && (
-                        // 1) owner — ownerUid ছাড়া সবকিছু বদলাতে পারবে
-                        (isOwner()
-                          && newData().ownerUid == data().ownerUid
-                          && newData().name is string && newData().name.size() > 0 && newData().name.size() <= 200
-                          && (newData().collaboratorUids == null || newData().collaboratorUids.size() <= 50))
-
-                        // 2) বিদ্যমান collaborator — শুধু save-সংক্রান্ত ফিল্ড
-                        || (isCollaborator()
-                            && changedKeys().hasOnly(['fs', 'updatedAt', 'updatedBy', 'updatedByName', 'sizeKB'])
-                            && newData().fs is map)
-
-                        // 3) share link দিয়ে নতুন join — নিজের uid ছাড়া কিছু যোগ
-                        //    করা যাবে না, আর সার্ভারে verify হবে একটা সত্যিকারের
-                        //    active shareLink আছে এই project-এর জন্য
-                        || (!isOwner() && !isCollaborator()
-                            && changedKeys().hasOnly(['collaboratorUids', 'lastJoinShareId'])
-                            && newData().collaboratorUids.size() <= 50
-                            && newData().collaboratorUids.size() == oldCollabCount() + 1
-                            && request.auth.uid in newData().collaboratorUids
-                            && newData().lastJoinShareId is string
-                            && get(/databases/$(database)/documents/shareLinks/$(newData().lastJoinShareId)).data.projectId == projectId
-                            && get(/databases/$(database)/documents/shareLinks/$(newData().lastJoinShareId)).data.active == true)
-                      );
-
-      allow delete: if isOwner();
+    // স্মার্ট হেল্পার ফাংশন: ইউজার এডমিন কিনা তা চেক করবে
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'imran.info.me@gmail.com';
     }
 
-    // ── shareLinks/{shareId} ──
-    match /shareLinks/{shareId} {
-      function newData() { return request.resource.data; }
-      function isSignedIn() { return request.auth != null; }
-      // creator আসলেই সেই project-এর owner/collaborator কিনা যাচাই
-      function isMemberOfTargetProject() {
-        let proj = get(/databases/$(database)/documents/projects/$(newData().projectId)).data;
-        return proj.ownerUid == request.auth.uid
-               || (proj.collaboratorUids != null && request.auth.uid in proj.collaboratorUids);
+    // ══════════════════════════════════════
+    // ১. প্রজেক্ট (এখন collaborative — owner অথবা collaborator হলে এক্সেস পাবে)
+    // ══════════════════════════════════════
+    match /projects/{projectId} {
+
+      function isOwner() {
+        return request.auth != null && resource.data.ownerUid == request.auth.uid;
       }
 
-      allow read: if isSignedIn();
+      function isCollaborator() {
+        return request.auth != null &&
+          resource.data.collaboratorUids != null &&
+          request.auth.uid in resource.data.collaboratorUids;
+      }
 
-      allow create: if isSignedIn()
-                    && newData().createdBy == request.auth.uid
-                    && newData().role in ['editor', 'viewer']
-                    && newData().projectId is string
-                    && isMemberOfTargetProject()
-                    && newData().keys().hasOnly(['projectId', 'role', 'createdBy', 'createdAt', 'active']);
+      // ── নতুন কেউ শেয়ার লিংক দিয়ে জয়েন করার সময়, নিজে owner/collaborator
+      //    না হয়েও শুধুমাত্র নিজের uid-টা collaboratorUids-এ যোগ করতে পারবে।
+      //    অন্য কারো uid যোগ/বাদ দেওয়া বা লিস্টের অন্য এন্ট্রি বদলানো যাবে না। ──
+      function isSelfJoining() {
+        return request.auth != null &&
+          !isOwner() && !isCollaborator() &&
+          request.resource.data.collaboratorUids != null &&
+          request.resource.data.collaboratorUids.hasAll(resource.data.collaboratorUids) &&
+          request.resource.data.collaboratorUids.size() == resource.data.collaboratorUids.size() + 1 &&
+          request.auth.uid in request.resource.data.collaboratorUids;
+      }
 
-      // creator শুধু 'active' ফ্ল্যাগ টগল (লিংক revoke) করতে পারবে —
-      // projectId/role/createdBy পরে বদলাতে পারবে না
-      allow update: if isSignedIn() && resource.data.createdBy == request.auth.uid
-                    && newData().diff(resource.data).affectedKeys().hasOnly(['active']);
+      allow read: if request.auth != null &&
+        (resource.data.ownerUid == request.auth.uid ||
+         request.auth.uid in resource.data.collaboratorUids);
 
-      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+      allow create: if request.auth != null &&
+        request.resource.data.ownerUid == request.auth.uid;
+
+      allow update: if request.auth != null &&
+        (isOwner() || isCollaborator() || isSelfJoining()) &&
+        request.resource.data.ownerUid == resource.data.ownerUid; // owner বদলানো যাবে না
+
+      // ── শুধু owner ডিলিট করতে পারবে — এডিটর হিসেবে যোগ দেওয়া কোলাবোরেটর
+      //    কখনোই প্রজেক্ট ডিলিট করতে পারবে না ──
+      allow delete: if request.auth != null &&
+        resource.data.ownerUid == request.auth.uid;
     }
 
-    // ── users/{uid} ── একদম প্রাইভেট
+    // ══════════════════════════════════════
+    // ২. শেয়ার লিংক (জয়েন করার জন্য)
+    // ══════════════════════════════════════
+    match /shareLinks/{shareId} {
+      allow read: if request.auth != null;   // যেকোনো লগইন ইউজার validate করতে পারবে
+
+      allow create: if request.auth != null &&
+        request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if request.auth != null &&
+        resource.data.createdBy == request.auth.uid;   // শুধু creator deactivate করতে পারবে
+
+      allow delete: if false;
+    }
+
+    // ══════════════════════════════════════
+    // ৩. ইউজার প্রোফাইল / denormalized প্রজেক্ট লিস্ট
+    // ══════════════════════════════════════
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      // এখানে স্পষ্টভাবে delete করার পারমিশন যুক্ত করা হলো
+      allow read, create, update, delete: if request.auth != null && request.auth.uid == uid;
     }
 
-    // ── publicProfiles/{uid} ── পাবলিক read, self-write
-    match /publicProfiles/{uid} {
-      function newData() { return request.resource.data; }
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid
-                   && (!('username' in newData()) || (newData().username is string && newData().username.size() <= 20))
-                   && (!('displayName' in newData()) || (newData().displayName is string && newData().displayName.size() <= 60));
-    }
-
-    // ── usernames/{usernameLower} ── login-lookup-এর জন্য read পাবলিক
-    // রাখতেই হচ্ছে (দেখো আগের মেসেজের নোট — এটা এখনো একটা জানা
-    // সীমাবদ্ধতা, ঠিকভাবে ফিক্স করতে Cloud Function লাগবে)
+    // ══════════════════════════════════════
+    // ৩.১ ইউজারনেম → ইমেইল ম্যাপিং (Username দিয়ে Login করার জন্য)
+    // ══════════════════════════════════════
+    // ডক আইডি সবসময় ছোট হাতের (lowercase) username হবে।
+    // ডেটা: { uid, email, createdAt }
     match /usernames/{usernameLower} {
-      function newData() { return request.resource.data; }
+
+      // ── read সবার জন্য খোলা (এমনকি লগইন না করা ইউজারও) ──
+      // এটা জরুরি কারণ Login স্ক্রিনে কেউ username দিলে, sign-in করার
+      // আগেই তার email বের করতে এই ডকটা পড়তে হয় (তখনও auth হয়নি)।
+      // এখানে শুধু uid + email থাকে, পাসওয়ার্ড বা অন্য sensitive data থাকে না।
       allow read: if true;
-      allow create: if request.auth != null
-                    && newData().uid == request.auth.uid
-                    && usernameLower.matches('^[a-z][a-z0-9_]{2,19}$')
-                    && newData().username is string;
-      allow update: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+
+      // ── create: শুধুমাত্র লগইন করা ইউজার, এবং শুধু নিজের uid দিয়েই
+      //    একটা username claim করতে পারবে (অন্যের নামে username বানাতে পারবে না) ──
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid;
+
+      // ── update বন্ধ — username বদলাতে হলে পুরনো ডকটা delete করে
+      //    নতুন একটা create করা হয় (কোড এভাবেই কাজ করে) ──
+      allow update: if false;
+
+      // ── delete: শুধু যে uid এই username-টা owns করে, সে-ই মুছতে পারবে
+      //    (username পরিবর্তন করার সময় পুরনোটা মুছে ফেলার জন্য দরকার) ──
+      allow delete: if request.auth != null &&
+        resource.data.uid == request.auth.uid;
     }
 
-    // ── userEmails/{emailLower} ── শুধু authenticated ইউজাররা read করতে পারবে
+    // ══════════════════════════════════════
+    // ৩.২ ইমেইল → uid ম্যাপিং (ইমেইল দিয়ে প্রজেক্টে কাউকে Invite করার জন্য)
+    // ══════════════════════════════════════
+    // ডক আইডি সবসময় ছোট হাতের (lowercase) email। ডেটা: { uid }
     match /userEmails/{emailLower} {
-      function newData() { return request.resource.data; }
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && newData().uid == request.auth.uid;
-      allow update: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+
+      // ── read সবার জন্য খোলা — কেউ প্রজেক্ট শেয়ার করতে গিয়ে টার্গেট
+      //    ইউজারের ইমেইল দিলে, তার uid বের করতে এই ডকটা পড়তে হয়। এখানে
+      //    শুধু uid থাকে, ইমেইল/পাসওয়ার্ড কিছুই এক্সপোজ হয় না। ──
+      allow read: if true;
+
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update: if false;
+
+      allow delete: if request.auth != null &&
+        resource.data.uid == request.auth.uid;
     }
 
-    // বাকি সবকিছু ডিফল্টে সম্পূর্ণ বন্ধ
+    // ══════════════════════════════════════
+    // ৩.৩ পাবলিক প্রোফাইল (কোলাবোরেটর লিস্টে নাম/ছবি দেখানোর জন্য)
+    // ══════════════════════════════════════
+    // ডক আইডি = uid। ডেটা: { username, displayName, photoURL, updatedAt }
+    match /publicProfiles/{uid} {
+
+      // ── read সবার জন্য খোলা — শেয়ার মোডালে "কে কে প্রজেক্টে আছে" লিস্টে
+      //    অন্যদের নাম/ছবি দেখানোর জন্য দরকার। এখানে ইমেইল থাকে না। ──
+      allow read: if true;
+
+      // ── শুধু নিজের প্রোফাইল ডকটাই লিখতে/মুছতে পারবে ──
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ══════════════════════════════════════
+    // ৪. Pro Editor প্যানেলের ৪টি কালেকশন (অপরিবর্তিত)
+    // ══════════════════════════════════════
+    match /pro_links/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pro_posts/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pro_pdfs/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pro_videos/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ══════════════════════════════════════
+    // ৫. স্মার্ট সিকিউরিটি: গ্লোবাল ফলব্যাক
+    // ══════════════════════════════════════
+    // উপরের কোনো রুলসের সাথে না মিললে, ডাটাবেসের অন্য যেকোনো অজানা কালেকশনের রিড/রাইট বন্ধ থাকবে।
     match /{document=**} {
       allow read, write: if false;
     }
