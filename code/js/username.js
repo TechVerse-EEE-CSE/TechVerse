@@ -57,29 +57,36 @@ export async function reserveUsernameForNewUser(uid, username, email, displayNam
   const lower     = normalizeUsername(username);
   const emailLow  = normalizeEmail(email);
 
-  await runTransaction(db, async (tx) => {
-    const unameRef = doc(db, 'usernames', lower);
-    const unameSnap = await tx.get(unameRef);
-    if (unameSnap.exists()) throw new Error('username-taken');
+  try {
+    await runTransaction(db, async (tx) => {
+      const unameRef = doc(db, 'usernames', lower);
+      const unameSnap = await tx.get(unameRef);
+      if (unameSnap.exists()) throw new Error('username-taken');
 
-    tx.set(unameRef, {
-      uid, username, email: email || null, createdAt: serverTimestamp(),
+      tx.set(unameRef, {
+        uid, username, email: email || null, createdAt: serverTimestamp(),
+      });
+
+      tx.set(doc(db, 'users', uid), {
+        username, usernameLower: lower,
+        email: email || null, emailLower: emailLow || null,
+      }, { merge: true });
+
+      if (emailLow) {
+        tx.set(doc(db, 'userEmails', emailLow), { uid }, { merge: true });
+      }
+
+      tx.set(doc(db, 'publicProfiles', uid), {
+        username, displayName: displayName || username, photoURL: photoURL || null,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
     });
-
-    tx.set(doc(db, 'users', uid), {
-      username, usernameLower: lower,
-      email: email || null, emailLower: emailLow || null,
-    }, { merge: true });
-
-    if (emailLow) {
-      tx.set(doc(db, 'userEmails', emailLow), { uid }, { merge: true });
+  } catch (e) {
+    if (e.message !== 'username-taken') {
+      console.error('reserveUsernameForNewUser transaction failed', { uid, lower, emailLow, code: e.code, message: e.message });
     }
-
-    tx.set(doc(db, 'publicProfiles', uid), {
-      username, displayName: displayName || username, photoURL: photoURL || null,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-  });
+    throw e;
+  }
 }
 
 // ══════════════════════════════════════
