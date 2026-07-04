@@ -18,6 +18,7 @@ window.switchAuthTab = function (tab) {
     document.getElementById('registerForm').classList.add('active');
     tabs[1].classList.add('active');
     document.getElementById('authTabs').style.display = 'flex';
+    window.goToRegisterStep(1); // always start the wizard fresh
   } else if (tab === 'reset') {
     document.getElementById('resetForm').classList.add('active');
     document.getElementById('authTabs').style.display = 'none';
@@ -25,6 +26,67 @@ window.switchAuthTab = function (tab) {
     document.getElementById('resetSent').classList.remove('show');
   }
   document.querySelectorAll('.auth-msg').forEach(m => m.classList.remove('show'));
+};
+
+// ══════════════════════════════════════
+//  REGISTER WIZARD — step-by-step Create Account form
+// ══════════════════════════════════════
+let _registerStep = 1;
+const REG_STEP_COUNT = 4;
+
+function _regMsg(type, msg) {
+  const el = document.getElementById('registerMsg');
+  if (!el) return;
+  const icon = type === 'error' ? 'fa-circle-exclamation'
+             : type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
+  el.className = `auth-msg ${type} show`;
+  el.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
+}
+
+window.goToRegisterStep = function (step) {
+  step = Math.min(Math.max(step, 1), REG_STEP_COUNT);
+  _registerStep = step;
+
+  document.querySelectorAll('.reg-step-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('regStep' + step);
+  if (panel) panel.classList.add('active');
+
+  document.querySelectorAll('.reg-step-dot').forEach(dot => {
+    const n = parseInt(dot.dataset.step, 10);
+    dot.classList.toggle('active', n === step);
+    dot.classList.toggle('done', n < step);
+  });
+
+  const msg = document.getElementById('registerMsg');
+  if (msg) msg.classList.remove('show');
+
+  // Scroll the freshly-shown step into view inside the (now scrollable) card
+  panel?.scrollIntoView?.({ block: 'nearest' });
+};
+
+window.nextRegisterStep = function () {
+  if (_registerStep === 1) {
+    const name  = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    if (!name)  return _regMsg('error', 'Please enter your name.');
+    if (!email) return _regMsg('error', 'Please enter an email.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _regMsg('error', 'Please enter a valid email address.');
+  } else if (_registerStep === 2) {
+    const username = document.getElementById('registerUsername').value.trim();
+    if (!username) return _regMsg('error', 'Please choose a username.');
+    if (!/^[a-z][a-z0-9_]{2,19}$/i.test(username))
+      return _regMsg('error', 'Username must be 3-20 characters, start with a letter, and can only contain letters, numbers, and underscore (_).');
+  } else if (_registerStep === 3) {
+    const pass    = document.getElementById('registerPassword').value;
+    const confirm = document.getElementById('registerConfirm').value;
+    if (pass.length < 6)  return _regMsg('error', 'Password must be at least 6 characters.');
+    if (pass !== confirm) return _regMsg('error', 'Passwords do not match.');
+  }
+  window.goToRegisterStep(_registerStep + 1);
+};
+
+window.prevRegisterStep = function () {
+  window.goToRegisterStep(_registerStep - 1);
 };
 
 // ── Password Visibility Toggle ──
@@ -78,7 +140,11 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (document.getElementById('authScreen').style.display === 'none') return;
   if (document.getElementById('loginForm').classList.contains('active'))    window.doLogin?.();
-  if (document.getElementById('registerForm').classList.contains('active')) window.doRegister?.();
+  if (document.getElementById('registerForm').classList.contains('active')) {
+    // Enter advances the wizard step-by-step, only submitting on the final step
+    if (_registerStep < REG_STEP_COUNT) window.nextRegisterStep?.();
+    else window.doRegister?.();
+  }
   if (document.getElementById('resetForm').classList.contains('active'))    window.doReset?.();
 });
 
