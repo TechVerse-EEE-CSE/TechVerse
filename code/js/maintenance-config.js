@@ -27,5 +27,5 @@ window.MAINTENANCE_CONFIG = {
   siteName: "Tech Verse",
 
   // স্বয়ংক্রিয়ভাবে প্রতি কত সেকেন্ডে সাইট চালু আছে কিনা চেক করবে (0 দিলে বন্ধ)
-  autoCheckSeconds: 5
+  autoCheckSeconds: 15
 };
