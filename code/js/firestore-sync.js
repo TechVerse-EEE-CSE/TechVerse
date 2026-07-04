@@ -29,7 +29,19 @@ let _lastKnownUpdateMs = 0;      // to avoid remote echo (not showing a toast fo
 
 onAuthStateChanged(auth, async (user) => {
   _currentUser = user;
-  if (!user) return;
+
+  if (!user) {
+    // ── Signed out: drop the live listener so no further remote
+    //    updates for the previous account can reach this tab ──
+    window.closeProjectSync?.();
+    return;
+  }
+
+  // ── Every local read/write below is scoped to this uid (see
+  //    idbScopedKey in idb-store.js), so it is physically impossible
+  //    for it to pick up files that belong to a different account,
+  //    even on a shared/public browser. ──
+  const fsKey = window.idbScopedKey('fs');
 
   // ── Check the users/{uid} doc — see if a project already exists ──
   const userRef  = doc(db, 'users', user.uid);
@@ -42,12 +54,17 @@ onAuthStateChanged(auth, async (user) => {
     window.openProjectSync(owned[0]);
     const fs = await window.cloudLoadProject(owned[0]);
     if (fs) {
-      await IDBStore.set('fs', fs);
+      await IDBStore.set(fsKey, fs);
       if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
     }
   } else {
-    // ── First-time login → create a new project from the current local files ──
-    const localFs = await IDBStore.get('fs');
+    // ── First-time login for this account → start a fresh project.
+    //    We deliberately do NOT reuse whatever happens to be sitting
+    //    in local storage here: because 'fs' is scoped per-uid, the
+    //    only way this key could already hold data is if this same
+    //    account saved it locally before (e.g. an interrupted first
+    //    session) — never another person's work. ──
+    const localFs = await IDBStore.get(fsKey);
     const projectId = await window.createProject('My Project', localFs || {});
     window.currentProjectId = projectId;
     window.openProjectSync(projectId);
@@ -155,7 +172,7 @@ window.cloudLoadProject = async function (projectId) {
 // ── Called when clicking the "Load new version" button after someone else's update ──
 window.applyRemoteUpdate = async function () {
   if (!window._remoteFsAvailable) return;
-  await IDBStore.set('fs', window._remoteFsAvailable);
+  await IDBStore.set(window.idbScopedKey('fs'), window._remoteFsAvailable);
   document.getElementById('reloadAvailableBadge')?.classList.add('hidden');
   document.getElementById('reloadDot')?.classList.add('hidden');
   if (typeof reloadFsFromStorage === 'function') await reloadFsFromStorage();
