@@ -8,7 +8,7 @@
 
 window.MAINTENANCE_CONFIG = {
   // মূল সুইচ — true মানে সাইট বন্ধ (Maintenance পেজ দেখাবে)
-  MAINTENANCE_MODE: false,
+  MAINTENANCE_MODE: true,
 
   // টাইটেল
   title: "আমাদের সাইট আপডেটের জন্য কাজ করছি ",
