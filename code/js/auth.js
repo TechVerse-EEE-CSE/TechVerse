@@ -17,7 +17,6 @@ import {
   updateProfile,
   deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 import firebaseConfig from "../config/firebase-config.js";
 import {
@@ -32,7 +31,6 @@ import {
 // ── Initialize ──
 const app       = initializeApp(firebaseConfig);
 const auth      = getAuth(app);
-const functions = getFunctions(app);
 const gProvider = new GoogleAuthProvider();
 const ghProvider = new GithubAuthProvider();
 ghProvider.addScope('repo'); // so a token from sign-in can also create/push repos for GitHub Deploy
@@ -265,18 +263,6 @@ window.doReset = async function () {
   if (!email) return showAuthMsg('resetMsg', 'error', 'Please enter an email.');
   setLoading('resetBtn', true);
   try {
-    // ⚠️ Server-side check (Cloud Function) — refuses to send a reset
-    // email for an account whose only sign-in method is Google/GitHub,
-    // since js/functions/index.js's enforceSingleProvider would reject
-    // that sign-in anyway. Keeps the "one method per account" rule
-    // consistent and gives a clear message instead of a dead-end email.
-    const check = httpsCallable(functions, 'checkAccountBeforePasswordReset');
-    const { data } = await check({ email });
-    if (!data.allowed) {
-      setLoading('resetBtn', false);
-      return showAuthMsg('resetMsg', 'error', data.message);
-    }
-
     await sendPasswordResetEmail(auth, email);
     document.getElementById('resetNormal').style.display = 'none';
     document.getElementById('resetSent').classList.add('show');
@@ -330,9 +316,9 @@ function friendlyError(code) {
     'auth/too-many-requests':       'Too many attempts. Please wait a moment.',
     'auth/network-request-failed':  'Network error.',
     'auth/popup-closed-by-user':    'Google sign-in was cancelled.',
-    'auth/invalid-credential':      'Incorrect email/password — or this account was created using Google/GitHub. Try signing in with that instead.',
+    'auth/invalid-credential':      'Incorrect email or password.',
     'auth/user-disabled':           'This account has been disabled.',
-    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method (Google, GitHub, or email/password). Please use that method instead.',
+    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
     'auth/popup-blocked':           'Popup was blocked by the browser. Please allow popups and try again.',
   };
   return map[code] || 'Something went wrong. Please try again.';
