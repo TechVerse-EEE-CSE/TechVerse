@@ -37,7 +37,7 @@
         '<div class="mt-title">' + escapeHtml(cfg.title || 'সাইট রক্ষণাবেক্ষণাধীন') + '</div>' +
         '<div class="mt-message">' + escapeHtml(cfg.message || '') + '</div>' +
         (hasEta ? '<div class="mt-countdown" id="mtCountdown"></div>' : '') +
-        '<div class="mt-status-row"><span class="mt-status-dot"></span><span id="mtStatusText">কাজ চলমান — অনুগ্রহ করে অপেক্ষা করুন</span></div>' +
+        '<div class="mt-status-row"><span class="mt-status-dot"></span><span id="mtStatusText"> আমাদের কাজ চলমান — অনুগ্রহ করে অপেক্ষা করুন</span></div>' +
         '<div class="mt-progress-track"><div class="mt-progress-fill"></div></div>' +
         '<div class="mt-actions">' +
           '<button class="mt-btn mt-primary" id="mtRetryBtn">আবার চেষ্টা করুন</button>' +
@@ -112,7 +112,7 @@
         }
       })
       .catch(function () {
-        if (manual && statusEl) statusEl.textContent = 'চেক করা যায়নি, পরে আবার চেষ্টা করুন';
+        if (manual && statusEl) statusEl.textContent = ' দুঃখিত, পরে আবার চেষ্টা করুন';
       })
       .finally(function () {
         checking = false;
