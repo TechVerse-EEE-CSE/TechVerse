@@ -115,6 +115,11 @@ window.joinProjectViaShareLink = async function (shareId) {
   if (!already) {
     await updateDoc(projRef, {
       collaboratorUids: arrayUnion(user.uid),
+      // ⚠️ Sent so the Firestore rule can verify (server-side) that this
+      // join is backed by a real, active shareLinks/{shareId} doc pointing
+      // at this exact project — without this, the rule can't tell a
+      // legitimate join from someone who merely guessed the projectId.
+      lastJoinShareId: shareId,
     });
     await setDoc(userRef, {
       sharedProjectIds: arrayUnion(projectId),
