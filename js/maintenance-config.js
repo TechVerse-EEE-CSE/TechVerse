@@ -8,7 +8,7 @@
 
 window.MAINTENANCE_CONFIG = {
   // Main switch — true means the site is down (shows the Maintenance page)
-  MAINTENANCE_MODE: false,
+  MAINTENANCE_MODE: true,
 
   // Title
   title: "We're Working on a Site Update",
@@ -18,7 +18,7 @@ window.MAINTENANCE_CONFIG = {
 
   // (Optional) Date/time for when the site will return. Leave empty to hide the countdown.
   // Format: "YYYY-MM-DDTHH:mm:ss" (based on your local time)
-  eta: "2026-07-19T00:00:00",
+  eta: "2026-07-07T12:00:20",
 
   // Contact info (optional) — leave empty to hide this section
   contactEmail: "imran.info.me@gmail.com",
