@@ -1,31 +1,31 @@
 /* ══════════════════════════════════════════════════════════
    MAINTENANCE MODE — CONFIG
    ------------------------------------------------------------
-   এই একটা ফাইল দিয়েই পুরো ম্যাশিন কন্ট্রোল হবে।
-   সাইট বন্ধ রাখতে চাইলে শুধু নিচের MAINTENANCE_MODE: true করে দিন।
-   আবার সাইট চালু করতে চাইলে MAINTENANCE_MODE: false করে দিন।
+   This single file controls the entire maintenance system.
+   To take the site down, just set MAINTENANCE_MODE: true below.
+   To bring the site back online, set MAINTENANCE_MODE: false.
    ══════════════════════════════════════════════════════════ */
 
 window.MAINTENANCE_CONFIG = {
-  // মূল সুইচ — true মানে সাইট বন্ধ (Maintenance পেজ দেখাবে)
+  // Main switch — true means the site is down (shows the Maintenance page)
   MAINTENANCE_MODE: false,
 
-  // টাইটেল
-  title: "আমাদের সাইট আপডেটের জন্য কাজ করছি ",
+  // Title
+  title: "We're Working on a Site Update",
 
-  // মূল মেসেজ
-  message: "Tech Verse এই মুহূর্তে আপডেট ও উন্নয়নের কাজ চলছে। দ্রুতই আমরা আরও ভালো অভিজ্ঞতা নিয়ে ফিরে আসছি। আপনার ধৈর্যের জন্য ধন্যবাদ!",
+  // Main message
+  message: "Tech Verse is currently undergoing updates and improvements. We'll be back soon with an even better experience. Thank you for your patience!",
 
-  // (ঐচ্ছিক) কতক্ষণের মধ্যে ফিরে আসবে তার তারিখ/সময়। খালি রাখলে countdown দেখাবে না।
-  // ফরম্যাট: "YYYY-MM-DDTHH:mm:ss" (আপনার লোকাল টাইম অনুযায়ী)
+  // (Optional) Date/time for when the site will return. Leave empty to hide the countdown.
+  // Format: "YYYY-MM-DDTHH:mm:ss" (based on your local time)
   eta: "2026-07-19T00:00:00",
 
-  // যোগাযোগের জন্য (ঐচ্ছিক) — খালি রাখলে সেকশনটা দেখাবে না
+  // Contact info (optional) — leave empty to hide this section
   contactEmail: "imran.info.me@gmail.com",
 
-  // সাইটের নাম/লোগো টেক্সট
+  // Site name/logo text
   siteName: "Tech Verse",
 
-  // স্বয়ংক্রিয়ভাবে প্রতি কত সেকেন্ডে সাইট চালু আছে কিনা চেক করবে (0 দিলে বন্ধ)
+  // How often (in seconds) to automatically check if the site is back online (set to 0 to disable)
   autoCheckSeconds: 15
 };
