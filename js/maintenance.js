@@ -1,15 +1,15 @@
 /* ══════════════════════════════════════════════════════════
    MAINTENANCE MODE — ENGINE
-   এই ফাইলে হাত দেওয়ার দরকার নেই।
-   অন/অফ করতে হলে js/maintenance-config.js ফাইল দেখুন।
+   No need to touch this file.
+   To turn it on/off, see the js/maintenance-config.js file.
    ══════════════════════════════════════════════════════════ */
 
 (function () {
   var cfg = window.MAINTENANCE_CONFIG || {};
 
-  if (!cfg.MAINTENANCE_MODE) return; // সাইট স্বাভাবিকভাবে চলবে
+  if (!cfg.MAINTENANCE_MODE) return; // Site will run normally
 
-  // পুরো পেজ লোড হওয়ার আগেই বাকি কন্টেন্ট লুকিয়ে ফেলি যাতে flash না করে
+  // Hide the rest of the content before the page fully loads, to avoid a flash
   var styleGuard = document.createElement('style');
   styleGuard.id = 'mtGuardStyle';
   styleGuard.textContent = 'body > *:not(#maintenanceOverlay):not(script):not(style){display:none !important;} body{overflow:auto !important; height:auto !important;}';
@@ -21,7 +21,7 @@
     overlay.id = 'maintenanceOverlay';
 
     var contactHtml = cfg.contactEmail
-      ? '<div class="mt-contact">জরুরি প্রয়োজনে যোগাযোগ করুন: <a href="mailto:' + cfg.contactEmail + '">' + cfg.contactEmail + '</a></div>'
+      ? '<div class="mt-contact">For urgent matters, please contact: <a href="mailto:' + cfg.contactEmail + '">' + cfg.contactEmail + '</a></div>'
       : '';
 
     overlay.innerHTML =
@@ -34,13 +34,13 @@
           '</svg>' +
         '</div>' +
         '<div class="mt-site-name">' + escapeHtml(cfg.siteName || 'Website') + '</div>' +
-        '<div class="mt-title">' + escapeHtml(cfg.title || 'সাইট রক্ষণাবেক্ষণাধীন') + '</div>' +
+        '<div class="mt-title">' + escapeHtml(cfg.title || 'Site Under Maintenance') + '</div>' +
         '<div class="mt-message">' + escapeHtml(cfg.message || '') + '</div>' +
         (hasEta ? '<div class="mt-countdown" id="mtCountdown"></div>' : '') +
-        '<div class="mt-status-row"><span class="mt-status-dot"></span><span id="mtStatusText"> আমাদের কাজ চলমান — অনুগ্রহ করে অপেক্ষা করুন</span></div>' +
+        '<div class="mt-status-row"><span class="mt-status-dot"></span><span id="mtStatusText">Work in progress — please wait</span></div>' +
         '<div class="mt-progress-track"><div class="mt-progress-fill"></div></div>' +
         '<div class="mt-actions">' +
-          '<button class="mt-btn mt-primary" id="mtRetryBtn">আবার চেষ্টা করুন</button>' +
+          '<button class="mt-btn mt-primary" id="mtRetryBtn">Retry</button>' +
         '</div>' +
         contactHtml +
       '</div>';
@@ -70,7 +70,7 @@
       var now = Date.now();
       var diff = target - now;
       if (diff <= 0) {
-        el.innerHTML = '<div class="mt-countdown-box"><div class="mt-countdown-num">শীঘ্রই</div><div class="mt-countdown-label">ফিরে আসছি</div></div>';
+        el.innerHTML = '<div class="mt-countdown-box"><div class="mt-countdown-num">Soon</div><div class="mt-countdown-label">We\'ll be back</div></div>';
         checkStatusNow(false);
         return;
       }
@@ -80,7 +80,7 @@
       var s = Math.floor((diff / 1000) % 60);
 
       el.innerHTML =
-        box(d, 'দিন') + box(h, 'ঘণ্টা') + box(m, 'মিনিট') + box(s, 'সেকেন্ড');
+        box(d, 'Days') + box(h, 'Hours') + box(m, 'Minutes') + box(s, 'Seconds');
     }
 
     function box(val, label) {
@@ -91,13 +91,13 @@
     setInterval(render, 1000);
   }
 
-  // ব্যাকগ্রাউন্ডে সময় সময় চেক করে দেখে সাইট চালু হয়ে গেছে কিনা (কনফিগ ফাইল আবার fetch করে)
+  // Periodically checks in the background whether the site is back online (re-fetches the config file)
   var checking = false;
   function checkStatusNow(manual) {
     if (checking) return;
     checking = true;
     var statusEl = document.getElementById('mtStatusText');
-    if (manual && statusEl) statusEl.textContent = 'চেক করা হচ্ছে...';
+    if (manual && statusEl) statusEl.textContent = 'Checking...';
 
     var url = 'js/maintenance-config.js?_=' + Date.now();
     fetch(url, { cache: 'no-store' })
@@ -105,14 +105,14 @@
       .then(function (text) {
         var stillOn = /MAINTENANCE_MODE\s*:\s*true/.test(text);
         if (!stillOn) {
-          if (statusEl) statusEl.textContent = 'সাইট চালু হয়ে গেছে! পেজ রিলোড হচ্ছে...';
+          if (statusEl) statusEl.textContent = 'The site is back online! Reloading the page...';
           setTimeout(function () { location.reload(); }, 800);
         } else if (manual && statusEl) {
-          statusEl.textContent = 'এখনও কাজ চলমান — অনুগ্রহ করে অপেক্ষা করুন';
+          statusEl.textContent = 'Still in progress — please wait';
         }
       })
       .catch(function () {
-        if (manual && statusEl) statusEl.textContent = ' দুঃখিত, পরে আবার চেষ্টা করুন';
+        if (manual && statusEl) statusEl.textContent = 'Sorry, please try again later';
       })
       .finally(function () {
         checking = false;
