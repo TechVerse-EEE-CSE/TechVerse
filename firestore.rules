@@ -137,6 +137,28 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════
+    // ৩.৪ রেটিং / রিভিউ (Rate Us পেজ)
+    // ══════════════════════════════════════
+    // ডক আইডি = uid (একজন ইউজার একটাই রেটিং দিতে/আপডেট করতে পারবে)।
+    // ডেটা: { uid, displayName, username, photoURL, rating(1-5), review, createdAt, updatedAt }
+    match /ratings/{uid} {
+      // ── read সবার জন্য খোলা — গড় রেটিং ও রিভিউ ফিড দেখানোর জন্য দরকার ──
+      allow read: if true;
+
+      // ── শুধু নিজের uid দিয়েই রেটিং create/update করতে পারবে, rating অবশ্যই ১-৫ এর মধ্যে ──
+      allow create, update: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.data.uid == uid &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5 &&
+        (!('review' in request.resource.data) || request.resource.data.review.size() <= 400);
+
+      // ── শুধু নিজের রেটিং মুছে ফেলতে পারবে ──
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ══════════════════════════════════════
     // ৪. Pro Editor প্যানেলের ৪টি কালেকশন (অপরিবর্তিত)
     // ══════════════════════════════════════
     match /pro_links/{document} {
