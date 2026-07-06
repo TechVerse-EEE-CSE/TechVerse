@@ -1191,69 +1191,40 @@
 <div class="float-toolbar" id="floatToolbar">
 
   <!-- Color Picker -->
-  <div class="ftb-item" id="ftbColorWrap" title="Color Picker">
+  <div class="ftb-item" id="ftbColorWrap" data-tip="Color Picker">
     <div class="ftb-color-preview" id="ftbColorPreview"></div>
     <input type="color" id="ftbColorInput" class="ftb-color-hidden" value="#5b8dee">
-    <span class="ftb-label">Picker</span>
   </div>
 
   <div class="ftb-sep"></div>
 
   <!-- Undo -->
-  <div class="ftb-item" onclick="ftbUndo()" title="Undo (Ctrl+Z)">
-    <div class="ftb-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7v6h6"/>
-        <path d="M3 13C5 7 10 4 16 6s8 6 5 11"/>
-      </svg>
-    </div>
-    <span class="ftb-label">Undo</span>
+  <div class="ftb-item" onclick="ftbUndo()" data-tip="Undo (Ctrl+Z)">
+    <i class="fa-solid fa-rotate-left ftb-fa-icon"></i>
   </div>
 
   <!-- Redo -->
-  <div class="ftb-item" onclick="ftbRedo()" title="Redo (Ctrl+Y)">
-    <div class="ftb-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 7v6h-6"/>
-        <path d="M21 13C19 7 14 4 8 6S0 12 3 17"/>
-      </svg>
-    </div>
-    <span class="ftb-label">Redo</span>
+  <div class="ftb-item" onclick="ftbRedo()" data-tip="Redo (Ctrl+Y)">
+    <i class="fa-solid fa-rotate-right ftb-fa-icon"></i>
   </div>
 
   <div class="ftb-sep"></div>
 
   <!-- Tab -->
-  <div class="ftb-item" onclick="ftbTab()" title="Insert Tab">
-    <div class="ftb-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="12" x2="18" y2="12"/>
-        <polyline points="13 7 18 12 13 17"/>
-        <line x1="21" y1="5" x2="21" y2="19"/>
-      </svg>
-    </div>
-    <span class="ftb-label">Tab</span>
+  <div class="ftb-item" onclick="ftbTab()" data-tip="Insert Tab">
+    <i class="fa-solid fa-indent ftb-fa-icon"></i>
   </div>
 
   <!-- Backspace -->
-  <div class="ftb-item" onclick="ftbBackspace()" title="Backspace">
-    <div class="ftb-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12H7"/>
-        <polyline points="12 7 7 12 12 17"/>
-        <line x1="7" y1="12" x2="7" y2="12"/>
-      </svg>
-    </div>
-    <span class="ftb-label">⌫</span>
+  <div class="ftb-item" onclick="ftbBackspace()" data-tip="Backspace">
+    <i class="fa-solid fa-delete-left ftb-fa-icon"></i>
   </div>
 
   <div class="ftb-sep"></div>
 
   <!-- Toggle button -->
-  <div class="ftb-toggle" id="ftbToggle" onclick="toggleFloatToolbar()" title="Hide/Show">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6"/>
-    </svg>
+  <div class="ftb-toggle" id="ftbToggle" onclick="toggleFloatToolbar()" data-tip="Hide/Show">
+    <i class="fa-solid fa-chevron-right"></i>
   </div>
 </div>
 
