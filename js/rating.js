@@ -1,0 +1,312 @@
+// ══════════════════════════════════════════════════════
+//  RATING.JS — Tech Verse "Rate Us" Page
+//  Features:
+//   ✅ 1–5 star interactive rating + optional written review
+//   ✅ One rating per user (doc id = uid) — resubmitting = update
+//   ✅ Live average, total count, and 5→1 star distribution bars
+//   ✅ Live feed of everyone's reviews (most recent first)
+//   ✅ Edit / delete your own rating anytime
+//  js/rating.js — works as a window global
+// ══════════════════════════════════════════════════════
+
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  collection,
+  onSnapshot,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import firebaseConfig from "../config/firebase-config.js";
+
+// ── Init (reuse the app instance if one already exists) ──
+const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const RATING_WORDS = { 1: 'খুবই খারাপ', 2: 'খারাপ', 3: 'ভালো', 4: 'দারুণ', 5: 'অসাধারণ!' };
+
+let _selectedStars   = 0;   // the value the user has picked/hovered but not yet submitted
+let _myExistingRating = null; // {rating, review} if this user already rated
+let _allRatings       = [];   // live cache of every rating doc (for stats + feed)
+let _unsubscribeFeed  = null;
+let _submitting       = false;
+
+// ══════════════════════════════════════
+//  Open / Close
+// ══════════════════════════════════════
+window.openRatingModal = async function () {
+  window.openModal('ratingModal');
+  _resetInputUI();
+  _attachLiveFeed();
+
+  const user = auth.currentUser;
+  if (!user) return; // editor is behind auth, shouldn't normally happen
+
+  try {
+    const snap = await getDoc(doc(db, 'ratings', user.uid));
+    if (snap.exists()) {
+      _myExistingRating = snap.data();
+      _selectedStars = _myExistingRating.rating || 0;
+      _paintStars(_selectedStars);
+      document.getElementById('ratingReviewInput').value = _myExistingRating.review || '';
+      updateRatingCharCount();
+      document.getElementById('ratingSubmitLabel').textContent = 'রেটিং আপডেট করুন';
+      document.getElementById('ratingDeleteBtn').style.display = 'inline-flex';
+    } else {
+      _myExistingRating = null;
+      document.getElementById('ratingSubmitLabel').textContent = 'রেটিং জমা দিন';
+      document.getElementById('ratingDeleteBtn').style.display = 'none';
+    }
+  } catch (e) {
+    console.error('openRatingModal:', e);
+  }
+};
+
+window.closeRatingModal = function () {
+  if (_unsubscribeFeed) { _unsubscribeFeed(); _unsubscribeFeed = null; }
+  window.closeModal('ratingModal');
+};
+
+function _resetInputUI() {
+  document.getElementById('ratingMsg').textContent = '';
+  document.getElementById('ratingMsg').className = 'profile-msg';
+  const btn = document.getElementById('ratingSubmitBtn');
+  if (btn) { btn.disabled = false; btn.classList.remove('rating-btn-loading'); }
+}
+
+// ══════════════════════════════════════
+//  Star input (hover + click)
+// ══════════════════════════════════════
+window.hoverRatingStars = function (n) {
+  _paintStars(n);
+  document.getElementById('ratingWordLabel').textContent = RATING_WORDS[n] || '';
+};
+
+window.setRatingStars = function (n) {
+  _selectedStars = n;
+  _paintStars(n);
+  document.getElementById('ratingWordLabel').textContent = RATING_WORDS[n] || '';
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('ratingStarsInput');
+  if (!wrap) return;
+  wrap.addEventListener('mouseleave', () => {
+    _paintStars(_selectedStars);
+    document.getElementById('ratingWordLabel').textContent = RATING_WORDS[_selectedStars] || '\u00A0';
+  });
+});
+
+function _paintStars(n) {
+  document.querySelectorAll('#ratingStarsInput .rstar').forEach(star => {
+    const val = Number(star.dataset.val);
+    star.classList.toggle('rstar-active', val <= n);
+  });
+}
+
+window.updateRatingCharCount = function () {
+  const el = document.getElementById('ratingReviewInput');
+  const counter = document.getElementById('ratingCharCount');
+  if (el && counter) counter.textContent = `${el.value.length}/400`;
+};
+
+// ══════════════════════════════════════
+//  Submit / Update
+// ══════════════════════════════════════
+window.submitRating = async function () {
+  if (_submitting) return;
+  const user = auth.currentUser;
+  if (!user) return;
+
+  if (_selectedStars < 1) {
+    _showRatingMsg('error', 'দয়া করে অন্তত ১টি স্টার সিলেক্ট করুন।');
+    return;
+  }
+
+  _submitting = true;
+  const btn = document.getElementById('ratingSubmitBtn');
+  const label = document.getElementById('ratingSubmitLabel');
+  const prevLabel = label.textContent;
+  btn.disabled = true;
+  label.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+  try {
+    const review = document.getElementById('ratingReviewInput').value.trim().slice(0, 400);
+    const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+    const username = window._currentUsername || '';
+
+    const payload = {
+      uid: user.uid,
+      displayName,
+      username,
+      photoURL: user.photoURL || null,
+      rating: _selectedStars,
+      review,
+      updatedAt: serverTimestamp(),
+    };
+    if (!_myExistingRating) payload.createdAt = serverTimestamp();
+
+    await setDoc(doc(db, 'ratings', user.uid), payload, { merge: true });
+
+    _myExistingRating = { ...(_myExistingRating || {}), ...payload };
+    document.getElementById('ratingDeleteBtn').style.display = 'inline-flex';
+    label.textContent = 'রেটিং আপডেট করুন';
+    _showRatingMsg('success', 'ধন্যবাদ! আপনার রেটিং সেভ হয়েছে।');
+    if (typeof showToast === 'function') showToast('রেটিং সাবমিট হয়েছে!', 'success', 'fa-star');
+    _celebrateStars();
+  } catch (e) {
+    console.error('submitRating:', e);
+    label.textContent = prevLabel;
+    _showRatingMsg('error', 'সেভ করা যায়নি, আবার চেষ্টা করুন।');
+  } finally {
+    btn.disabled = false;
+    _submitting = false;
+  }
+};
+
+window.deleteMyRating = async function () {
+  const user = auth.currentUser;
+  if (!user || !_myExistingRating) return;
+  if (!confirm('আপনার রেটিং মুছে ফেলতে চান?')) return;
+
+  try {
+    await deleteDoc(doc(db, 'ratings', user.uid));
+    _myExistingRating = null;
+    _selectedStars = 0;
+    _paintStars(0);
+    document.getElementById('ratingReviewInput').value = '';
+    updateRatingCharCount();
+    document.getElementById('ratingWordLabel').textContent = '\u00A0';
+    document.getElementById('ratingDeleteBtn').style.display = 'none';
+    document.getElementById('ratingSubmitLabel').textContent = 'রেটিং জমা দিন';
+    _showRatingMsg('info', 'আপনার রেটিং মুছে ফেলা হয়েছে।');
+    if (typeof showToast === 'function') showToast('রেটিং মুছে ফেলা হয়েছে', 'info', 'fa-trash');
+  } catch (e) {
+    console.error('deleteMyRating:', e);
+    _showRatingMsg('error', 'মুছে ফেলা যায়নি, আবার চেষ্টা করুন।');
+  }
+};
+
+function _showRatingMsg(type, text) {
+  const el = document.getElementById('ratingMsg');
+  if (!el) return;
+  el.textContent = text;
+  el.className = `profile-msg show ${type}`;
+}
+
+// ══════════════════════════════════════
+//  Live stats + review feed
+// ══════════════════════════════════════
+function _attachLiveFeed() {
+  if (_unsubscribeFeed) return; // already listening
+  _unsubscribeFeed = onSnapshot(collection(db, 'ratings'), snap => {
+    _allRatings = snap.docs.map(d => d.data());
+    _renderStats();
+    _renderFeed();
+  }, err => console.error('ratings feed:', err));
+}
+
+function _renderStats() {
+  const total = _allRatings.length;
+  const sum = _allRatings.reduce((s, r) => s + (r.rating || 0), 0);
+  const avg = total ? sum / total : 0;
+
+  document.getElementById('ratingAvgNum').textContent = avg.toFixed(1);
+  document.getElementById('ratingAvgCount').textContent =
+    total === 0 ? 'এখনো কোনো রেটিং নেই' : `${total}টি রেটিং থেকে`;
+
+  const starsBox = document.getElementById('ratingAvgStars');
+  starsBox.innerHTML = [1, 2, 3, 4, 5].map(i => {
+    const filled = i <= Math.round(avg);
+    return `<i class="fa-solid fa-star${filled ? '' : ' rstar-dim'}"></i>`;
+  }).join('');
+
+  const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  _allRatings.forEach(r => { if (dist[r.rating] !== undefined) dist[r.rating]++; });
+
+  const distBox = document.getElementById('ratingDistBars');
+  distBox.innerHTML = [5, 4, 3, 2, 1].map(star => {
+    const count = dist[star];
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    return `
+      <div class="rdist-row">
+        <span class="rdist-label">${star}<i class="fa-solid fa-star"></i></span>
+        <div class="rdist-track"><div class="rdist-fill" style="width:${pct}%"></div></div>
+        <span class="rdist-count">${count}</span>
+      </div>`;
+  }).join('');
+}
+
+function _renderFeed() {
+  const list = document.getElementById('ratingReviewsList');
+  const empty = document.getElementById('ratingReviewsEmpty');
+  if (!list) return;
+
+  const withReviews = _allRatings
+    .filter(r => r.review && r.review.trim().length > 0)
+    .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
+    .slice(0, 30);
+
+  if (withReviews.length === 0) {
+    list.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  list.innerHTML = withReviews.map(r => {
+    const name = r.displayName || 'User';
+    const initials = name.slice(0, 2).toUpperCase();
+    const stars = [1, 2, 3, 4, 5].map(i =>
+      `<i class="fa-solid fa-star${i <= r.rating ? '' : ' rstar-dim'}"></i>`).join('');
+    const timeAgo = _relativeTime(r.updatedAt);
+    const avatar = r.photoURL
+      ? `<img src="${r.photoURL}" alt="">`
+      : initials;
+    return `
+      <div class="rreview-card">
+        <div class="rreview-top">
+          <div class="rreview-avatar">${avatar}</div>
+          <div class="rreview-meta">
+            <div class="rreview-name">${_escapeHtml(name)}</div>
+            <div class="rreview-stars">${stars}</div>
+          </div>
+          <div class="rreview-time">${timeAgo}</div>
+        </div>
+        <div class="rreview-text">${_escapeHtml(r.review)}</div>
+      </div>`;
+  }).join('');
+}
+
+function _relativeTime(ts) {
+  if (!ts || !ts.seconds) return '';
+  const diffMs = Date.now() - ts.seconds * 1000;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'এইমাত্র';
+  if (mins < 60) return `${mins} মিনিট আগে`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} ঘন্টা আগে`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days} দিন আগে`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} মাস আগে`;
+  return `${Math.floor(months / 12)} বছর আগে`;
+}
+
+function _escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function _celebrateStars() {
+  const wrap = document.getElementById('ratingStarsInput');
+  if (!wrap) return;
+  wrap.classList.add('rstars-pop');
+  setTimeout(() => wrap.classList.remove('rstars-pop'), 500);
+}
