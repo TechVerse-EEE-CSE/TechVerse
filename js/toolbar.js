@@ -39,11 +39,7 @@
     const btn = document.createElement('div');
     btn.id = 'ftbPeekBtn';
     btn.title = 'Show Toolbar';
-    btn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>`;
+    btn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
     btn.onclick = function() {
       tbCollapsed = false;
       document.getElementById('floatToolbar').classList.remove('collapsed');
