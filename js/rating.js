@@ -16,10 +16,13 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   deleteDoc,
   collection,
   onSnapshot,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import firebaseConfig from "../config/firebase-config.js";
 
@@ -247,6 +250,8 @@ function _renderFeed() {
   const empty = document.getElementById('ratingReviewsEmpty');
   if (!list) return;
 
+  const myUid = auth.currentUser?.uid || null;
+
   const withReviews = _allRatings
     .filter(r => r.review && r.review.trim().length > 0)
     .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
@@ -268,6 +273,13 @@ function _renderFeed() {
     const avatar = r.photoURL
       ? `<img src="${r.photoURL}" alt="">`
       : initials;
+
+    const loveUids    = Array.isArray(r.loveUids) ? r.loveUids : [];
+    const helpfulUids = Array.isArray(r.helpfulUids) ? r.helpfulUids : [];
+    const iLoved      = myUid ? loveUids.includes(myUid) : false;
+    const iFoundHelpful = myUid ? helpfulUids.includes(myUid) : false;
+    const ratingUidJs = r.uid.replace(/'/g, "\\'");
+
     return `
       <div class="rreview-card">
         <div class="rreview-top">
@@ -279,9 +291,52 @@ function _renderFeed() {
           <div class="rreview-time">${timeAgo}</div>
         </div>
         <div class="rreview-text">${_escapeHtml(r.review)}</div>
+        <div class="rreview-actions">
+          <button class="rreact-btn${iLoved ? ' active-love' : ''}" onclick="toggleLoveReaction('${ratingUidJs}')">
+            <i class="fa-${iLoved ? 'solid' : 'regular'} fa-heart"></i>
+            <span>${loveUids.length}</span>
+          </button>
+          <button class="rreact-btn${iFoundHelpful ? ' active-helpful' : ''}" onclick="toggleHelpfulReaction('${ratingUidJs}')">
+            <i class="fa-${iFoundHelpful ? 'solid' : 'regular'} fa-thumbs-up"></i>
+            <span>${helpfulUids.length ? `Helpful (${helpfulUids.length})` : 'Helpful'}</span>
+          </button>
+        </div>
       </div>`;
   }).join('');
 }
+
+// ══════════════════════════════════════
+//  Review reactions — love / helpful (one toggle per user, per review)
+// ══════════════════════════════════════
+window.toggleLoveReaction = async function (ratingUid) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const r = _allRatings.find(x => x.uid === ratingUid);
+  const already = !!(r && Array.isArray(r.loveUids) && r.loveUids.includes(user.uid));
+  try {
+    await updateDoc(doc(db, 'ratings', ratingUid), {
+      loveUids: already ? arrayRemove(user.uid) : arrayUnion(user.uid),
+    });
+  } catch (e) {
+    console.error('toggleLoveReaction:', e);
+    if (typeof showToast === 'function') showToast('একটু সমস্যা হয়েছে, আবার চেষ্টা করুন', 'error', 'fa-triangle-exclamation');
+  }
+};
+
+window.toggleHelpfulReaction = async function (ratingUid) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const r = _allRatings.find(x => x.uid === ratingUid);
+  const already = !!(r && Array.isArray(r.helpfulUids) && r.helpfulUids.includes(user.uid));
+  try {
+    await updateDoc(doc(db, 'ratings', ratingUid), {
+      helpfulUids: already ? arrayRemove(user.uid) : arrayUnion(user.uid),
+    });
+  } catch (e) {
+    console.error('toggleHelpfulReaction:', e);
+    if (typeof showToast === 'function') showToast('একটু সমস্যা হয়েছে, আবার চেষ্টা করুন', 'error', 'fa-triangle-exclamation');
+  }
+};
 
 function _relativeTime(ts) {
   if (!ts || !ts.seconds) return '';
