@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/team.css">
 <link rel="stylesheet" href="css/whatsnew.css">
+<link rel="stylesheet" href="css/rating.css">
 
 
 <!-- PWA -->
@@ -411,7 +412,7 @@
 
 
 
-        <div class="menu-row" onclick="window.open('https://play.google.com','_blank')">
+        <div class="menu-row" onclick="closeSidebar();if(typeof openRatingModal==='function')openRatingModal();">
           <i class="fa-solid fa-star"></i>
           <span>Rate Us</span>
         </div>
@@ -1141,6 +1142,64 @@
   </div>
 </div>
 
+<!-- ══ RATING MODAL — js/rating.js ══ -->
+<div class="modal" id="ratingModal">
+  <div class="modal-content rating-modal-content">
+    <button class="rating-close-btn" onclick="closeRatingModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="rating-modal-scroll">
+
+      <div class="rating-header">
+        <div class="rating-header-icon"><i class="fa-solid fa-star"></i></div>
+        <h3>Rate Tech Verse</h3>
+        <p class="rating-sub">আপনার মতামত আমাদের আরও ভালো করতে সাহায্য করবে</p>
+      </div>
+
+      <div class="rating-stats">
+        <div class="rating-stats-left">
+          <div class="rating-avg-num" id="ratingAvgNum">0.0</div>
+          <div class="rating-avg-stars" id="ratingAvgStars"></div>
+          <div class="rating-avg-count" id="ratingAvgCount">এখনো কোনো রেটিং নেই</div>
+        </div>
+        <div class="rating-stats-right" id="ratingDistBars"></div>
+      </div>
+
+      <div class="rating-give-section">
+        <div class="rating-give-label" id="ratingGiveLabel">আপনার রেটিং দিন</div>
+        <div class="rating-stars-input" id="ratingStarsInput">
+          <i class="fa-solid fa-star rstar" data-val="1" onclick="setRatingStars(1)" onmouseenter="hoverRatingStars(1)"></i>
+          <i class="fa-solid fa-star rstar" data-val="2" onclick="setRatingStars(2)" onmouseenter="hoverRatingStars(2)"></i>
+          <i class="fa-solid fa-star rstar" data-val="3" onclick="setRatingStars(3)" onmouseenter="hoverRatingStars(3)"></i>
+          <i class="fa-solid fa-star rstar" data-val="4" onclick="setRatingStars(4)" onmouseenter="hoverRatingStars(4)"></i>
+          <i class="fa-solid fa-star rstar" data-val="5" onclick="setRatingStars(5)" onmouseenter="hoverRatingStars(5)"></i>
+        </div>
+        <div class="rating-word" id="ratingWordLabel">&nbsp;</div>
+
+        <textarea id="ratingReviewInput" class="rating-review-input" maxlength="400"
+          placeholder="অভিজ্ঞতা শেয়ার করুন (ঐচ্ছিক)..." oninput="updateRatingCharCount()"></textarea>
+        <div class="rating-char-count" id="ratingCharCount">0/400</div>
+
+        <div id="ratingMsg" class="profile-msg"></div>
+
+        <div class="btn-group" style="margin-top:6px;">
+          <button class="btn btn-cancel" id="ratingDeleteBtn" onclick="deleteMyRating()" style="display:none;">
+            <i class="fa-solid fa-trash"></i> মুছুন
+          </button>
+          <button class="btn btn-primary" id="ratingSubmitBtn" onclick="submitRating()">
+            <i class="fa-solid fa-paper-plane"></i> <span id="ratingSubmitLabel">রেটিং জমা দিন</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="rating-reviews-section">
+        <div class="rating-reviews-title"><i class="fa-solid fa-comments"></i> সাম্প্রতিক রিভিউ</div>
+        <div class="rating-reviews-list" id="ratingReviewsList"></div>
+        <div class="rating-reviews-empty" id="ratingReviewsEmpty">এখনো কোনো রিভিউ নেই — প্রথম রিভিউটি আপনিই দিন!</div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
 
@@ -1303,6 +1362,7 @@
 <script type="module" src="js/project-manager.js"></script>
 <script type="module" src="js/firestore-sync.js"></script>
 <script type="module" src="js/profile.js"></script>
+<script type="module" src="js/rating.js"></script>
 
 
 
