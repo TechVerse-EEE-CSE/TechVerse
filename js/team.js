@@ -14,11 +14,11 @@ const TEAM_MEMBERS = [
     photo:     '/gallery/about.webp',
     available: true,
     bio:       'Developer of Tech Verse — a browser-based code editor built entirely from scratch. Passionate about crafting seamless experiences across the stack, from pixel-perfect frontends to Firebase-powered backends.',
-    skills:    ['JavaScript', 'Firebase', 'PWA', 'HTML/CSS', 'Git'],
+    skills:    ['python', 'c++', 'JavaScript', 'HTML', 'Git', 'database'],
     stats: [
-      { label: 'Projects',      value: 15,  suffix: '+' },
-      { label: 'Yrs Experience', value: 3,   suffix: '+' },
-      { label: 'Happy Users',   value: 500, suffix: '+' },
+      { label: 'Projects',      value: 5,  suffix: '+' },
+      { label: 'Yrs Experience', value: 1,   suffix: '+' },
+      { label: 'Happy Users',   value: 50, suffix: '+' },
     ],
     links: [
       { icon: 'fa-brands fa-facebook',  label: 'Facebook',  url: 'https://facebook.com/imran.ahmedddddd' },
