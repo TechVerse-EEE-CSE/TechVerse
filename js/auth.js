@@ -53,6 +53,7 @@ onAuthStateChanged(auth, user => {
 // ── Enter Editor ──
 function enterEditor(user) {
   document.getElementById('authScreen').style.display = 'none';
+  if (window.AuthNetworkBG) window.AuthNetworkBG.stop();
 
   const displayName = user.displayName || user.email.split('@')[0];
   const initials    = displayName.slice(0, 2).toUpperCase();
@@ -109,6 +110,7 @@ function _showUsernameInUI(username) {
 // ── Show Auth ──
 function showAuthScreen() {
   document.getElementById('authScreen').style.display = 'flex';
+  if (window.AuthNetworkBG) window.AuthNetworkBG.start();
   const up = document.getElementById('userPill');
   if (up) up.style.display = 'none';
 }
