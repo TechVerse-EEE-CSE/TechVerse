@@ -111,6 +111,8 @@ window.flipTeamCard = function (i) {
   // Reset any tilt offset so the flip animation isn't skewed
   const tilt = document.getElementById(`teamTilt${i}`);
   if (tilt) tilt.style.transform = '';
+  // Light haptic tap on flip (mobile only — silently no-ops elsewhere)
+  if (navigator.vibrate) navigator.vibrate(15);
 };
 
 // ── 3D mouse-tilt + cursor-following glare (front face only) ──
