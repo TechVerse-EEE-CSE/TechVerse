@@ -26,7 +26,7 @@ window.WHATSNEW_CONFIG = {
   version: "2026-07-06",
 
   // Small eyebrow label above the title
-  badge: "What's New",
+  badge: "Our New version use",
 
   // Headline
   title: "Tech Verse just got better",
