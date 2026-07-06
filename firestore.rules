@@ -140,19 +140,74 @@ service cloud.firestore {
     // ৩.৪ রেটিং / রিভিউ (Rate Us পেজ)
     // ══════════════════════════════════════
     // ডক আইডি = uid (একজন ইউজার একটাই রেটিং দিতে/আপডেট করতে পারবে)।
-    // ডেটা: { uid, displayName, username, photoURL, rating(1-5), review, createdAt, updatedAt }
+    // ডেটা: { uid, displayName, username, photoURL, rating(1-5), review, createdAt, updatedAt,
+    //         loveUids: [uid...], helpfulUids: [uid...] }
     match /ratings/{uid} {
-      // ── read সবার জন্য খোলা — গড় রেটিং ও রিভিউ ফিড দেখানোর জন্য দরকার ──
+
+      // ── পুরনো ডকে loveUids/helpfulUids না থাকলে খালি লিস্ট ধরে নেওয়া হবে ──
+      function oldLoveUids() {
+        return ('loveUids' in resource.data) ? resource.data.loveUids : [];
+      }
+      function oldHelpfulUids() {
+        return ('helpfulUids' in resource.data) ? resource.data.helpfulUids : [];
+      }
+
+      // ── শুধু নিজের uid-টা লিস্টে যোগ বা বাদ দেওয়া যাবে, অন্য কারো uid ছোঁয়া যাবে না ──
+      function isValidLoveToggle() {
+        let newArr = request.resource.data.loveUids;
+        let old    = oldLoveUids();
+        return newArr is list &&
+          (
+            (newArr.size() == old.size() + 1 && newArr.hasAll(old) && request.auth.uid in newArr) ||
+            (newArr.size() == old.size() - 1 && old.hasAll(newArr) && request.auth.uid in old && !(request.auth.uid in newArr))
+          );
+      }
+      function isValidHelpfulToggle() {
+        let newArr = request.resource.data.helpfulUids;
+        let old    = oldHelpfulUids();
+        return newArr is list &&
+          (
+            (newArr.size() == old.size() + 1 && newArr.hasAll(old) && request.auth.uid in newArr) ||
+            (newArr.size() == old.size() - 1 && old.hasAll(newArr) && request.auth.uid in old && !(request.auth.uid in newArr))
+          );
+      }
+
+      // ── যেকোনো লগইন ইউজার একটা রিভিউতে love বা helpful টগল করতে পারবে,
+      //    কিন্তু শুধু নিজের uid ছাড়া অন্য কিছু (rating/review/অন্য কারো reaction) বদলাতে পারবে না ──
+      function isReactionUpdate() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return request.auth != null &&
+          (
+            (changed.hasOnly(['loveUids']) && isValidLoveToggle()) ||
+            (changed.hasOnly(['helpfulUids']) && isValidHelpfulToggle())
+          );
+      }
+
+      // ── read সবার জন্য খোলা — গড় রেটিং, রিভিউ ফিড ও reaction কাউন্ট দেখানোর জন্য দরকার ──
       allow read: if true;
 
-      // ── শুধু নিজের uid দিয়েই রেটিং create/update করতে পারবে, rating অবশ্যই ১-৫ এর মধ্যে ──
-      allow create, update: if request.auth != null &&
+      // ── শুধু নিজের uid দিয়েই রেটিং create করতে পারবে, rating অবশ্যই ১-৫ এর মধ্যে ──
+      allow create: if request.auth != null &&
         request.auth.uid == uid &&
         request.resource.data.uid == uid &&
         request.resource.data.rating is int &&
         request.resource.data.rating >= 1 &&
         request.resource.data.rating <= 5 &&
         (!('review' in request.resource.data) || request.resource.data.review.size() <= 400);
+
+      // ── নিজের রিভিউ কনটেন্ট আপডেট (owner), অথবা অন্য যেকারো love/helpful টগল ──
+      allow update: if request.auth != null &&
+        (
+          (
+            request.auth.uid == uid &&
+            request.resource.data.uid == uid &&
+            request.resource.data.rating is int &&
+            request.resource.data.rating >= 1 &&
+            request.resource.data.rating <= 5 &&
+            (!('review' in request.resource.data) || request.resource.data.review.size() <= 400)
+          ) ||
+          isReactionUpdate()
+        );
 
       // ── শুধু নিজের রেটিং মুছে ফেলতে পারবে ──
       allow delete: if request.auth != null && request.auth.uid == uid;
