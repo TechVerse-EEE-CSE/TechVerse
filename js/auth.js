@@ -35,10 +35,22 @@ const gProvider = new GoogleAuthProvider();
 const ghProvider = new GithubAuthProvider();
 ghProvider.addScope('repo'); // so a token from sign-in can also create/push repos for GitHub Deploy
 
+// ── Guards against a race with doRegister() below: creating the account via
+// createUserWithEmailAndPassword() auto-signs the user in, which fires this
+// very listener WHILE doRegister() is still running its own
+// reserveUsernameForNewUser() call for the chosen username. If both calls
+// race each other, two concurrent transactions end up writing to the same
+// users/{uid} doc and Firestore can abort one from contention — which
+// doRegister() then (wrongly) treats as a fatal error and rolls back
+// (deletes) the freshly-created account. Set while doRegister() owns the
+// username reservation so this listener skips its own auto-generated one. ──
+let registrationInProgress = false;
+
 // ── Auth State Listener ──
 onAuthStateChanged(auth, user => {
   if (user) {
     enterEditor(user);
+    if (registrationInProgress) return;
     // Make sure this user has a username (auto-generated for Google sign-ins
     // and pre-existing accounts made before this feature existed).
     // Runs in the background — never blocks entering the editor.
@@ -179,6 +191,7 @@ window.doRegister = async function () {
     return showAuthMsg('registerMsg', 'error', reason);
   }
 
+  registrationInProgress = true;
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
@@ -212,6 +225,11 @@ window.doRegister = async function () {
     if (e.code === 'auth/email-already-in-use' || e.code === 'auth/invalid-email') window.goToRegisterStep?.(1);
     else if (e.code === 'auth/weak-password') window.goToRegisterStep?.(3);
     showAuthMsg('registerMsg', 'error', friendlyError(e.code));
+  } finally {
+    // Registration flow (success or failure) is fully done — safe for the
+    // auth-state listener to resume its normal auto-username-check duty
+    // for any future sign-ins.
+    registrationInProgress = false;
   }
 };
 
