@@ -4,6 +4,9 @@
    skill chips, stats counters, status/verified badges.
 ══════════════════════════════════════ */
 
+/* Extra fonts for this section only — self-contained, no index.html edit needed */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Space+Grotesk:wght@600;700&family=Lora:ital,wght@1,400;1,500&display=swap');
+
 /* Enables smooth animation of the conic-gradient angle below */
 @property --border-angle {
   syntax: '<angle>';
@@ -74,9 +77,10 @@
 }
 
 .team-status {
+  font-family: var(--font-code);
   align-self: flex-start;
   display: flex; align-items: center; gap: 6px;
-  font-size: 10px; font-weight: 600; color: var(--success);
+  font-size: 9.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--success);
   background: rgba(16,201,143,0.12);
   padding: 4px 9px; border-radius: 20px;
   margin-bottom: 6px;
@@ -109,13 +113,19 @@
 .team-name-row {
   display: flex; align-items: center; gap: 6px;
 }
-.team-name { font-size: 15.5px; font-weight: 700; color: var(--text-main); }
+.team-name {
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--text-main);
+}
 .team-verified {
   font-size: 13px; color: var(--primary);
 }
 .team-role {
-  font-size: 11.5px; color: var(--primary); font-weight: 600;
-  background: var(--primary-glow); padding: 2px 10px; border-radius: 20px;
+  font-family: var(--font-code);
+  font-size: 10.5px; color: var(--primary); font-weight: 500;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  background: var(--primary-glow); padding: 3px 10px; border-radius: 20px;
   margin-top: 1px; margin-bottom: 4px;
 }
 
@@ -124,7 +134,8 @@
   padding: 2px 0 4px;
 }
 .skill-chip {
-  font-size: 9.5px; font-weight: 600; color: var(--text-muted);
+  font-family: var(--font-code);
+  font-size: 9.5px; font-weight: 500; color: var(--text-muted);
   background: var(--bg-surface-hover);
   border: 1px solid var(--border-light);
   padding: 3px 8px; border-radius: 20px;
@@ -140,17 +151,20 @@
 }
 .stat-item { display: flex; flex-direction: column; align-items: center; }
 .stat-value {
-  font-size: 15px; font-weight: 800; color: var(--text-main);
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--text-main);
   font-variant-numeric: tabular-nums;
 }
 .stat-label {
+  font-family: var(--font-code);
   font-size: 8.5px; color: var(--text-dim); text-transform: uppercase;
-  letter-spacing: 0.03em; margin-top: 2px; text-align: center;
+  letter-spacing: 0.04em; margin-top: 2px; text-align: center;
 }
 
 .team-flip-hint {
+  font-family: var(--font-code);
   margin-top: auto; padding-top: 10px;
-  font-size: 10px; color: var(--text-dim);
+  font-size: 9.5px; color: var(--text-dim); letter-spacing: 0.02em;
   display: flex; align-items: center; gap: 5px;
 }
 
@@ -173,12 +187,20 @@
   object-fit: cover; border: 2px solid var(--primary);
   flex-shrink: 0;
 }
-.team-name-mini { font-size: 13.5px; font-weight: 700; color: var(--text-main); display:flex; align-items:center; gap:5px; }
+.team-name-mini {
+  font-family: 'Sora', 'Inter', sans-serif;
+  font-size: 13.5px; font-weight: 700; color: var(--text-main);
+  display:flex; align-items:center; gap:5px;
+}
 .team-verified-mini { font-size: 11px; color: var(--primary); }
-.team-role-mini { font-size: 11px; color: var(--text-muted); }
+.team-role-mini {
+  font-family: var(--font-code);
+  font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.03em;
+}
 
 .team-bio {
-  font-size: 12.5px; line-height: 1.6; color: var(--text-muted);
+  font-family: 'Lora', Georgia, serif; font-style: italic;
+  font-size: 12.5px; line-height: 1.65; color: var(--text-muted);
   padding: 12px 0; flex: 1; overflow-y: auto;
 }
 
