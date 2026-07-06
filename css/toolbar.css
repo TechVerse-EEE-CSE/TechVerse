@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════
    FLOATING TOOLBAR — css/toolbar.css
    Add at the end of css/styles.css
+   (v2 — icon-based redesign)
 ══════════════════════════════════════ */
 
 /* ── Floating Toolbar ── */
@@ -10,79 +11,108 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 800;
-  background: rgba(22, 25, 33, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(91,141,238,0.15);
+  background: rgba(18, 20, 27, 0.88);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(91,141,238,0.18);
   border-right: none;
-  border-radius: 16px 0 0 16px;
-  padding: 10px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.4);
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1),
-              right 0.3s cubic-bezier(0.4,0,0.2,1);
-  min-width: 64px;
-}
-
-.float-toolbar.collapsed {
-  right: -52px;
-}
-
-/* ── Each item ── */
-.ftb-item {
+  border-radius: 18px 0 0 18px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 12px;
+  box-shadow: -6px 0 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1),
+              right 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.float-toolbar.collapsed {
+  right: -60px;
+}
+
+/* ── Each item — clean icon button ── */
+.ftb-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  border-radius: 10px;
-  transition: background 0.2s, transform 0.15s;
-  width: 100%;
-  user-select: none;
+  border-radius: 11px;
+  transition: background 0.18s ease, transform 0.15s ease;
   position: relative;
 }
 
+.ftb-item::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: #5b8dee;
+  transition: transform 0.18s ease;
+}
+
 .ftb-item:hover {
-  background: rgba(91,141,238,0.15);
-  transform: scale(1.05);
+  background: rgba(91,141,238,0.14);
+}
+
+.ftb-item:hover::before {
+  transform: translateY(-50%) scaleY(1);
 }
 
 .ftb-item:active {
-  transform: scale(0.95);
-  background: rgba(91,141,238,0.25);
+  transform: scale(0.92);
+  background: rgba(91,141,238,0.22);
 }
 
-.ftb-icon {
-  width: 28px;
-  height: 28px;
-  color: rgba(255,255,255,0.75);
-  transition: color 0.2s;
+/* Font Awesome icon inside a button */
+.ftb-fa-icon {
+  font-size: 16px;
+  color: rgba(255,255,255,0.68);
+  transition: color 0.18s ease, transform 0.18s ease;
 }
 
-.ftb-item:hover .ftb-icon { color: #5b8dee; }
-
-.ftb-icon svg {
-  width: 100%;
-  height: 100%;
+.ftb-item:hover .ftb-fa-icon {
+  color: #7ea6ff;
+  transform: scale(1.08);
 }
 
-.ftb-label {
-  font-size: 10px;
-  color: rgba(255,255,255,0.4);
+/* ── Tooltip (replaces the old under-icon label) ── */
+.ftb-item[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  white-space: nowrap;
+  background: #10121a;
+  color: #e8ecf5;
   font-family: 'Inter', sans-serif;
-  letter-spacing: 0.3px;
-  transition: color 0.2s;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(91,141,238,0.25);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 850;
 }
 
-.ftb-item:hover .ftb-label { color: rgba(255,255,255,0.8); }
+.ftb-item[data-tip]:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
 
 /* ── Color preview circle ── */
 .ftb-color-preview {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: conic-gradient(
     #ff0000, #ff8000, #ffff00,
@@ -95,8 +125,8 @@
 }
 
 .ftb-item:hover .ftb-color-preview {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(91,141,238,0.4);
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(91,141,238,0.45);
 }
 
 .ftb-color-hidden {
@@ -109,30 +139,30 @@
 
 /* ── Separator ── */
 .ftb-sep {
-  width: 36px;
+  width: 26px;
   height: 1px;
-  background: rgba(255,255,255,0.07);
-  margin: 2px 0;
+  background: rgba(255,255,255,0.08);
+  margin: 3px 0;
 }
 
 /* ── Toggle Button ── */
 .ftb-toggle {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: rgba(255,255,255,0.3);
-  border-radius: 8px;
-  transition: color 0.2s, background 0.2s, transform 0.3s;
-  margin: 6px 0 4px;
+  color: rgba(255,255,255,0.35);
+  border-radius: 9px;
+  transition: color 0.2s, background 0.2s;
+  margin-top: 2px;
 }
 
-.ftb-toggle:hover { color: #5b8dee; background: rgba(91,141,238,0.1); }
-.ftb-toggle svg { width: 16px; height: 16px; }
+.ftb-toggle:hover { color: #5b8dee; background: rgba(91,141,238,0.12); }
+.ftb-toggle i { font-size: 13px; transition: transform 0.3s ease; }
 
-.float-toolbar.collapsed .ftb-toggle svg {
+.float-toolbar.collapsed .ftb-toggle i {
   transform: rotate(180deg);
 }
 
@@ -143,9 +173,8 @@
 }
 
 .float-toolbar.collapsed {
-  padding: 6px 0;
-  min-width: 32px;
-  border-radius: 12px 0 0 12px;
+  padding: 6px;
+  border-radius: 14px 0 0 14px;
 }
 
 /* ══════════════════════════════════════
@@ -361,6 +390,8 @@
   .float-toolbar { top: auto; bottom: 120px; transform: none; }
   .color-popup   { top: auto; bottom: 120px; transform: none; right: 72px; }
   .color-popup.show { transform: none; }
+  /* tooltips would run off-screen on mobile — hide them, title attr still works via long-press */
+  .ftb-item[data-tip]::after { display: none; }
 }
 
 /* ── Peek Button (visible when toolbar is collapsed) ── */
@@ -372,7 +403,7 @@
   z-index: 801;
   width: 20px;
   height: 48px;
-  background: rgba(22, 25, 33, 0.85);
+  background: rgba(18, 20, 27, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(91,141,238,0.2);
   border-right: none;
@@ -395,12 +426,10 @@
 
 #ftbPeekBtn:hover {
   color: #5b8dee;
-  background: rgba(22, 25, 33, 0.97);
+  background: rgba(18, 20, 27, 0.97);
   width: 24px;
 }
 
-#ftbPeekBtn svg {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
+#ftbPeekBtn i {
+  font-size: 11px;
 }
