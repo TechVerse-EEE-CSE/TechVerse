@@ -175,7 +175,6 @@
   window.ftbUndo = function() {
     if (typeof editor !== 'undefined' && editor) {
       editor.undo();
-      editor.focus();
       if (typeof showToast === 'function') showToast('Undo', 'info', 'fa-rotate-left');
     }
   };
@@ -184,7 +183,6 @@
   window.ftbRedo = function() {
     if (typeof editor !== 'undefined' && editor) {
       editor.redo();
-      editor.focus();
       if (typeof showToast === 'function') showToast('Redo', 'info', 'fa-rotate-right');
     }
   };
@@ -195,7 +193,6 @@
       const doc    = editor.getDoc();
       const cursor = doc.getCursor();
       doc.replaceRange('    ', cursor);
-      editor.focus();
     }
   };
 
@@ -203,7 +200,6 @@
   window.ftbBackspace = function() {
     if (typeof editor !== 'undefined' && editor) {
       editor.execCommand('delCharBefore');
-      editor.focus();
     }
   };
 
