@@ -22,8 +22,8 @@ window.WHATSNEW_CONFIG = {
   ENABLED: true,
 
   // Bump this on every release so the popup shows again for everyone.
-  // Anything works: "2026-07-06", "v3", "release-14"...
-  version: "00.02.02",
+  // Anything works: "2026-07-06", "v4", "release-14"...
+  version: "00.02.03",
 
   // Small eyebrow label above the title
   badge: "Our New version use",
@@ -49,7 +49,7 @@ window.WHATSNEW_CONFIG = {
     {
       icon: "fa-solid fa-wand-magic-sparkles",
       title: "Polished experience",
-      description: "an update about section check please right now."
+      description: "an update toolbar please check and go on your project manage help full 🌕."
     }
   ],
 
@@ -57,5 +57,5 @@ window.WHATSNEW_CONFIG = {
   ctaText: "Got it, thanks!",
 
   // Optional footer note (leave empty string to hide)
-  footerNote: "Tech Verse • Imran Ahmed"
+  footerNote: "Tech Verse EEE & CSE"
 };
