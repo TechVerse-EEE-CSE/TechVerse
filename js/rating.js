@@ -31,7 +31,7 @@ const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const RATING_WORDS = { 1: 'খুবই খারাপ', 2: 'খারাপ', 3: 'ভালো', 4: 'দারুণ', 5: 'অসাধারণ!' };
+const RATING_WORDS = { 1: '🫩', 2: '😢', 3: '🙂', 4: '😊', 5: '🥰' };
 
 let _selectedStars   = 0;   // the value the user has picked/hovered but not yet submitted
 let _myExistingRating = null; // {rating, review} if this user already rated
@@ -58,11 +58,11 @@ window.openRatingModal = async function () {
       _paintStars(_selectedStars);
       document.getElementById('ratingReviewInput').value = _myExistingRating.review || '';
       updateRatingCharCount();
-      document.getElementById('ratingSubmitLabel').textContent = 'রেটিং আপডেট করুন';
+      document.getElementById('ratingSubmitLabel').textContent = 'update rating';
       document.getElementById('ratingDeleteBtn').style.display = 'inline-flex';
     } else {
       _myExistingRating = null;
-      document.getElementById('ratingSubmitLabel').textContent = 'রেটিং জমা দিন';
+      document.getElementById('ratingSubmitLabel').textContent = 'Submit a rating';
       document.getElementById('ratingDeleteBtn').style.display = 'none';
     }
   } catch (e) {
@@ -127,7 +127,7 @@ window.submitRating = async function () {
   if (!user) return;
 
   if (_selectedStars < 1) {
-    _showRatingMsg('error', 'দয়া করে অন্তত ১টি স্টার সিলেক্ট করুন।');
+    _showRatingMsg('error', 'Please select at least 1 star.');
     return;
   }
 
@@ -158,14 +158,14 @@ window.submitRating = async function () {
 
     _myExistingRating = { ...(_myExistingRating || {}), ...payload };
     document.getElementById('ratingDeleteBtn').style.display = 'inline-flex';
-    label.textContent = 'রেটিং আপডেট করুন';
-    _showRatingMsg('success', 'ধন্যবাদ! আপনার রেটিং সেভ হয়েছে।');
-    if (typeof showToast === 'function') showToast('রেটিং সাবমিট হয়েছে!', 'success', 'fa-star');
+    label.textContent = 'update rating';
+    _showRatingMsg('success', 'Thank you! Your rating has been saved.');
+    if (typeof showToast === 'function') showToast('Rating submitted!', 'success', 'fa-star');
     _celebrateStars();
   } catch (e) {
     console.error('submitRating:', e);
     label.textContent = prevLabel;
-    _showRatingMsg('error', 'সেভ করা যায়নি, আবার চেষ্টা করুন।');
+    _showRatingMsg('error', 'Could not be saved, please try again.');
   } finally {
     btn.disabled = false;
     _submitting = false;
@@ -175,7 +175,7 @@ window.submitRating = async function () {
 window.deleteMyRating = async function () {
   const user = auth.currentUser;
   if (!user || !_myExistingRating) return;
-  if (!confirm('আপনার রেটিং মুছে ফেলতে চান?')) return;
+  if (!confirm('Want to delete your rating?')) return;
 
   try {
     await deleteDoc(doc(db, 'ratings', user.uid));
@@ -186,12 +186,12 @@ window.deleteMyRating = async function () {
     updateRatingCharCount();
     document.getElementById('ratingWordLabel').textContent = '\u00A0';
     document.getElementById('ratingDeleteBtn').style.display = 'none';
-    document.getElementById('ratingSubmitLabel').textContent = 'রেটিং জমা দিন';
-    _showRatingMsg('info', 'আপনার রেটিং মুছে ফেলা হয়েছে।');
-    if (typeof showToast === 'function') showToast('রেটিং মুছে ফেলা হয়েছে', 'info', 'fa-trash');
+    document.getElementById('ratingSubmitLabel').textContent = 'Submit a rating';
+    _showRatingMsg('info', 'Your rating has been deleted.');
+    if (typeof showToast === 'function') showToast('Rating deleted.', 'info', 'fa-trash');
   } catch (e) {
     console.error('deleteMyRating:', e);
-    _showRatingMsg('error', 'মুছে ফেলা যায়নি, আবার চেষ্টা করুন।');
+    _showRatingMsg('error', 'Could not be deleted, please try again');
   }
 };
 
@@ -221,7 +221,7 @@ function _renderStats() {
 
   document.getElementById('ratingAvgNum').textContent = avg.toFixed(1);
   document.getElementById('ratingAvgCount').textContent =
-    total === 0 ? 'এখনো কোনো রেটিং নেই' : `${total}টি রেটিং থেকে`;
+    total === 0 ? 'No ratings yet.' : `${total} rating`;
 
   const starsBox = document.getElementById('ratingAvgStars');
   starsBox.innerHTML = [1, 2, 3, 4, 5].map(i => {
@@ -319,7 +319,7 @@ window.toggleLoveReaction = async function (ratingUid) {
     });
   } catch (e) {
     console.error('toggleLoveReaction:', e);
-    if (typeof showToast === 'function') showToast('একটু সমস্যা হয়েছে, আবার চেষ্টা করুন', 'error', 'fa-triangle-exclamation');
+    if (typeof showToast === 'function') showToast('There was a problem, please try again.', 'error', 'fa-triangle-exclamation');
   }
 };
 
@@ -334,7 +334,7 @@ window.toggleHelpfulReaction = async function (ratingUid) {
     });
   } catch (e) {
     console.error('toggleHelpfulReaction:', e);
-    if (typeof showToast === 'function') showToast('একটু সমস্যা হয়েছে, আবার চেষ্টা করুন', 'error', 'fa-triangle-exclamation');
+    if (typeof showToast === 'function') showToast('There was a problem, please try again.', 'error', 'fa-triangle-exclamation');
   }
 };
 
@@ -342,15 +342,15 @@ function _relativeTime(ts) {
   if (!ts || !ts.seconds) return '';
   const diffMs = Date.now() - ts.seconds * 1000;
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'এইমাত্র';
-  if (mins < 60) return `${mins} মিনিট আগে`;
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} minutes ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} ঘন্টা আগে`;
+  if (hrs < 24) return `${hrs} hours ago`;
   const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days} দিন আগে`;
+  if (days < 30) return `${days} days ago`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} মাস আগে`;
-  return `${Math.floor(months / 12)} বছর আগে`;
+  if (months < 12) return `${months} months ago`;
+  return `${Math.floor(months / 12)} years ago`;
 }
 
 function _escapeHtml(str) {
