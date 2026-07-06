@@ -89,6 +89,12 @@ function enterEditor(user) {
   // Expose for profile settings
   window._firebaseAuth    = auth;
   window._updateProfile   = updateProfile;
+
+  // Let other plain-script modules (e.g. js/whatsnew.js) know a user is
+  // logged in and ready, so they can react without importing Firebase.
+  document.dispatchEvent(new CustomEvent('tv:auth-ready', {
+    detail: { uid: user.uid, name: displayName, email: user.email }
+  }));
 }
 
 // ── Show the username under the email in the dropdown/drawer ──
