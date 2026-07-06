@@ -294,4 +294,10 @@
   } else {
     init();
   }
+
+  // Exposed so auth.js can stop this loop the moment the user logs in
+  // (authScreen becomes display:none) and restart it when auth screen
+  // is shown again — otherwise it keeps computing 340 nodes/frame
+  // forever in the background, slowing down the whole app.
+  window.AuthNetworkBG = { start, stop };
 })();
