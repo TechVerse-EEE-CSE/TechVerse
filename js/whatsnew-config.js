@@ -22,8 +22,8 @@ window.WHATSNEW_CONFIG = {
   ENABLED: true,
 
   // Bump this on every release so the popup shows again for everyone.
-  // Anything works: "2026-07-06", "v2", "release-14"...
-  version: "2026-07-06",
+  // Anything works: "2026-07-06", "v3", "release-14"...
+  version: "00.02.02",
 
   // Small eyebrow label above the title
   badge: "Our New version use",
@@ -49,7 +49,7 @@ window.WHATSNEW_CONFIG = {
     {
       icon: "fa-solid fa-wand-magic-sparkles",
       title: "Polished experience",
-      description: "Small design and usability improvements throughout the site."
+      description: "an update about section check please right now."
     }
   ],
 
