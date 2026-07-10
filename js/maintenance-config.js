@@ -8,7 +8,7 @@
 
 window.MAINTENANCE_CONFIG = {
   // Main switch — true means the site is down (shows the Maintenance page)
-  MAINTENANCE_MODE: false,
+  MAINTENANCE_MODE: true,
 
   // Title
   title: "We're Working on a Site Update",
