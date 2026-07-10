@@ -11,14 +11,14 @@ window.MAINTENANCE_CONFIG = {
   MAINTENANCE_MODE: true,
 
   // Title
-  title: "We're Working on a Site Update",
+  title: "Work is underway to update our website.",
 
   // Main message
-  message: "Tech Verse is currently undergoing updates and improvements. We'll be back soon with an even better experience. Thank you for your patience!",
+  message: "Work is currently underway to improve our website's speed, so we ask for your patience. Insha'Allah, you will enjoy a better experience using our site, and everything will be made easier.",
 
   // (Optional) Date/time for when the site will return. Leave empty to hide the countdown.
   // Format: "YYYY-MM-DDTHH:mm:ss" (based on your local time)
-  eta: "2026-07-07T12:00:20",
+  eta: "2026-07-19T12:00:20",
 
   // Contact info (optional) — leave empty to hide this section
   contactEmail: "imran.info.me@gmail.com",
@@ -27,5 +27,5 @@ window.MAINTENANCE_CONFIG = {
   siteName: "Tech Verse",
 
   // How often (in seconds) to automatically check if the site is back online (set to 0 to disable)
-  autoCheckSeconds: 15
+  autoCheckSeconds: 5
 };
