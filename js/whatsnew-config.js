@@ -23,10 +23,10 @@ window.WHATSNEW_CONFIG = {
 
   // Bump this on every release so the popup shows again for everyone.
   // Anything works: "2026-07-06", "v4", "release-14"...
-  version: "00.02.03",
+  version: "00.02.04",
 
   // Small eyebrow label above the title
-  badge: "Our New version use",
+  badge: "Our New version added",
 
   // Headline
   title: "Tech Verse just got better",
@@ -42,15 +42,15 @@ window.WHATSNEW_CONFIG = {
       description: "We added extra protection across the platform to keep your account and projects safer."
     },
     {
-      icon: "fa-solid fa-gauge-high",
+      icon: "fa-solid fa-rocket",
       title: "Faster & smoother",
       description: "Pages load quicker and the editor feels snappier overall."
     },
-    {
+    {   
       icon: "fa-solid fa-wand-magic-sparkles",
-      title: "Polished experience",
-      description: "an update toolbar please check and go on your project manage help full 🌕."
-    }
+      title: "Polished Experience",
+      description: "Refined toolbar design with usability improvements and a smoother overall experience."
+   }
   ],
 
   // Button text
